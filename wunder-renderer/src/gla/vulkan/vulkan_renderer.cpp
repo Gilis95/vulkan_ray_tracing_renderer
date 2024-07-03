@@ -40,26 +40,32 @@ void vulkan_renderer::init_internal(const renderer_properties &properties) {
 
 VkResult vulkan_renderer::create_vulkan_instance() {
   VkApplicationInfo app_info = {};
-  VkInstanceCreateInfo instance_create_info = {};
 
   // A generic application info structure
   app_info.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-  app_info.pApplicationName = "renderer\0";
-  app_info.applicationVersion = 1;
-  app_info.apiVersion = VK_API_VERSION_1_3;
-
-  // Create the instance.
-  instance_create_info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-  instance_create_info.pApplicationInfo = &app_info;
+  app_info.pApplicationName = "Wunder_Renderer";
+  app_info.pEngineName = "Wunder_Renderer";
+  app_info.apiVersion = VK_API_VERSION_1_2;
 
   auto window_required_extensions =
       window_factory::get_instance().get_window().get_vulkan_extensions();
+
+  VkValidationFeatureEnableEXT enables[] = { VK_VALIDATION_FEATURE_ENABLE_BEST_PRACTICES_EXT };
+  VkValidationFeaturesEXT features = {};
+  features.sType = VK_STRUCTURE_TYPE_VALIDATION_FEATURES_EXT;
+  features.enabledValidationFeatureCount = 1;
+  features.pEnabledValidationFeatures = enables;
+
+  // Create the instance.
+  VkInstanceCreateInfo instance_create_info = {};
+  instance_create_info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
+  instance_create_info.pNext = nullptr;  // &features;
+  instance_create_info.pApplicationInfo = &app_info;
 
   instance_create_info.enabledExtensionCount =
       window_required_extensions.m_extensions_count;
   instance_create_info.ppEnabledExtensionNames =
       window_required_extensions.m_extensions;
-  instance_create_info.enabledLayerCount = 0;
 
   return vkCreateInstance(&instance_create_info, nullptr, &m_vk_instance);
 }

@@ -21,6 +21,8 @@ void application::init() {
   std::string application_revision("Revision: 1234");
   std::string application_name("application Name: wunder");
 
+  log::init();
+
   TracyAppInfo(m_properties.m_debug_name.c_str(),
                m_properties.m_debug_name.size());
   TracyAppInfo(m_properties.m_debug_version.c_str(),

@@ -22,7 +22,7 @@ glfw_window::~glfw_window() = default;
 void glfw_window::init(const window_properties &properties) {
   int status = glfwInit();
 
-  AssertReturnUnless(status);
+  AssertReturnUnless(status == GLFW_TRUE);
   glfwSetErrorCallback(glfw_error_callback);
 
   m_window = glfwCreateWindow(properties.m_width, properties.m_height,

@@ -2,16 +2,19 @@
 
 #include "window/glfw/glfw_window.h"
 #include "window/window.h"
+#include "core/wunder_macros.h"
 
 namespace wunder {
 window_factory window_factory::s_instance;
 
 bool window_factory::create_window(window_type type) {
   switch (type) {
-    case window_type::glfw:
+    case window_type::glfw: {
       m_window = make_unique<wunder::glfw_window>();
+    }
+      break;
     default:
-      return false;
+      AssertReturnIf("Not handled window type.", false)
   }
 
   return true;
