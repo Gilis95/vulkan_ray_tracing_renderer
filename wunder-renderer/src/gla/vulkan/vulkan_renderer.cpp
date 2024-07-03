@@ -4,7 +4,9 @@
 
 #include <optional>
 
+#include "core/wunder_logger.h"
 #include "core/wunder_macros.h"
+#include "gla/renderer_properties.h"
 #include "window/window_factory.h"
 
 namespace {
@@ -27,7 +29,7 @@ void vulkan_renderer::init_internal(const renderer_properties &properties) {
 
   //  gladLoadVulkan({}, getVulkanFunction);
 
-  auto result = create_vulkan_instance();
+  auto result = create_vulkan_instance(properties);
   AssertReturnIf(result != VK_SUCCESS);
   // First figure out how many devices are in the system.
 
@@ -45,7 +47,8 @@ void vulkan_renderer::init_internal(const renderer_properties &properties) {
   result = create_descriptor_pool();
 }
 
-VkResult vulkan_renderer::create_vulkan_instance() {
+VkResult vulkan_renderer::create_vulkan_instance(
+    const renderer_properties &properties) {
   VkApplicationInfo app_info = {};
   std::memset(&app_info, 0, sizeof(app_info));
 
@@ -81,6 +84,7 @@ VkResult vulkan_renderer::create_vulkan_instance() {
       window_required_extensions.m_extensions_count;
   instance_create_info.ppEnabledExtensionNames =
       window_required_extensions.m_extensions;
+  try_add_validation_layer(instance_create_info, properties);
 
   VkInstance *ptr = &m_vk_instance;
   AssertReturnIf(vkCreateInstance == nullptr, VkResult::VK_ERROR_DEVICE_LOST);
@@ -189,6 +193,37 @@ VkResult vulkan_renderer::create_descriptor_pool() {
   //        pool_info.pPoolSizes = pool_sizes;
   //        return vkCreateDescriptorPool(m_device, &pool_info, nullptr,
   //        &m_descriptor_pool);
+
+  return VkResult::VK_SUCCESS;
+}
+
+VkResult vulkan_renderer::try_add_validation_layer(
+    VkInstanceCreateInfo &instance_create_info,
+    const renderer_properties &properties) {
+  ReturnUnless(properties.m_enable_validation, VkResult::VK_SUCCESS);
+  const char *validationLayerName = "VK_LAYER_KHRONOS_validation";
+  // Check if this layer is available at instance level
+  uint32_t instanceLayerCount;
+  vkEnumerateInstanceLayerProperties(&instanceLayerCount, nullptr);
+  std::vector<VkLayerProperties> instanceLayerProperties(instanceLayerCount);
+  vkEnumerateInstanceLayerProperties(&instanceLayerCount,
+                                     instanceLayerProperties.data());
+
+  WUNDER_DEBUG("[Renderer] Vulkan Instance Layers:");
+  for (const VkLayerProperties &layer : instanceLayerProperties) {
+    WUNDER_DEBUG("[Renderer] {0}", layer.layerName);
+
+    if (strcmp(layer.layerName, validationLayerName) == 0) {
+      instance_create_info.ppEnabledLayerNames = &validationLayerName;
+      instance_create_info.enabledLayerCount = 1;
+
+      return VkResult::VK_SUCCESS;
+    }
+  }
+
+  WUNDER_WARN(
+      "[Renderer] Validation layer VK_LAYER_KHRONOS_validation not present, "
+      "validation is disabled");
 
   return VkResult::VK_SUCCESS;
 }

@@ -2,6 +2,7 @@
 #define RENDERER_API_H
 
 namespace wunder {
+
 struct renderer_properties;
 
 class renderer_api {

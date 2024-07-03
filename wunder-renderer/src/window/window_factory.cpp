@@ -1,8 +1,9 @@
 #include "window/window_factory.h"
 
-#include "window/glfw/glfw_window.h"
-#include "window/window.h"
 #include "core/wunder_macros.h"
+#include "window/window.h"
+#include "window/window_properties.h"
+#include "window/glfw/glfw_window.h"
 
 namespace wunder {
 window_factory window_factory::s_instance;

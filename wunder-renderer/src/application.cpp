@@ -1,20 +1,21 @@
 #include "application.h"
 
 #include <tracy/Tracy.hpp>
-#include <utility>
 
+#include "application_properties.h"
 #include "core/wunder_macros.h"
 #include "event/event_handler.hpp"
 #include "gla/graphic_layer_abstraction_factory.h"
-#include "window/window.h"
 #include "window/window_factory.h"
 
 namespace wunder {
 /////////////////////////////////////////////////////////////////////////////////////////
-application::application(application_properties properties)
+application::application(application_properties &&properties)
     : event_handler<window_close_event>(),
       m_is_running(false),
-      m_properties(std::move(properties)) {}
+      m_properties(std::make_unique<application_properties>(
+          std::move(properties)))
+          {}
 
 /////////////////////////////////////////////////////////////////////////////////////////
 application::~application() = default;
@@ -26,17 +27,17 @@ void application::init() {
 
   log::init();
 
-  TracyAppInfo(m_properties.m_debug_name.c_str(),
-               m_properties.m_debug_name.size());
-  TracyAppInfo(m_properties.m_debug_version.c_str(),
-               m_properties.m_debug_version.size());
+  TracyAppInfo(m_properties->m_debug_name.c_str(),
+               m_properties->m_debug_name.size());
+  TracyAppInfo(m_properties->m_debug_version.c_str(),
+               m_properties->m_debug_version.size());
 
   AssertReturnUnless(window_factory::get_instance().create_window(
-      m_properties.m_window_properties.m_type));
+      m_properties->m_window_properties.m_type));
   auto &window = window_factory::get_instance().get_window();
-  window.init(m_properties.m_window_properties);
+  window.init(m_properties->m_window_properties);
   graphic_layer_abstraction_factory::create_instance(
-      m_properties.m_renderer_properties);
+      m_properties->m_renderer_properties);
 
   init_internal();
 }

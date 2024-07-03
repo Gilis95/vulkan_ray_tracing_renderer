@@ -1,25 +1,19 @@
 #ifndef APPLICATION_H
 #define APPLICATION_H
 
-#include "core/wunder_memory.h"
-#include "gla/graphic_layer_abstraction_factory.h"
-#include "window/window.h"
 #include "event/event_handler.h"
 #include "event/window_events.h"
+#include "core/wunder_memory.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 namespace wunder {
-struct application_properties {
-  std::string m_debug_name;
-  std::string m_debug_version;
-  window_properties m_window_properties;
-  renderer_properties m_renderer_properties;
-};
+
+struct application_properties;
 
 class application : private event_handler<window_close_event>{
  public:
-  explicit application(application_properties properties);
+  explicit application(application_properties&& properties);
   ~application() override;
 
   /**
@@ -52,10 +46,10 @@ class application : private event_handler<window_close_event>{
 
  private:
   bool m_is_running;
-  application_properties m_properties;
+  unique_ptr<application_properties> m_properties;
 };
 
-extern application *create_application();
+extern application *create_application(application_properties& m_properties);
 
 }  // namespace wunder
 /////////////////////////////////////////////////////////////////////////////////////////

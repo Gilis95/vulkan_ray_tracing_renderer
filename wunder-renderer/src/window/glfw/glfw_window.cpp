@@ -6,6 +6,7 @@
 #include "core/wunder_macros.h"
 #include "event/window_events.h"
 #include "event/event_controller.h"
+#include "window/window_properties.h"
 
 namespace wunder {
 

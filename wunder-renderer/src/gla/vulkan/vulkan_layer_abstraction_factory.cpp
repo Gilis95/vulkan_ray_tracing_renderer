@@ -3,9 +3,11 @@
 #include "gla/vulkan/vulkan_renderer.h"
 
 namespace wunder {
+vulkan_layer_abstraction_factory::~vulkan_layer_abstraction_factory() = default;
+
 void vulkan_layer_abstraction_factory::init_instance_internal(
     const renderer_properties &properties) {
-  m_renderer = make_unique<vulkan_renderer>();
+  m_renderer = std::make_unique<vulkan_renderer>();
   m_renderer->init(properties);
 }
 

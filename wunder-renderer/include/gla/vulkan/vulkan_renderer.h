@@ -14,7 +14,7 @@ class vulkan_renderer : public renderer_api {
   void init_internal(const renderer_properties &properties) override;
 
  private:
-  VkResult create_vulkan_instance();
+  VkResult create_vulkan_instance(const renderer_properties& properties);
 
   VkResult select_gpu();
 
@@ -22,6 +22,7 @@ class vulkan_renderer : public renderer_api {
 
   VkResult create_vulkan_logical_device();
 
+  VkResult try_add_validation_layer(VkInstanceCreateInfo& instance_create_info, const renderer_properties &properties);
  private:
   VkInstance m_vk_instance = VK_NULL_HANDLE;  // Vulkan library handle
   VkDebugUtilsMessengerEXT m_debug_messenger =

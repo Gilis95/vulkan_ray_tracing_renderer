@@ -9,7 +9,7 @@ namespace wunder {
 
 class wunder_application : public application {
  public:
-  wunder_application(application_properties properties);
+  explicit wunder_application(application_properties&& properties);
 
   void init_internal() override;
 };

@@ -5,15 +5,7 @@
 
 namespace wunder {
 
-enum class gla_type { Inavlid = -1, Vulkan, Count };
-
-enum class gpu_to_use { Invalid = -1, Integrated, Dedicated, Count };
-
-struct renderer_properties {
- public:
-  gla_type m_renderer_type;
-  gpu_to_use m_gpu_to_use;
-};
+struct renderer_properties;
 
 class renderer_api;
 
