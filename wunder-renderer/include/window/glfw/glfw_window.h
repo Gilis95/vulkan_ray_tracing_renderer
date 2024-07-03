@@ -5,7 +5,7 @@
 
 #include "window/window.h"
 
-class GLFWwindow;
+struct GLFWwindow;
 
 namespace wunder {
 
@@ -20,7 +20,8 @@ class glfw_window : public window {
   void init(const window_properties &properties) override;
   void update(int dt) override;
   void shutdown() override;
-
+ public: // glfw callbacks
+  static void on_close(GLFWwindow* window);
  public:
   [[nodiscard]] vulkan_extension get_vulkan_extensions() const override;
 

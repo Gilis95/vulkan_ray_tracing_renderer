@@ -4,6 +4,8 @@
 
 #include "core/wunder_logger.h"
 #include "core/wunder_macros.h"
+#include "event/window_events.h"
+#include "event/event_controller.h"
 
 namespace wunder {
 
@@ -30,6 +32,7 @@ void glfw_window::init(const window_properties &properties) {
 
   // create context for current window
   glfwMakeContextCurrent(m_window);
+  glfwSetWindowCloseCallback(m_window, &on_close);
 
   // VSync
   glfwSwapInterval(0);
@@ -46,6 +49,12 @@ void glfw_window::update(int dt) {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void glfw_window::shutdown() { glfwTerminate(); }
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void glfw_window::on_close(GLFWwindow* window)
+{
+  event_controller::on_event<window_close_event>(window_close_event{});
+}
 
 /////////////////////////////////////////////////////////////////////////////////////////
 vulkan_extension glfw_window::get_vulkan_extensions() const {

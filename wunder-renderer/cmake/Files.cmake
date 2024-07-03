@@ -16,9 +16,9 @@ include(cmake/Variables.cmake)
  #file(GLOB ECS_HEADER ${ECS_HDR_DIR}/*.h)
  #file(GLOB ECS_INLINE ${ECS_HDR_DIR}/*.hpp)
  #
- #file(GLOB EVENT_SOURCE ${EVENT_SRC_DIR}/*.cpp)
- #file(GLOB EVENT_HEADER ${EVENT_HDR_DIR}/*.h)
- #file(GLOB EVENT_INLINE ${EVENT_HDR_DIR}/*.hpp)
+ file(GLOB EVENT_SOURCE ${EVENT_SRC_DIR}/*.cpp)
+ file(GLOB EVENT_HEADER ${EVENT_HDR_DIR}/*.h)
+ file(GLOB EVENT_INLINE ${EVENT_HDR_DIR}/*.hpp)
  #
  file(GLOB GLA_SOURCE ${GLA_SRC_DIR}/*.cpp)
  file(GLOB GLA_HEADER ${GLA_HDR_DIR}/*.h)
@@ -112,8 +112,8 @@ set(WUNDER_RENDERER_HEADERS
          ${CORE_INLINE}
          #${ECS_HEADER}
          #${ECS_INLINE}
-         #${EVENT_HEADER}
-         #${EVENT_INLINE}
+         ${EVENT_HEADER}
+         ${EVENT_INLINE}
          ${GLA_HEADER}
          ${GLA_INLINE}
          ${GLA_VULKAN_HEADER}
@@ -137,7 +137,7 @@ set(WUNDER_RENDERER_SOURCES
          #${CAMERA_SOURCE}
          ${CORE_SOURCE}
          #${ECS_SOURCE}
-         #${EVENT_SOURCE}
+         ${EVENT_SOURCE}
          ${GLA_SOURCE}
          ${GLA_VULKAN_SOURCE}
          #${RENDERER_SOURCE}

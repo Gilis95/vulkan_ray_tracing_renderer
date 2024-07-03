@@ -4,6 +4,8 @@
 #include "core/wunder_memory.h"
 #include "gla/graphic_layer_abstraction_factory.h"
 #include "window/window.h"
+#include "event/event_handler.h"
+#include "event/window_events.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -15,10 +17,10 @@ struct application_properties {
   renderer_properties m_renderer_properties;
 };
 
-class application {
+class application : private event_handler<window_close_event>{
  public:
-  application(application_properties properties);
-  virtual ~application();
+  explicit application(application_properties properties);
+  ~application() override;
 
   /**
    * This is second function called after class creation.
@@ -45,6 +47,8 @@ class application {
   //        void PushLayer(Layer *layer);
 
   //        void PushOverlay(Layer *layer);
+ private:
+  void on_event(const window_close_event&) override;
 
  private:
   bool m_is_running;

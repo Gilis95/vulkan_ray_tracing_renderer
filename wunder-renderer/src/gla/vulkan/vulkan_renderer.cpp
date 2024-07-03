@@ -13,6 +13,9 @@ struct QueueFamilyIndices {
 
   bool is_complete() { return m_graphics_family.has_value(); }
 };
+
+GLADapiproc getVulkanFunction(const char *name) {}
+
 }  // namespace
 
 namespace wunder {
@@ -20,6 +23,10 @@ namespace wunder {
 vulkan_renderer::~vulkan_renderer() { vkDestroyDevice(m_device, nullptr); }
 
 void vulkan_renderer::init_internal(const renderer_properties &properties) {
+  AssertReturnIf(!gladLoaderLoadVulkan(NULL, NULL, NULL));
+
+  //  gladLoadVulkan({}, getVulkanFunction);
+
   auto result = create_vulkan_instance();
   AssertReturnIf(result != VK_SUCCESS);
   // First figure out how many devices are in the system.
@@ -28,46 +35,58 @@ void vulkan_renderer::init_internal(const renderer_properties &properties) {
   AssertReturnIf(result != VK_SUCCESS);
 
   result = select_queue_family();
-  AssertReturnUnless(result == VK_SUCCESS)
+  AssertReturnUnless(result == VK_SUCCESS);
 
-      result = create_vulkan_logical_device();
-  AssertReturnUnless(result == VK_SUCCESS)
+  result = create_vulkan_logical_device();
+  AssertReturnUnless(result == VK_SUCCESS);
 
-      vkGetDeviceQueue(m_device, m_selected_queue_family, 0, &m_queue);
+  vkGetDeviceQueue(m_device, m_selected_queue_family, 0, &m_queue);
 
   result = create_descriptor_pool();
 }
 
 VkResult vulkan_renderer::create_vulkan_instance() {
   VkApplicationInfo app_info = {};
+  std::memset(&app_info, 0, sizeof(app_info));
 
   // A generic application info structure
   app_info.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
   app_info.pApplicationName = "Wunder_Renderer";
   app_info.pEngineName = "Wunder_Renderer";
   app_info.apiVersion = VK_API_VERSION_1_2;
+  app_info.pNext = nullptr;
 
   auto window_required_extensions =
       window_factory::get_instance().get_window().get_vulkan_extensions();
 
-  VkValidationFeatureEnableEXT enables[] = { VK_VALIDATION_FEATURE_ENABLE_BEST_PRACTICES_EXT };
+  VkValidationFeatureEnableEXT enables[] = {
+      VK_VALIDATION_FEATURE_ENABLE_BEST_PRACTICES_EXT};
   VkValidationFeaturesEXT features = {};
+  std::memset(&features, 0, sizeof(features));
+
   features.sType = VK_STRUCTURE_TYPE_VALIDATION_FEATURES_EXT;
   features.enabledValidationFeatureCount = 1;
   features.pEnabledValidationFeatures = enables;
 
   // Create the instance.
   VkInstanceCreateInfo instance_create_info = {};
+  std::memset(&instance_create_info, 0, sizeof(instance_create_info));
+
   instance_create_info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
   instance_create_info.pNext = nullptr;  // &features;
   instance_create_info.pApplicationInfo = &app_info;
+  instance_create_info.enabledLayerCount = 0;
 
   instance_create_info.enabledExtensionCount =
       window_required_extensions.m_extensions_count;
   instance_create_info.ppEnabledExtensionNames =
       window_required_extensions.m_extensions;
 
-  return vkCreateInstance(&instance_create_info, nullptr, &m_vk_instance);
+  VkInstance *ptr = &m_vk_instance;
+  AssertReturnIf(vkCreateInstance == nullptr, VkResult::VK_ERROR_DEVICE_LOST);
+  auto ret = vkCreateInstance(&instance_create_info, nullptr, ptr);
+
+  return ret;
 }
 
 VkResult vulkan_renderer::select_gpu() {
@@ -119,6 +138,8 @@ VkResult vulkan_renderer::select_queue_family() {
 
     ++m_selected_queue_family;
   }
+
+  return VkResult::VK_SUCCESS;
 }
 
 VkResult vulkan_renderer::create_vulkan_logical_device() {
@@ -168,5 +189,7 @@ VkResult vulkan_renderer::create_descriptor_pool() {
   //        pool_info.pPoolSizes = pool_sizes;
   //        return vkCreateDescriptorPool(m_device, &pool_info, nullptr,
   //        &m_descriptor_pool);
+
+  return VkResult::VK_SUCCESS;
 }
 }  // namespace wunder

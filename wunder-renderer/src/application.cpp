@@ -4,6 +4,7 @@
 #include <utility>
 
 #include "core/wunder_macros.h"
+#include "event/event_handler.hpp"
 #include "gla/graphic_layer_abstraction_factory.h"
 #include "window/window.h"
 #include "window/window_factory.h"
@@ -11,7 +12,9 @@
 namespace wunder {
 /////////////////////////////////////////////////////////////////////////////////////////
 application::application(application_properties properties)
-    : m_is_running(false), m_properties(std::move(properties)) {}
+    : event_handler<window_close_event>(),
+      m_is_running(false),
+      m_properties(std::move(properties)) {}
 
 /////////////////////////////////////////////////////////////////////////////////////////
 application::~application() = default;
@@ -51,4 +54,11 @@ void application::run() {
     FrameMark;
   }
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void application::on_event(const window_close_event &) /*override*/
+{
+  m_is_running = false;
+}
+
 }  // namespace wunder
