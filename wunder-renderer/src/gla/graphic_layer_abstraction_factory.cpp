@@ -1,17 +1,34 @@
 #include "gla/graphic_layer_abstraction_factory.h"
+
+#include "core/wunder_macros.h"
 #include "gla/vulkan/vulkan_layer_abstraction_factory.h"
 
 namespace wunder {
-    void  graphic_layer_abstraction_factory::create_instance(renderer_properties &properties) {
-        switch (properties.m_renderer_type) {
-            case gla_type::Vulkan:
-                s_instance = make_unique<vulkan_layer_abstraction_factory>();
-        }
+unique_ptr<graphic_layer_abstraction_factory>
+    graphic_layer_abstraction_factory::s_instance = nullptr;
 
-        s_instance->init_instance(properties);
+void graphic_layer_abstraction_factory::create_instance(
+    const renderer_properties &properties) {
+  switch (properties.m_renderer_type) {
+    case gla_type::Vulkan: {
+      s_instance = std::move(make_unique<vulkan_layer_abstraction_factory>());
+    } break;
+    default: {
+      AssertReturnIf("Not handle graphic type.");
     }
+  }
 
-    void graphic_layer_abstraction_factory::init_instance(renderer_properties &properties) {
-        init_instance_internal(properties);
-    }
+  s_instance->init_instance(properties);
 }
+
+graphic_layer_abstraction_factory &
+graphic_layer_abstraction_factory::get_instance() {
+  // review this later
+  return *s_instance.get();
+}
+
+void graphic_layer_abstraction_factory::init_instance(
+    const renderer_properties &properties) {
+  init_instance_internal(properties);
+}
+}  // namespace wunder

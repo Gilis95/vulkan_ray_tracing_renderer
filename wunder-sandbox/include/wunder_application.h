@@ -8,13 +8,13 @@
 namespace wunder {
 
 class wunder_application : public application {
-public:
-    wunder_application(application_properties properties);
+ public:
+  wunder_application(application_properties properties);
 
-    void init_internal() override;
+  void init_internal() override;
 };
 
-    /////////////////////////////////////////////////////////////////////////////////////////
-    application *create_application();
-}
+/////////////////////////////////////////////////////////////////////////////////////////
+application *create_application();
+}  // namespace wunder
 #endif

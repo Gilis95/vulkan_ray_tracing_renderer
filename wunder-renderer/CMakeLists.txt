@@ -15,12 +15,13 @@ add_definitions(-DENABLE_ASSERTS=1 -DWUNDER_ENABLE_LOG=1)
 
 option(WANDER_ENGINE_INSTALL "Generate installation target" OFF)
 
+include(cmake/Variables.cmake)
 include(cmake/Files.cmake)
 
 glad_add_library(glad_vulkan REPRODUCIBLE LOADER API vulkan=1.3)
 
 ################################################################################################
-add_library(wunder-renderer STATIC ${WANDER_RENDERER_HEADERS} ${WANDER_RENDERER_SOURCES})
+add_library(wunder-renderer STATIC ${WUNDER_RENDERER_HEADERS} ${WUNDER_RENDERER_SOURCES})
 
 target_include_directories(wunder-renderer PUBLIC
         $<BUILD_INTERFACE: ${HDR_DIR}>

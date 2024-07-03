@@ -103,7 +103,7 @@ file(GLOB ROOT_INLINE ${HDR_DIR}/*.hpp)
  #source_group("Header Files/windows" FILES ${WINDOW_GLFW_HEADER})
  #source_group("Inline Files/windows" FILES ${WINDOW_GLFW_INLINE})
  #source_group("Source Files/window" FILES ${WINDOW_GLFW_SOURCE})
-set(WANDER_RENDERER_HEADERS
+set(WUNDER_RENDERER_HEADERS
          #${APPLICATION_HEADER}
          #${APPLICATION_INLINE}
          #${CAMERA_HEADER}
@@ -132,7 +132,7 @@ set(WANDER_RENDERER_HEADERS
          ${WINDOW_GLFW_INLINE}
         )
 
-set(WANDER_RENDERER_SOURCES
+set(WUNDER_RENDERER_SOURCES
          #${APPLICATION_SOURCE}
          #${CAMERA_SOURCE}
          ${CORE_SOURCE}

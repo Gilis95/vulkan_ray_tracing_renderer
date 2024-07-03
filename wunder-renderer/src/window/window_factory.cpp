@@ -1,24 +1,21 @@
 #include "window/window_factory.h"
 
-#include "window/window.h"
 #include "window/glfw/glfw_window.h"
+#include "window/window.h"
 
 namespace wunder {
-  window_factory  window_factory::s_instance;
+window_factory window_factory::s_instance;
 
-  bool window_factory::create_window(window_type type)  {
-    switch(type) {
-      case window_type::glfw:
-        m_window = make_unique<wunder::glfw_window>();
-      default:
-        return false;
-    }
-
-    return true;
+bool window_factory::create_window(window_type type) {
+  switch (type) {
+    case window_type::glfw:
+      m_window = make_unique<wunder::glfw_window>();
+    default:
+      return false;
   }
 
-    window& window_factory::get_window()
-    {
-        return *m_window;
-    }
+  return true;
 }
+
+window& window_factory::get_window() { return *m_window; }
+}  // namespace wunder

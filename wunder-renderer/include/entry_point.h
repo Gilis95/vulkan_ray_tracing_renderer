@@ -4,15 +4,15 @@
 #include "application.h"
 
 int main(int argc, char **argv) {
-    auto app = wunder::create_application();
+  auto app = wunder::create_application();
 
-    app->init();
+  app->init();
 
-    app->run();
+  app->run();
 
-    delete app;
+  delete app;
 
-    return 0;
+  return 0;
 }
 
 #endif
