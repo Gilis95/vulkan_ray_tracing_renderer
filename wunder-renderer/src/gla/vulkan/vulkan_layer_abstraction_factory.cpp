@@ -1,5 +1,9 @@
 #include "gla/vulkan/vulkan_layer_abstraction_factory.h"
 
+
+#include "gla/vulkan/vulkan_device.h"
+#include "gla/vulkan/vulkan_logical_device.h"
+#include "gla/vulkan/vulkan_command_pool.h"
 #include "gla/vulkan/vulkan_renderer.h"
 
 namespace wunder {

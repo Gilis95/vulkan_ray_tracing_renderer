@@ -7,6 +7,9 @@
 #include "core/wunder_logger.h"
 #include "core/wunder_macros.h"
 #include "gla/renderer_properties.h"
+#include "gla/vulkan/vulkan_device.h"
+#include "gla/vulkan/vulkan_logical_device.h"
+#include "gla/vulkan/vulkan_command_pool.h"
 #include "window/window_factory.h"
 
 namespace {
@@ -18,11 +21,14 @@ struct QueueFamilyIndices {
 
 GLADapiproc getVulkanFunction(const char *name) {}
 
+const char *s_validation_layer_name = "VK_LAYER_KHRONOS_validation";
+
+
 }  // namespace
 
 namespace wunder {
 
-vulkan_renderer::~vulkan_renderer() { vkDestroyDevice(m_device, nullptr); }
+vulkan_renderer::~vulkan_renderer() = default;
 
 void vulkan_renderer::init_internal(const renderer_properties &properties) {
   AssertReturnIf(!gladLoaderLoadVulkan(NULL, NULL, NULL));
@@ -33,18 +39,8 @@ void vulkan_renderer::init_internal(const renderer_properties &properties) {
   AssertReturnIf(result != VK_SUCCESS);
   // First figure out how many devices are in the system.
 
-  result = select_gpu();
-  AssertReturnIf(result != VK_SUCCESS);
-
-  result = select_queue_family();
-  AssertReturnUnless(result == VK_SUCCESS);
-
-  result = create_vulkan_logical_device();
-  AssertReturnUnless(result == VK_SUCCESS);
-
-  vkGetDeviceQueue(m_device, m_selected_queue_family, 0, &m_queue);
-
-  result = create_descriptor_pool();
+  select_physical_device();
+  select_logical_device();
 }
 
 VkResult vulkan_renderer::create_vulkan_instance(
@@ -56,7 +52,7 @@ VkResult vulkan_renderer::create_vulkan_instance(
   app_info.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
   app_info.pApplicationName = "Wunder_Renderer";
   app_info.pEngineName = "Wunder_Renderer";
-  app_info.apiVersion = VK_API_VERSION_1_2;
+  app_info.apiVersion = VK_API_VERSION_1_3;
   app_info.pNext = nullptr;
 
   auto window_required_extensions =
@@ -93,128 +89,23 @@ VkResult vulkan_renderer::create_vulkan_instance(
   return ret;
 }
 
-VkResult vulkan_renderer::select_gpu() {
-  uint32_t physical_device_count = 0;
-  auto result = vkEnumeratePhysicalDevices(m_vk_instance,
-                                           &physical_device_count, nullptr);
-  AssertReturnIf(result != VK_SUCCESS, result);
-
-  AssertReturnUnless(0 < physical_device_count, VK_ERROR_UNKNOWN);
-
-  // Size the device array appropriately and get the physical
-  // device handles.
-  std::vector<VkPhysicalDevice> physical_devices(
-      physical_device_count);  // list of available gpu`s
-  vkEnumeratePhysicalDevices(m_vk_instance, &physical_device_count,
-                             &physical_devices[0]);
-
-  for (auto physical_device : physical_devices) {
-    VkPhysicalDeviceProperties properties;
-    vkGetPhysicalDeviceProperties(physical_device, &properties);
-
-    ContinueUnless(properties.deviceType ==
-                   VkPhysicalDeviceType::VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU);
-    m_physical_device = physical_device;
-  }
-
-  // fallback to first gpu
-  if (m_physical_device == nullptr) {
-    m_physical_device = physical_devices[0];
-  }
-
-  return VK_SUCCESS;
-}
-
-VkResult vulkan_renderer::select_queue_family() {
-  uint32_t queue_family_count = 0;
-  vkGetPhysicalDeviceQueueFamilyProperties(m_physical_device,
-                                           &queue_family_count, nullptr);
-
-  std::vector<VkQueueFamilyProperties> queue_families(queue_family_count);
-  vkGetPhysicalDeviceQueueFamilyProperties(
-      m_physical_device, &queue_family_count, queue_families.data());
-
-  m_selected_queue_family = 0;
-  for (const auto &queue_family : queue_families) {
-    if (queue_family.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
-      break;
-    }
-
-    ++m_selected_queue_family;
-  }
-
-  return VkResult::VK_SUCCESS;
-}
-
-VkResult vulkan_renderer::create_vulkan_logical_device() {
-  int device_extension_count = 1;
-  const char *device_extensions[] = {"VK_KHR_swapchain"};
-  VkDeviceQueueCreateInfo queues_info[1] = {};
-  auto &queue_info = queues_info[0];
-  queue_info.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-  queue_info.queueFamilyIndex = m_selected_queue_family;
-  queue_info.queueCount = 1;
-  float queuePriority = 1.0f;
-  queue_info.pQueuePriorities = &queuePriority;
-
-  VkDeviceCreateInfo create_info = {};
-  create_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-  create_info.queueCreateInfoCount =
-      sizeof(queues_info) / sizeof(queues_info[0]);
-  create_info.pQueueCreateInfos = queues_info;
-  create_info.enabledExtensionCount = device_extension_count;
-  create_info.ppEnabledExtensionNames = device_extensions;
-
-  return vkCreateDevice(m_physical_device, &create_info, nullptr, &m_device);
-}
-
-VkResult vulkan_renderer::create_descriptor_pool() {
-  //
-  //        VkDescriptorPoolSize pool_sizes[] =
-  //                {
-  //                        { VK_DESCRIPTOR_TYPE_SAMPLER, 1000 },
-  //                        { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000 },
-  //                        { VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 1000 },
-  //                        { VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1000 },
-  //                        { VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 1000 },
-  //                        { VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, 1000 },
-  //                        { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1000 },
-  //                        { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1000 },
-  //                        { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 1000 },
-  //                        { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 1000 },
-  //                        { VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 1000 }
-  //                };
-  //
-  //        VkDescriptorPoolCreateInfo pool_info = {};
-  //        pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-  //        pool_info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
-  //        pool_info.maxSets = 1000 * IM_ARRAYSIZE(pool_sizes);
-  //        pool_info.poolSizeCount = (uint32_t)IM_ARRAYSIZE(pool_sizes);
-  //        pool_info.pPoolSizes = pool_sizes;
-  //        return vkCreateDescriptorPool(m_device, &pool_info, nullptr,
-  //        &m_descriptor_pool);
-
-  return VkResult::VK_SUCCESS;
-}
-
 VkResult vulkan_renderer::try_add_validation_layer(
     VkInstanceCreateInfo &instance_create_info,
-    const renderer_properties &properties) {
+    const renderer_properties &properties) const {
   ReturnUnless(properties.m_enable_validation, VkResult::VK_SUCCESS);
-  const char *validationLayerName = "VK_LAYER_KHRONOS_validation";
   // Check if this layer is available at instance level
-  uint32_t instanceLayerCount;
-  vkEnumerateInstanceLayerProperties(&instanceLayerCount, nullptr);
-  std::vector<VkLayerProperties> instanceLayerProperties(instanceLayerCount);
-  vkEnumerateInstanceLayerProperties(&instanceLayerCount,
-                                     instanceLayerProperties.data());
+  uint32_t instance_layer_count;
+  vkEnumerateInstanceLayerProperties(&instance_layer_count, nullptr);
+  std::vector<VkLayerProperties> instance_layer_properties(instance_layer_count);
+  vkEnumerateInstanceLayerProperties(&instance_layer_count,
+                                     instance_layer_properties.data());
 
   WUNDER_DEBUG("[Renderer] Vulkan Instance Layers:");
-  for (const VkLayerProperties &layer : instanceLayerProperties) {
+  for (const VkLayerProperties &layer : instance_layer_properties) {
     WUNDER_DEBUG("[Renderer] {0}", layer.layerName);
 
-    if (strcmp(layer.layerName, validationLayerName) == 0) {
-      instance_create_info.ppEnabledLayerNames = &validationLayerName;
+    if (strcmp(layer.layerName, s_validation_layer_name) == 0) {
+      instance_create_info.ppEnabledLayerNames = &s_validation_layer_name;
       instance_create_info.enabledLayerCount = 1;
 
       return VkResult::VK_SUCCESS;
@@ -227,4 +118,21 @@ VkResult vulkan_renderer::try_add_validation_layer(
 
   return VkResult::VK_SUCCESS;
 }
+
+void vulkan_renderer::select_physical_device() {
+  m_physical_device = std::make_unique<vulkan_physical_device>(m_vk_instance);
+}
+
+void vulkan_renderer::select_logical_device() {
+  VkPhysicalDeviceFeatures enabled_features;
+  memset(&enabled_features, 0, sizeof(VkPhysicalDeviceFeatures));
+  enabled_features.samplerAnisotropy = true;
+  enabled_features.wideLines = true;
+  enabled_features.fillModeNonSolid = true;
+  enabled_features.independentBlend = true;
+  enabled_features.pipelineStatisticsQuery = true;
+  enabled_features.shaderStorageImageReadWithoutFormat = true;
+  m_logical_device = std::make_unique<vulkan_logical_device>(*m_physical_device, enabled_features);
+}
+
 }  // namespace wunder

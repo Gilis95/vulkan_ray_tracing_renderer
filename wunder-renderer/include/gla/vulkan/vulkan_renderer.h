@@ -3,39 +3,39 @@
 
 #include <glad/vulkan.h>
 
+#include <memory>
+
 #include "gla/renderer_api.h"
 
 namespace wunder {
+class vulkan_physical_device;
+class vulkan_logical_device;
+class vulkan_command_pool;
+
 class vulkan_renderer : public renderer_api {
  public:
   ~vulkan_renderer() override;
 
  protected:
-  void init_internal(const renderer_properties &properties) override;
+  void init_internal(const renderer_properties& properties) override;
 
  private:
   VkResult create_vulkan_instance(const renderer_properties& properties);
+  VkResult try_add_validation_layer(VkInstanceCreateInfo& instance_create_info,
+                                    const renderer_properties& properties) const;
 
-  VkResult select_gpu();
+  void select_logical_device();
+  void select_physical_device();
 
-  VkResult select_queue_family();
-
-  VkResult create_vulkan_logical_device();
-
-  VkResult try_add_validation_layer(VkInstanceCreateInfo& instance_create_info, const renderer_properties &properties);
  private:
   VkInstance m_vk_instance = VK_NULL_HANDLE;  // Vulkan library handle
   VkDebugUtilsMessengerEXT m_debug_messenger =
       VK_NULL_HANDLE;  // Vulkan debug output handle
 
-  VkPhysicalDevice m_physical_device =
-      VK_NULL_HANDLE;                  // chosen physical device
-  VkDevice m_device = VK_NULL_HANDLE;  // Vulkan device for commands
+  std::unique_ptr<vulkan_physical_device> m_physical_device;
+  std::unique_ptr<vulkan_logical_device> m_logical_device;
 
-  int m_selected_queue_family;
-  VkQueue m_queue = VK_NULL_HANDLE;
   VkSurfaceKHR m_surface = VK_NULL_HANDLE;  // Vulkan window surface
-  VkResult create_descriptor_pool();
 };
 }  // namespace wunder
 #endif /* VULKAN_RENDERER_H */
