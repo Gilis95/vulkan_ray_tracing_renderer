@@ -2,15 +2,16 @@
 #define WINDOW_H
 
 #include <cstdint>
+#include <vector>
 
 namespace wunder {
 struct window_properties;
 
-struct vulkan_extension {
+struct vulkan_extensions {
  public:
-  uint32_t m_extensions_count = 0;
-  const char **m_extensions = nullptr;
+  std::vector<char *> m_extensions;
 };
+
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 class window {
@@ -25,7 +26,8 @@ class window {
 
   virtual void shutdown() = 0;
 
-  [[nodiscard]] virtual vulkan_extension get_vulkan_extensions() const = 0;
+  [[nodiscard]] virtual void fill_vulkan_extensions(
+      vulkan_extensions & out_extensions) const = 0;
 };
 }  // namespace wunder
 

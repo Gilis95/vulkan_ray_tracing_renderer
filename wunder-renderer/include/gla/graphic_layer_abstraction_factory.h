@@ -21,7 +21,7 @@ class graphic_layer_abstraction_factory {
   [[nodiscard]] static graphic_layer_abstraction_factory &get_instance();
 
  public:
-  [[nodiscard]] virtual const renderer_api &get_renderer_api() const = 0;
+  [[nodiscard]] virtual renderer_api &get_renderer_api() = 0;
 
  protected:
   virtual void init_instance_internal(

@@ -10,6 +10,8 @@
 #include <memory>
 #include <vector>
 
+#include "core/wunder_memory.h"
+
 namespace wunder {
 
 class vulkan_physical_device;
@@ -18,14 +20,14 @@ class vulkan_command_pool;
 // Represents a logical device
 class vulkan_logical_device {
  public:
-  vulkan_logical_device(vulkan_physical_device& vulkan_physical_device,
+  vulkan_logical_device(shared_ptr<vulkan_physical_device> vulkan_physical_device,
                         VkPhysicalDeviceFeatures enabled_features);
   ~vulkan_logical_device();
  public:
   [[nodiscard]] VkQueue get_graphics_queue() { return m_graphics_queue; }
   [[nodiscard]] VkQueue get_compute_queue() { return m_compute_queue; }
   [[nodiscard]] const vulkan_physical_device& get_physical_device() const {
-    return m_physical_device;
+    return *m_physical_device.get();
   }
   [[nodiscard]] VkDevice get_vulkan_logical_device() const {
     return m_logical_device;
@@ -44,8 +46,8 @@ class vulkan_logical_device {
   VkQueue m_compute_queue= VK_NULL_HANDLE;
   VkPhysicalDeviceFeatures m_enabled_features;
 
-  vulkan_physical_device& m_physical_device;
-  std::unique_ptr<vulkan_command_pool> m_command_pool;
+  shared_ptr<vulkan_physical_device> m_physical_device;
+  unique_ptr<vulkan_command_pool> m_command_pool;
 };
 
 }  // namespace wunder

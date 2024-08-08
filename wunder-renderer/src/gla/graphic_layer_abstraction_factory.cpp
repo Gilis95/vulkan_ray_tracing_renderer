@@ -11,8 +11,8 @@ unique_ptr<graphic_layer_abstraction_factory>
 
 void graphic_layer_abstraction_factory::create_instance(
     const renderer_properties &properties) {
-  switch (properties.m_renderer_type) {
-    case gla_type::Vulkan: {
+  switch (properties.m_driver) {
+    case driver::Vulkan: {
       s_instance = std::move(std::make_unique<vulkan_layer_abstraction_factory>());
     } break;
     default: {

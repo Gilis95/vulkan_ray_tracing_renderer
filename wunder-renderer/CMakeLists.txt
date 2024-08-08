@@ -21,7 +21,8 @@ include(cmake/Files.cmake)
 glad_add_library(glad_vulkan REPRODUCIBLE LOADER API vulkan=1.3)
 
 ################################################################################################
-add_library(wunder-renderer STATIC ${WUNDER_RENDERER_HEADERS} ${WUNDER_RENDERER_SOURCES})
+add_library(wunder-renderer STATIC ${WUNDER_RENDERER_HEADERS} ${WUNDER_RENDERER_SOURCES}
+        include/core/vector_map.h)
 
 target_include_directories(wunder-renderer PUBLIC
         $<BUILD_INTERFACE: ${HDR_DIR}>

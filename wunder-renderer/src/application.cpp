@@ -5,7 +5,10 @@
 #include "application_properties.h"
 #include "core/wunder_macros.h"
 #include "event/event_handler.hpp"
+
 #include "gla/graphic_layer_abstraction_factory.h"
+#include "gla/renderer_api.h"
+
 #include "window/window_factory.h"
 
 namespace wunder {
@@ -13,9 +16,8 @@ namespace wunder {
 application::application(application_properties &&properties)
     : event_handler<window_close_event>(),
       m_is_running(false),
-      m_properties(std::make_unique<application_properties>(
-          std::move(properties)))
-          {}
+      m_properties(
+          std::make_unique<application_properties>(std::move(properties))) {}
 
 /////////////////////////////////////////////////////////////////////////////////////////
 application::~application() = default;
@@ -49,9 +51,12 @@ void application::close() { m_is_running = false; }
 void application::run() {
   m_is_running = true;
   auto &window = window_factory::get_instance().get_window();
+  auto &gla = graphic_layer_abstraction_factory::get_instance();
+  auto &renderer = gla.get_renderer_api();
 
   while (m_is_running) {
     window.update(0);
+    renderer.update(0);
     FrameMark;
   }
 }

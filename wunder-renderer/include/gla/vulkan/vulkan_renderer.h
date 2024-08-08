@@ -3,14 +3,18 @@
 
 #include <glad/vulkan.h>
 
-#include <memory>
+#include <string>
+#include <vector>
 
 #include "gla/renderer_api.h"
+#include "core/wunder_memory.h"
 
 namespace wunder {
+class vulkan;
 class vulkan_physical_device;
 class vulkan_logical_device;
 class vulkan_command_pool;
+struct vulkan_extensions;
 
 class vulkan_renderer : public renderer_api {
  public:
@@ -20,22 +24,23 @@ class vulkan_renderer : public renderer_api {
   void init_internal(const renderer_properties& properties) override;
 
  private:
-  VkResult create_vulkan_instance(const renderer_properties& properties);
-  VkResult try_add_validation_layer(VkInstanceCreateInfo& instance_create_info,
-                                    const renderer_properties& properties) const;
-
+  void create_vulkan_instance(const renderer_properties& properties);
   void select_logical_device();
   void select_physical_device();
 
- private:
-  VkInstance m_vk_instance = VK_NULL_HANDLE;  // Vulkan library handle
-  VkDebugUtilsMessengerEXT m_debug_messenger =
-      VK_NULL_HANDLE;  // Vulkan debug output handle
+  void update(int dt) override;
 
-  std::unique_ptr<vulkan_physical_device> m_physical_device;
-  std::unique_ptr<vulkan_logical_device> m_logical_device;
+  renderer_capabilities& get_capabilities() override;
+
+  private:
+  shared_ptr<vulkan> m_vulkan;
+  unique_ptr<renderer_capabilities> m_renderer_capabilities;
+  shared_ptr<vulkan_physical_device> m_physical_device;
+  unique_ptr<vulkan_logical_device> m_logical_device;
 
   VkSurfaceKHR m_surface = VK_NULL_HANDLE;  // Vulkan window surface
+
+
 };
 }  // namespace wunder
 #endif /* VULKAN_RENDERER_H */

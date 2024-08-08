@@ -23,7 +23,8 @@ class glfw_window : public window {
  public: // glfw callbacks
   static void on_close(GLFWwindow* window);
  public:
-  [[nodiscard]] vulkan_extension get_vulkan_extensions() const override;
+  [[nodiscard]] void fill_vulkan_extensions(
+      vulkan_extensions& out_extensions) const override;
 
  private:
   GLFWwindow *m_window;

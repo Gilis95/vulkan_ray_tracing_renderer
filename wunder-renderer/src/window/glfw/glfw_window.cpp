@@ -2,16 +2,18 @@
 
 #include <GLFW/glfw3.h>
 
+#include <vector>
+
 #include "core/wunder_logger.h"
 #include "core/wunder_macros.h"
-#include "event/window_events.h"
 #include "event/event_controller.h"
+#include "event/window_events.h"
 #include "window/window_properties.h"
 
 namespace wunder {
 
 /////////////////////////////////////////////////////////////////////////////////////////
-static void glfw_error_callback(int error, const char *description) {
+static void glfw_error_callback(int error, const char* description) {
   WUNDER_ERROR("GLFW Error ({0}): {1}", error, description);
 }
 
@@ -22,7 +24,7 @@ glfw_window::glfw_window() = default;
 glfw_window::~glfw_window() = default;
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void glfw_window::init(const window_properties &properties) {
+void glfw_window::init(const window_properties& properties) {
   int status = glfwInit();
 
   AssertReturnUnless(status == GLFW_TRUE);
@@ -52,18 +54,20 @@ void glfw_window::update(int dt) {
 void glfw_window::shutdown() { glfwTerminate(); }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void glfw_window::on_close(GLFWwindow* window)
-{
+void glfw_window::on_close(GLFWwindow* window) {
   event_controller::on_event<window_close_event>(window_close_event{});
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-vulkan_extension glfw_window::get_vulkan_extensions() const {
-  vulkan_extension result;
+void glfw_window::fill_vulkan_extensions(
+    vulkan_extensions& out_extensions) const {
+  std::uint32_t count = 0;
+  auto extensions = glfwGetRequiredInstanceExtensions(&count);
+  ReturnUnless(count > 0);
 
-  result.m_extensions =
-      glfwGetRequiredInstanceExtensions(&result.m_extensions_count);
-
-  return result;
+  size_t old_size = out_extensions.m_extensions.size();
+  out_extensions.m_extensions.resize(old_size + count);
+  memcpy(out_extensions.m_extensions.data(), extensions,
+         count * sizeof(extensions));
 }
 }  // namespace wunder

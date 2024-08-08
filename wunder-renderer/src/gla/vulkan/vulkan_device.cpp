@@ -4,14 +4,18 @@
 #include "gla/vulkan/vulkan_device.h"
 
 #include "core/wunder_macros.h"
+#include "gla/vulkan/vulkan.h"
+#include "gla/vulkan/vulkan_macros.h"
 
 namespace wunder {
 ////////////////////////////////////////////////////////////////////////////////////
 // Vulkan Physical Device
 ////////////////////////////////////////////////////////////////////////////////////
 
-vulkan_physical_device::vulkan_physical_device(VkInstance vk_instance)
-    : m_vk_instance(vk_instance) {
+vulkan_physical_device::vulkan_physical_device(shared_ptr<vulkan> vulkan)
+    : m_vulkan(vulkan) {
+  CrashUnless(vulkan);
+
   AssertReturnUnless(select_gpu() == VkResult::VK_SUCCESS &&
                      "Failed to select physical device");
 
@@ -26,9 +30,8 @@ vulkan_physical_device::~vulkan_physical_device() = default;
 
 VkResult vulkan_physical_device::select_gpu() {
   uint32_t physical_device_count = 0;
-  auto result = vkEnumeratePhysicalDevices(m_vk_instance,
-                                           &physical_device_count, nullptr);
-  AssertReturnIf(result != VK_SUCCESS, result);
+  VK_CHECK_RESULT(vkEnumeratePhysicalDevices(m_vulkan->instance(),
+                                             &physical_device_count, nullptr));
 
   AssertReturnUnless(0 < physical_device_count, VK_ERROR_UNKNOWN);
 
@@ -36,8 +39,9 @@ VkResult vulkan_physical_device::select_gpu() {
   // device handles.
   std::vector<VkPhysicalDevice> physical_devices(
       physical_device_count);  // list of available gpu`s
-  vkEnumeratePhysicalDevices(m_vk_instance, &physical_device_count,
-                             &physical_devices[0]);
+  VK_CHECK_RESULT(vkEnumeratePhysicalDevices(
+      m_vulkan->instance(), &physical_device_count,
+                             &physical_devices[0]));
 
   for (auto physical_device : physical_devices) {
     VkPhysicalDeviceProperties properties;
@@ -69,11 +73,11 @@ void vulkan_physical_device::get_gpu_extensions() {
     if (vkEnumerateDeviceExtensionProperties(m_physical_device, nullptr,
                                              &ext_count, &extensions.front()) ==
         VK_SUCCESS) {
-      WUNDER_TRACE("Selected physical device has {0} extensions",
+      WUNDER_TRACE_TAG("Renderer","Selected physical device has {0} extensions",
                    extensions.size());
       for (const auto& ext : extensions) {
         m_supported_extensions.emplace(ext.extensionName);
-        WUNDER_TRACE("  {0}", ext.extensionName);
+        WUNDER_TRACE_TAG("Renderer","  {0}", ext.extensionName);
       }
     }
   }

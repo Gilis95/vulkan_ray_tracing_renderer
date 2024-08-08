@@ -21,6 +21,10 @@
 #define WUNDER_LOG_ERROR_AND_BREAK(...)
 #endif
 
+// DO NOT delete the volatile keyword, otherwise compiler might delete the
+// instruction
+#define CRASH *((volatile unsigned int*)0) = 0xDEAD
+
 #define AssertLogIf(x, ...)                               \
   {                                                       \
     if ((x)) {                                            \
@@ -45,6 +49,26 @@
     if (!(x)) {              \
       return __VA_ARGS__;    \
     }                        \
+  }
+
+#define CrashIf(x, ...)                                                       \
+  {                                                                           \
+    if (x) {                                                                  \
+      WUNDER_LOG_ERROR_AND_BREAK(                                             \
+          "Forcefully crashing the program: {0} {1} {2}", __FILE__, __LINE__, \
+          __FUNCTION__);                                                      \
+      CRASH;                                                                  \
+    }                                                                         \
+  }
+
+#define CrashUnless(x, ...)                                                   \
+  {                                                                           \
+    if (!(x)) {                                                               \
+      WUNDER_LOG_ERROR_AND_BREAK(                                             \
+          "Forcefully crashing the program: {0} {1} {2}", __FILE__, __LINE__, \
+          __FUNCTION__);                                                      \
+      CRASH;                                                                  \
+    }                                                                         \
   }
 
 #define AssertReturnIf(x, ...)                                              \

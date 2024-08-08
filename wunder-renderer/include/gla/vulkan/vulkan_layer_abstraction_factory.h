@@ -16,10 +16,11 @@ class vulkan_layer_abstraction_factory
   void init_instance_internal(const renderer_properties &properties) override;
 
  public:
-  [[nodiscard]] const renderer_api &get_renderer_api() const override;
+  [[nodiscard]] renderer_api &get_renderer_api() override;
 
  private:
   unique_ptr<vulkan_renderer> m_renderer;
+  void create_renderer(const renderer_properties &properties);
 };
 
 }  // namespace wunder
