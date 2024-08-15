@@ -101,4 +101,21 @@
     }                     \
   }
 
+#define AssertContinueIf(x, ...)                                            \
+  {                                                                         \
+    if (x) {                                                                \
+      WUNDER_LOG_ERROR_AND_BREAK("Assertion Failed: {0} {1} {2}", __FILE__, \
+                                 __LINE__, __FUNCTION__);                   \
+      continue;                                                             \
+    }                                                                       \
+  }
+#define AssertContinueUnless(x, ...)                                        \
+  {                                                                         \
+    if (!(x)) {                                                             \
+      WUNDER_LOG_ERROR_AND_BREAK("Assertion Failed: {0} {1} {2}", __FILE__, \
+                                 __LINE__, __FUNCTION__);                   \
+      continue;                                                             \
+    }                                                                       \
+  }
+
 #endif

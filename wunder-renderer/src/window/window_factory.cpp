@@ -8,8 +8,8 @@
 namespace wunder {
 window_factory window_factory::s_instance;
 
-bool window_factory::create_window(window_type type) {
-  switch (type) {
+bool window_factory::create_window(const window_properties & window_properties) {
+  switch (window_properties.m_type) {
     case window_type::glfw: {
       m_window = make_unique<wunder::glfw_window>();
     }
@@ -18,6 +18,7 @@ bool window_factory::create_window(window_type type) {
       AssertReturnIf("Not handled window type.", false)
   }
 
+  m_window->init(window_properties);
   return true;
 }
 

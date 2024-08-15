@@ -5,6 +5,7 @@
 #ifndef WUNDER_VULKAN_H
 #define WUNDER_VULKAN_H
 
+#include <cstdint>
 #include <string>
 #include <vector>
 
@@ -21,6 +22,11 @@ class vulkan {
   void init(const renderer_properties& properties);
 
   [[nodiscard]] VkInstance instance() const { return m_vk_instance; }
+
+ public:
+  std::uint32_t get_api_major_version() const { return m_api_minor_version; }
+  std::uint32_t get_api_minor_version() const { return m_api_minor_version; }
+
  private:
   static VkResult extract_supported_extensions(
       std::vector<VkExtensionProperties>& supported_extensions);
@@ -48,6 +54,8 @@ class vulkan {
 
   std::vector<std::string> m_used_layers;
   std::vector<std::string> m_used_extensions;
+  std::uint32_t m_api_major_version;
+  std::uint32_t m_api_minor_version;
 };
 }  // namespace wunder
 #endif  // WUNDER_VULKAN_H

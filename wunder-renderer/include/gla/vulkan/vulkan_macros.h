@@ -6,9 +6,31 @@
 #include <thread>
 
 #include "core/wunder_logger.h"
-#include "gla/graphic_layer_abstraction_factory.h"
+#include "core/wunder_macros.h"
 #include "gla/renderer_api.h"
 #include "gla/renderer_capabilities .h"
+#include "gla/vulkan/vulkan_context.h"
+#include "gla/vulkan/vulkan_layer_abstraction_factory.h"
+
+#define VK_CHECK_RESULT(f)                                \
+  {                                                       \
+    VkResult res = (f);                                   \
+    wunder::vulkan_check_result(res, __FILE__, __LINE__); \
+  }
+
+#define VK_CHECK_RESULT_RETURN(f)                         \
+  {                                                       \
+    VkResult res = (f);                                   \
+    wunder::vulkan_check_result(res, __FILE__, __LINE__); \
+    ReturnIf(res != VK_SUCCESS, res);                     \
+  }
+
+#define VK_CHECK_RESULT_CRASH(f)                          \
+  {                                                       \
+    VkResult res = (f);                                   \
+    wunder::vulkan_check_result(res, __FILE__, __LINE__); \
+    CrashIf(res != VK_SUCCESS, res);                      \
+  }
 
 namespace wunder {
 
@@ -96,9 +118,9 @@ inline const char* VKResultToString(VkResult result) {
 }
 
 inline void dump_gpu_info() {
-  auto& gla = graphic_layer_abstraction_factory::get_instance();
-  auto& renderer_api = gla.get_renderer_api();
-  auto& caps = renderer_api.get_capabilities();
+  auto& caps = vulkan_layer_abstraction_factory::instance()
+                   .get_vulkan_context()
+                   .get_capabilities();
   WUNDER_TRACE_TAG("Renderer", "GPU Info:");
   WUNDER_TRACE_TAG("Renderer", "  vendor: {0}", caps.vendor);
   WUNDER_TRACE_TAG("Renderer", "  Device: {0}", caps.device);
@@ -133,26 +155,19 @@ static const char* vulkan_vendor_id_to_string(uint32_t vendorID) {
   return "Unknown";
 }
 
+
+inline static void set_debug_utils_object_name(VkDevice device, const VkObjectType objectType, const std::string& name, const void* handle)
+{
+  VkDebugUtilsObjectNameInfoEXT nameInfo;
+  nameInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT;
+  nameInfo.objectType = objectType;
+  nameInfo.pObjectName = name.c_str();
+  nameInfo.objectHandle = (uint64_t)handle;
+  nameInfo.pNext = VK_NULL_HANDLE;
+
+  VK_CHECK_RESULT(vkSetDebugUtilsObjectNameEXT(device, &nameInfo));
+}
+
 }  // namespace wunder
-
-#define VK_CHECK_RESULT(f)                                \
-  {                                                       \
-    VkResult res = (f);                                   \
-    wunder::vulkan_check_result(res, __FILE__, __LINE__); \
-  }
-
-#define VK_CHECK_RESULT_RETURN(f)                         \
-  {                                                       \
-    VkResult res = (f);                                   \
-    wunder::vulkan_check_result(res, __FILE__, __LINE__); \
-    ReturnIf(res != VK_SUCCESS, res);                     \
-  }
-
-#define VK_CHECK_RESULT_CRASH(f)                         \
-  {                                                       \
-    VkResult res = (f);                                   \
-    wunder::vulkan_check_result(res, __FILE__, __LINE__); \
-    CrashIf(res != VK_SUCCESS, res);                     \
-  }
 
 #endif  // WUNDER_VULKAN_MACROS_H

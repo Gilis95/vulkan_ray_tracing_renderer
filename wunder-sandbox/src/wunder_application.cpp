@@ -1,7 +1,7 @@
 #include "wunder_application.h"
 
 #include <application_properties.h>
-#include <gla/graphic_layer_abstraction_factory.h>
+#include <core/wunder_filesystem.h>
 #include <gla/renderer_properties.h>
 #include <window/window_properties.h>
 
@@ -18,6 +18,9 @@ void wunder_application::init_internal() {}
 
 /////////////////////////////////////////////////////////////////////////////////////////
 application *create_application() {
+  auto current_path = std::filesystem::current_path();
+  wunder::wunder_filesystem::instance().set_work_dir((std::filesystem::absolute(current_path / ".." / "..")));
+
   auto app_properties = application_properties{
       "wunder", "123",
       window_properties{"Wunder Application", 1280, 720, window_type::glfw},

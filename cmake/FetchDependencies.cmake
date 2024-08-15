@@ -7,10 +7,10 @@ FetchContent_Declare(
 )
 
 FetchContent_Declare(
-         glad
-         GIT_REPOSITORY https://github.com/Gilis95/glad
-         GIT_TAG        origin/glad2
-         SOURCE_SUBDIR  cmake
+        glad
+        GIT_REPOSITORY https://github.com/Gilis95/glad
+        GIT_TAG origin/glad2
+        SOURCE_SUBDIR cmake
 )
 
 FetchContent_Declare(
@@ -38,3 +38,6 @@ FetchContent_Declare(
 )
 
 FetchContent_MakeAvailable(EnTT glad glfw glm spdlog tracy)
+
+include(cmake/FetchShadercDependency.cmake)
+include(cmake/FetchSPIRVCrossDependency.cmake)

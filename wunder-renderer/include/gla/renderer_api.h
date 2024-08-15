@@ -15,7 +15,7 @@ class renderer_api {
 
   virtual void update(int dt) = 0;
 
-  virtual renderer_capabilities& get_capabilities() = 0;
+  virtual const renderer_capabilities& get_capabilities() const = 0;
  protected:
   virtual void init_internal(const renderer_properties& properties) = 0;
 };

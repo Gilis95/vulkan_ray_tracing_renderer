@@ -1,26 +1,35 @@
 #ifndef WUNDER_VULKAN_LAYER_ABSTRACTION_FACTORY_H
 #define WUNDER_VULKAN_LAYER_ABSTRACTION_FACTORY_H
 
-#include "gla/graphic_layer_abstraction_factory.h"
+#include "core/wunder_memory.h"
 
 namespace wunder {
+struct renderer_properties;
+
 class vulkan_renderer;
 class renderer_api;
+class vulkan_context;
 
-class vulkan_layer_abstraction_factory
-    : public graphic_layer_abstraction_factory {
- public:
-  ~vulkan_layer_abstraction_factory() override;
-
- protected:
-  void init_instance_internal(const renderer_properties &properties) override;
-
- public:
-  [[nodiscard]] renderer_api &get_renderer_api() override;
-
+class vulkan_layer_abstraction_factory {
  private:
-  unique_ptr<vulkan_renderer> m_renderer;
+  vulkan_layer_abstraction_factory();
+ public:
+  ~vulkan_layer_abstraction_factory();
+ public:
+  static vulkan_layer_abstraction_factory &instance();
+ public:
+  void init_instance(const renderer_properties &properties);
+
+  [[nodiscard]] vulkan_renderer &get_renderer_api();
+  [[nodiscard]] vulkan_context &get_vulkan_context();
+ private:
   void create_renderer(const renderer_properties &properties);
+ private:
+  static vulkan_layer_abstraction_factory s_instance;
+
+  unique_ptr<vulkan_renderer> m_renderer;
+  unique_ptr<vulkan_context> m_context;
+  void create_vulkan_context(const renderer_properties &properties);
 };
 
 }  // namespace wunder

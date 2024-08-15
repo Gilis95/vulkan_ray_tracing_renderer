@@ -2,85 +2,63 @@
 // Created by christian on 7/3/24.
 //
 
-#ifndef WUNDER_WUNDER_RENDERER_INCLUDE_GLA_VULKAN_VULKAN_DEVICE_H_
-#define WUNDER_WUNDER_RENDERER_INCLUDE_GLA_VULKAN_VULKAN_DEVICE_H_
-#pragma once
+#ifndef WUNDER_WUNDER_RENDERER_INCLUDE_GLA_VULKAN_VULKAN_LOGICAL_DEVICE_H_
+#define WUNDER_WUNDER_RENDERER_INCLUDE_GLA_VULKAN_VULKAN_LOGICAL_DEVICE_H_
 
 #include <glad/vulkan.h>
 
-#include <string>
-#include <unordered_set>
+#include <memory>
 #include <vector>
 
 #include "core/wunder_memory.h"
 
 namespace wunder {
 
-class vulkan;
+class vulkan_physical_device;
+class vulkan_command_pool;
+struct vulkan_extension_data;
+struct physical_device_info;
 
-class vulkan_physical_device {
+// Represents a logical device
+class vulkan_device {
  public:
-  struct queue_family_indices {
-    int32_t Graphics = -1;
-    int32_t Compute = -1;
-    int32_t Transfer = -1;
-  };
-  queue_family_indices get_queue_family_indices(int queueFlags) const;
+  vulkan_device(VkPhysicalDeviceFeatures enabled_features);
+  ~vulkan_device();
 
  public:
-  explicit vulkan_physical_device(shared_ptr<vulkan> vulkan);
-  ~vulkan_physical_device();
+  void initialize();
 
-  [[nodiscard]] bool is_extension_supported(
-      const std::string& extensionName) const;
-  uint32_t get_memory_type_index(uint32_t typeBits,
-                                 VkMemoryPropertyFlags properties) const;
-
-  [[nodiscard]] VkPhysicalDevice get_vulkan_physical_device() const {
-    return m_physical_device;
-  }
-  [[nodiscard]] const queue_family_indices& get_queue_family_indices() const {
-    return m_queue_family_indices;
+  [[nodiscard]] VkQueue get_graphics_queue() { return m_graphics_queue; }
+  [[nodiscard]] VkQueue get_compute_queue() { return m_compute_queue; }
+  [[nodiscard]] VkDevice get_vulkan_logical_device() const {
+    return m_logical_device;
   }
 
-  [[nodiscard]] const VkPhysicalDeviceProperties& get_properties() const {
-    return m_device_properties;
+  vulkan_command_pool &get_command_pool() { return *m_command_pool; }
+  [[nodiscard]] const vulkan_command_pool &get_command_pool() const {
+    return *m_command_pool;
   }
-  [[nodiscard]] const VkPhysicalDeviceLimits& get_limits() const {
-    return m_device_properties.limits;
-  }
-  [[nodiscard]] const VkPhysicalDeviceMemoryProperties& get_memory_properties()
-      const {
-    return m_physical_device_memory_properties;
-  }
-
-  [[nodiscard]] VkFormat get_depth_format() const { return m_depth_format; }
 
  private:
-  [[nodiscard]] VkResult select_gpu();
-  void select_queue_family();
+  void create_extensions_list();
+  void create_logical_device();
 
-  [[nodiscard]] VkFormat find_depth_format() const;
+  static void append_used_device_features(
+      const physical_device_info &physical_device_info,
+      const std::vector<void *> &used_features,
+      VkDeviceCreateInfo &out_device_create_info) ;
+
+  void destroy();
 
  private:
-  queue_family_indices m_queue_family_indices;
+  VkDevice m_logical_device = VK_NULL_HANDLE;
+  VkQueue m_graphics_queue = VK_NULL_HANDLE;
+  VkQueue m_compute_queue = VK_NULL_HANDLE;
 
-  VkPhysicalDevice m_physical_device = VK_NULL_HANDLE;
-  VkPhysicalDeviceProperties m_device_properties{};
-  VkPhysicalDeviceFeatures m_physical_device_features{};
-  VkPhysicalDeviceMemoryProperties m_physical_device_memory_properties{};
-
-  VkFormat m_depth_format = VK_FORMAT_UNDEFINED;
-
-  wunder::shared_ptr<vulkan> m_vulkan;
-  std::vector<VkQueueFamilyProperties> m_queue_family_properties;
-  std::unordered_set<std::string> m_supported_extensions;
-  std::vector<VkDeviceQueueCreateInfo> m_queue_create_infos;
-
-  friend class vulkan_logical_device;
-  void get_gpu_extensions();
+  std::vector<vulkan_extension_data> m_used_extensions;
+  std::vector<vulkan_extension_data> m_requested_extensions;
+  unique_ptr<vulkan_command_pool> m_command_pool;
 };
 
 }  // namespace wunder
-
-#endif  // WUNDER_WUNDER_RENDERER_INCLUDE_GLA_VULKAN_VULKAN_DEVICE_H_
+#endif  // WUNDER_WUNDER_RENDERER_INCLUDE_GLA_VULKAN_VULKAN_LOGICAL_DEVICE_H_

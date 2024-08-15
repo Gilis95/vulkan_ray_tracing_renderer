@@ -2,11 +2,11 @@ project(wunder-renderer VERSION 1.0.0 LANGUAGES CXX)
 
 add_definitions(-DWANDER_ENABLE_LOG -D_CRT_SECURE_NO_WARNINGS -DWANDER_ENGINE_DEBUG -DTRACY_ENABLE -DGLFW_INCLUDE_NONE)
 
-if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
     add_definitions(-DWUNDER_LINUX=1)
 endif ()
 
-if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
     add_definitions(-DWUNDER_WINDOWS=1)
 endif ()
 
@@ -21,15 +21,31 @@ include(cmake/Files.cmake)
 glad_add_library(glad_vulkan REPRODUCIBLE LOADER API vulkan=1.3)
 
 ################################################################################################
-add_library(wunder-renderer STATIC ${WUNDER_RENDERER_HEADERS} ${WUNDER_RENDERER_SOURCES}
-        include/core/vector_map.h)
+add_library(wunder-renderer STATIC ${WUNDER_RENDERER_HEADERS} ${WUNDER_RENDERER_SOURCES})
 
 target_include_directories(wunder-renderer PUBLIC
         $<BUILD_INTERFACE: ${HDR_DIR}>
         $<INSTALL_INTERFACE:include>
-        )
+)
 
-target_link_libraries(wunder-renderer PRIVATE EnTT glad_vulkan glfw glm spdlog TracyClient)
+target_link_libraries(wunder-renderer PRIVATE
+        EnTT
+        glad_vulkan
+        glfw
+        glm
+        spdlog
+        TracyClient
+#        spirv-headers
+#        spirv-tools
+        glslang
+        shaderc
+        shaderc_util
+        glslc
+        spirv-cross-core
+        spirv-cross-glsl
+        spirv-cross-reflect
+        spirv-cross-cpp
+)
 
 if (WANDER_ENGINE_INSTALL)
     # cmake install dirs

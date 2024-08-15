@@ -5,10 +5,10 @@ cmake_policy(VERSION 3.2)
 project(wunder VERSION 1.0.0 LANGUAGES CXX C)
 #message(STATUS "Stinky : Version " ${STINKY_VERSION})
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_BUILD_TYPE debug)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++20")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++23")
 
 #Fetch common dependencies
 include(cmake/FetchDependencies.cmake)

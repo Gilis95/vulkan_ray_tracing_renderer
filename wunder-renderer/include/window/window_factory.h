@@ -15,7 +15,7 @@ class window_factory {
   static window_factory& get_instance() { return s_instance; }
 
  public:
-  bool create_window(window_type type);
+  bool create_window(const window_properties& window_properties);
   window& get_window();
 
  private:
