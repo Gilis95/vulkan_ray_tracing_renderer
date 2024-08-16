@@ -9,6 +9,7 @@
 #include "gla/renderer_properties.h"
 #include "gla/vulkan/vulkan_command_pool.h"
 #include "gla/vulkan/vulkan_context.h"
+#include "gla/vulkan/vulkan_descriptor_set_manager.h"
 #include "gla/vulkan/vulkan_device.h"
 #include "gla/vulkan/vulkan_physical_device.h"
 #include "gla/vulkan/vulkan_renderer.h"

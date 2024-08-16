@@ -6,6 +6,7 @@
 
 #include "gla/renderer_capabilities .h"
 #include "gla/vulkan/vulkan_context.h"
+#include "gla/vulkan/vulkan_descriptor_set_manager.h"
 #include "gla/vulkan/vulkan_device.h"
 #include "gla/vulkan/vulkan_layer_abstraction_factory.h"
 #include "gla/vulkan/vulkan_shader.h"
@@ -15,8 +16,52 @@ namespace wunder {
 vulkan_renderer::~vulkan_renderer() = default;
 
 void vulkan_renderer::init_internal(const renderer_properties &properties) {
-  vulkan_shader::create("wunder-renderer/resources/shaders/pathtrace.rgen",
-                        VkShaderStageFlagBits::VK_SHADER_STAGE_RAYGEN_BIT_KHR);
+  for (auto &[shader_type, shaders_compile_data] :
+       get_shaders_for_compilation()) {
+    auto &shaders_of_type = m_shaders[shader_type];
+
+    for (auto &shader_compile_data : shaders_compile_data) {
+      auto maybe_shader =
+          vulkan_shader::create(shader_compile_data.m_shader_path, shader_type);
+      if (maybe_shader.has_value()) {
+        auto &shader =
+            shaders_of_type.emplace_back(std::move(maybe_shader.value()));
+
+        ContinueUnless(shader_compile_data.m_on_successful_compile);
+        shader_compile_data.m_on_successful_compile(*shader);
+        continue;
+      }
+
+      WUNDER_ERROR_TAG("Renderer",
+                       "Failed to compile {0} of type {1}. Error:  {2}",
+                       shader_compile_data.m_shader_path.string(),
+                       static_cast<int>(shader_type),
+                       static_cast<int>(maybe_shader.error()));
+      ContinueIf(shader_compile_data.m_optional);
+      CRASH;
+    }
+  }
+}
+
+vector_map<VkShaderStageFlagBits, std::vector<shader_to_compile>>
+vulkan_renderer::get_shaders_for_compilation() {
+  vector_map<VkShaderStageFlagBits, std::vector<shader_to_compile>>
+      shaders_to_compile;
+  shaders_to_compile[VkShaderStageFlagBits::VK_SHADER_STAGE_RAYGEN_BIT_KHR] =
+      std::vector<shader_to_compile>(
+          std::initializer_list<shader_to_compile>{shader_to_compile{
+              .m_shader_path =
+                  "wunder-renderer/resources/shaders/pathtrace.rgen",
+              .m_on_successful_compile =
+                  std::bind(&vulkan_renderer::create_descriptor_manager, this,
+                            std::placeholders::_1),
+              .m_optional = false}});
+  return shaders_to_compile;
+}
+
+void vulkan_renderer::create_descriptor_manager(const vulkan_shader &shader) {
+  m_descriptor_set_manager = std::make_unique<vulkan_descriptor_set_manager>();
+  m_descriptor_set_manager->initialize(shader);
 }
 
 void vulkan_renderer::update(int dt) /*override*/

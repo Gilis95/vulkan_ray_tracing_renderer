@@ -30,7 +30,7 @@ class vector_map : public std::vector<std::pair<key_t, value_t>> {
     auto found_it = find(key);
     ReturnIf(found_it != base_type::end(), found_it->second);
 
-    return base_type::emplace_back(std::make_pair(key, value_t()));
+    return base_type::emplace_back(std::make_pair(key, value_t())).second;
   }
 };
 }  // namespace wunder

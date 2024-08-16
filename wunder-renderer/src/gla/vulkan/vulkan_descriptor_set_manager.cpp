@@ -29,34 +29,26 @@ class descriptor_pool_creator {
 
 namespace wunder {
 
-unique_ptr<vulkan_descriptor_set_manager>
-vulkan_descriptor_set_manager::create_descriptor_set(
-    const vulkan_shader& vulkan_shader) {
-  auto result = make_unique<vulkan_descriptor_set_manager>();
-
-  result->initialize(vulkan_shader);
-
-  return std::move(result);
-}
-
 void vulkan_descriptor_set_manager::update_resource(
     const vulkan_resource_identifier& set_identifier,
     vulkan_resource resource) {
-  std::unordered_map<vulkan_resource_identifier,
-                     vulkan_shader_resource_declaration>&
-      shader_resources_declaration =
-          m_shader_reflection_data.m_shader_resources_declaration;
+  auto& shader_resources_declaration =
+      m_shader_reflection_data.m_shader_resources_declaration;
   auto found_resource_met_it =
       shader_resources_declaration.find(set_identifier);
   AssertReturnIf(found_resource_met_it == shader_resources_declaration.end(), );
 
-  vulkan_shader_resource_declaration& resource_declaration =
-      found_resource_met_it->second;
-  auto descriptor_bindings_it =m_input_resources.find(resource_declaration.m_set);
+  const vulkan_shader_resource_declaration& resource_declaration = std::visit(
+      downcast_vulkan_shader_resource,
+      found_resource_met_it->second);
+
+  auto descriptor_bindings_it =
+      m_input_resources.find(resource_declaration.m_set);
   AssertReturnIf(descriptor_bindings_it == m_input_resources.end());
-  vulkan_descriptor_bindings& descriptor_bindings =  descriptor_bindings_it->second;
-  descriptor_bindings[resource_declaration.m_binding] =
-      resource;
+  vulkan_descriptor_bindings& descriptor_bindings =
+      descriptor_bindings_it->second;
+  //TODO:: validate that the declared and provided types are maching!!!
+  descriptor_bindings[resource_declaration.m_binding] = resource;
 }
 
 void vulkan_descriptor_set_manager::bake() {
@@ -118,7 +110,8 @@ void vulkan_descriptor_set_manager::initialize(
       {VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1000},
       {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 1000},
       {VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 1000},
-      {VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 1000}};
+      {VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 1000},
+      {VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR, 1000}};
 
   VkDescriptorPoolCreateInfo poolInfo{};
   poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
@@ -147,13 +140,13 @@ void vulkan_descriptor_set_manager::initialize(
   // allocate decriptor sets
   for (std::uint32_t i = 0;
        i < m_shader_reflection_data.m_descriptor_sets_count; ++i) {
-    VkDescriptorSetLayout dsl =
-        vulkan_shader.get_vulkan_descriptor_set_layout();
+    auto maybe_dsl = vulkan_shader.get_vulkan_descriptor_set_layout(i);
+    AssertContinueUnless(maybe_dsl.has_value());
 
     VkDescriptorSetAllocateInfo descriptor_set_alloc_info = {};
     descriptor_set_alloc_info.sType =
         VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-    descriptor_set_alloc_info.pSetLayouts = &dsl;
+    descriptor_set_alloc_info.pSetLayouts = &maybe_dsl.value();
     descriptor_set_alloc_info.descriptorSetCount = 1;
     descriptor_set_alloc_info.descriptorPool = m_descriptor_pool;
 

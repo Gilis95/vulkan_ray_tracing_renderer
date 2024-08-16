@@ -21,18 +21,15 @@ class vulkan_pipeline;
 
 class vulkan_descriptor_set_manager {
  public:
-  static unique_ptr<vulkan_descriptor_set_manager> create_descriptor_set(
-      const vulkan_shader& vulkan_shader);
+  void initialize(const vulkan_shader& vulkan_shader);
+
+ public:
 
   void update_resource(const vulkan_resource_identifier& set_identifier,
                        vulkan_resource);
 
   void bake();
   void bind(const vulkan_pipeline& pipeline) const;
-
- private:
-  void initialize(const vulkan_shader& vulkan_shader);
-
  private:
   std::multimap<vulkan_descriptor_set_identifier, vulkan_descriptor_bindings>
       m_input_resources;

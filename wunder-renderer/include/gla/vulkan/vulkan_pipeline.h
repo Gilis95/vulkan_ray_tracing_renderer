@@ -8,6 +8,8 @@
 #include <vector>
 
 #include "core/wunder_memory.h"
+#include <glad/vulkan.h>
+
 namespace wunder {
 class vulkan_shader;
 
