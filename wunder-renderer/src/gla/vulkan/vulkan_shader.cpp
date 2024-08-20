@@ -80,7 +80,7 @@ inline std::string vulkan_shader_stage_to_string(
 
 template <typename T>
 concept vulkan_shader_resource_concept =
-    std::is_base_of<wunder::vulkan_shader_resource_declaration, T>::value;
+    std::is_base_of<wunder::vulkan_shader_resource_declaration_base, T>::value;
 
 template <vulkan_shader_resource_concept resource_type>
 void spirv_resources_to_descriptors_declarations(
@@ -273,9 +273,9 @@ void vulkan_shader::initialize(const std::vector<std::uint32_t>& debug_spirv) {
 }
 
 VkPipelineShaderStageCreateInfo vulkan_shader::get_shader_stage_info() const {
-  VkPipelineShaderStageCreateInfo result;
-  result.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+  VkPipelineShaderStageCreateInfo result{VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO};
   result.stage = m_vulkan_shader_type;
+  result.flags = 0;
   result.module = m_shader_module;
   result.pName = "main";
 
@@ -309,16 +309,20 @@ void vulkan_shader::initialize_reflection_data(
       vulkan_acceleration_structures_resource_declaration>(
       compiler, resources.acceleration_structures, m_reflection_data);
 
+  ReturnIf(m_reflection_data.m_shader_resources_declaration.empty());
+
   auto resource_with_max_set = std::max_element(
       m_reflection_data.m_shader_resources_declaration.begin(),
       m_reflection_data.m_shader_resources_declaration.end(),
-      [](const std::pair<vulkan_resource_identifier, vulkan_shader_resource>&
+      [](const std::pair<vulkan_resource_identifier,
+                         vulkan_shader_resource_declaration>&
              left_element,
-         const std::pair<vulkan_resource_identifier, vulkan_shader_resource>&
+         const std::pair<vulkan_resource_identifier,
+                         vulkan_shader_resource_declaration>&
              right_element) {
-        const vulkan_shader_resource_declaration& left_resource_declaration = std::visit(
+        const vulkan_shader_resource_declaration_base& left_resource_declaration = std::visit(
             downcast_vulkan_shader_resource, left_element.second);
-        const vulkan_shader_resource_declaration& right_resource_declaration = std::visit(
+        const vulkan_shader_resource_declaration_base& right_resource_declaration = std::visit(
             downcast_vulkan_shader_resource, right_element.second);
 
         return left_resource_declaration.m_set < right_resource_declaration.m_set;
@@ -335,7 +339,7 @@ void vulkan_shader::initialize_descriptor_set_layout() {
 
   for (auto& [_, resource_declaration_variant] :
        m_reflection_data.m_shader_resources_declaration) {
-    const vulkan_shader_resource_declaration& resource_declaration = std::visit(
+    const vulkan_shader_resource_declaration_base& resource_declaration = std::visit(
         downcast_vulkan_shader_resource, resource_declaration_variant);
 
     auto& layout_bindings = per_set_layout_bindings[resource_declaration.m_set];

@@ -20,35 +20,81 @@ enum class descriptor_pool_creator_result {
   Warning = 100000
 };
 
-class descriptor_pool_creator {
+class write_descriptor_creator {
  public:
   std::expected<VkWriteDescriptorSet, descriptor_pool_creator_result>
-  operator()(const std::monostate&) {}
+  operator()(const wunder::vulkan_uniform_buffer_resource_instance&) {
+    VkWriteDescriptorSet writeDescriptor;
+
+    return writeDescriptor;
+  }
+
+  std::expected<VkWriteDescriptorSet, descriptor_pool_creator_result>
+  operator()(const wunder::vulkan_storage_buffers_resource_instance&) {
+    VkWriteDescriptorSet writeDescriptor;
+
+    return writeDescriptor;
+  }
+
+  std::expected<VkWriteDescriptorSet, descriptor_pool_creator_result>
+  operator()(const wunder::vulkan_sampled_images_resource_instance&) {
+    VkWriteDescriptorSet writeDescriptor;
+
+    return writeDescriptor;
+  }
+
+  std::expected<VkWriteDescriptorSet, descriptor_pool_creator_result>
+  operator()(const wunder::vulkan_separate_images_resource_instance&) {
+    VkWriteDescriptorSet writeDescriptor;
+
+    return writeDescriptor;
+  }
+
+  std::expected<VkWriteDescriptorSet, descriptor_pool_creator_result>
+  operator()(const wunder::vulkan_separate_samplers_resource_instance&) {
+    VkWriteDescriptorSet writeDescriptor;
+
+    return writeDescriptor;
+  }
+
+  std::expected<VkWriteDescriptorSet, descriptor_pool_creator_result>
+  operator()(const wunder::vulkan_storage_images_resource_instance&) {
+    VkWriteDescriptorSet writeDescriptor;
+
+    return writeDescriptor;
+  }
+
+  std::expected<VkWriteDescriptorSet, descriptor_pool_creator_result>
+  operator()(
+      const wunder::vulkan_acceleration_structures_resource_instance&) {
+    VkWriteDescriptorSet writeDescriptor;
+
+    return writeDescriptor;
+  }
 };
 }  // namespace
 
 namespace wunder {
 
 void vulkan_descriptor_set_manager::update_resource(
-    const vulkan_resource_identifier& set_identifier,
-    vulkan_resource resource) {
+    const vulkan_resource_identifier& resource_identifier,
+    vulkan_shader_resource_instance resource) {
   auto& shader_resources_declaration =
       m_shader_reflection_data.m_shader_resources_declaration;
   auto found_resource_met_it =
-      shader_resources_declaration.find(set_identifier);
+      shader_resources_declaration.find(resource_identifier);
   AssertReturnIf(found_resource_met_it == shader_resources_declaration.end(), );
 
-  const vulkan_shader_resource_declaration& resource_declaration = std::visit(
-      downcast_vulkan_shader_resource,
-      found_resource_met_it->second);
+  const vulkan_shader_resource_declaration_base& resource_declaration = std::visit(
+      downcast_vulkan_shader_resource, found_resource_met_it->second);
 
   auto descriptor_bindings_it =
       m_input_resources.find(resource_declaration.m_set);
   AssertReturnIf(descriptor_bindings_it == m_input_resources.end());
   vulkan_descriptor_bindings& descriptor_bindings =
       descriptor_bindings_it->second;
-  //TODO:: validate that the declared and provided types are maching!!!
-  descriptor_bindings[resource_declaration.m_binding] = resource;
+  // TODO:: validate that the declared and provided types are maching!!!
+  descriptor_bindings.emplace(resource_declaration.m_binding, std::move(resource));
 }
 
 void vulkan_descriptor_set_manager::bake() {
@@ -63,7 +109,7 @@ void vulkan_descriptor_set_manager::bake() {
     write_descriptors.clear();
     for (auto& [descriptor_set_bind_identifier, vulkan_resource] :
          descriptor_bindings) {
-      auto result = std::visit(descriptor_pool_creator(), vulkan_resource);
+      auto result = std::visit(write_descriptor_creator(), vulkan_resource);
       AssertContinueIf(result.error() != descriptor_pool_creator_result::OK ||
                        !result.has_value());
       write_descriptors.emplace_back(result.value());
