@@ -11,14 +11,14 @@ namespace wunder {
 void add_supported_extensions(
     const vulkan_extension_source& source,
     const std::vector<vulkan_extension_data>& requested_extensions,
-    std::vector<vulkan_extension_data>& used_extensions) {
+    std::vector<vulkan_extension_data>& out_used_extensions) {
   unsigned long requested_extensions_count = requested_extensions.size();
-  used_extensions.reserve(requested_extensions_count);
+  out_used_extensions.reserve(requested_extensions_count);
 
   for (size_t i = 0; i < requested_extensions_count; ++i) {
     const auto& requested_extension = requested_extensions[i];
     if (source.is_extension_supported(requested_extension.m_name)) {
-      used_extensions.push_back(requested_extension);
+      out_used_extensions.push_back(requested_extension);
       continue;
     }
 

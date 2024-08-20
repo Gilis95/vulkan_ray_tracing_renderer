@@ -29,6 +29,7 @@
 
 #ifdef __cplusplus
 #include <stdint.h>
+#include <glm/glm.hpp>
 // GLSL Type
 using ivec2 = glm::ivec2;
 using vec2  = glm::vec2;

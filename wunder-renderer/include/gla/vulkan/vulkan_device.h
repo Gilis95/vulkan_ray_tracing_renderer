@@ -44,7 +44,7 @@ class vulkan_device {
   void create_logical_device();
 
   static void append_used_device_features(
-      const physical_device_info &physical_device_info,
+      physical_device_info &physical_device_info,
       const std::vector<void *> &used_features,
       VkDeviceCreateInfo &out_device_create_info) ;
 

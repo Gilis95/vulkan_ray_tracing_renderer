@@ -9,6 +9,7 @@
 #include "gla/vulkan/vulkan_descriptor_set_manager.h"
 #include "gla/vulkan/vulkan_device.h"
 #include "gla/vulkan/vulkan_layer_abstraction_factory.h"
+#include "gla/vulkan/vulkan_pipeline.h"
 #include "gla/vulkan/vulkan_shader.h"
 
 namespace wunder {
@@ -16,6 +17,8 @@ namespace wunder {
 vulkan_renderer::~vulkan_renderer() = default;
 
 void vulkan_renderer::init_internal(const renderer_properties &properties) {
+  m_pipeline = std::make_unique<vulkan_pipeline>();
+
   for (auto &[shader_type, shaders_compile_data] :
        get_shaders_for_compilation()) {
     auto &shaders_of_type = m_shaders[shader_type];
@@ -41,6 +44,8 @@ void vulkan_renderer::init_internal(const renderer_properties &properties) {
       CRASH;
     }
   }
+
+  m_pipeline->create_pipeline(m_shaders);
 }
 
 vector_map<VkShaderStageFlagBits, std::vector<shader_to_compile>>
@@ -56,12 +61,41 @@ vulkan_renderer::get_shaders_for_compilation() {
                   std::bind(&vulkan_renderer::create_descriptor_manager, this,
                             std::placeholders::_1),
               .m_optional = false}});
+  shaders_to_compile[VkShaderStageFlagBits::VK_SHADER_STAGE_ANY_HIT_BIT_KHR] =
+      std::vector<shader_to_compile>(
+          std::initializer_list<shader_to_compile>{shader_to_compile{
+              .m_shader_path =
+                  "wunder-renderer/resources/shaders/pathtrace.rahit",
+              .m_on_successful_compile = nullptr,
+              .m_optional = false}});
+  shaders_to_compile
+      [VkShaderStageFlagBits::VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR] =
+          std::vector<shader_to_compile>(
+              std::initializer_list<shader_to_compile>{shader_to_compile{
+                  .m_shader_path =
+                      "wunder-renderer/resources/shaders/pathtrace.rchit",
+                  .m_on_successful_compile = nullptr,
+                  .m_optional = false}});
+  shaders_to_compile[VkShaderStageFlagBits::VK_SHADER_STAGE_MISS_BIT_KHR] =
+      std::vector<shader_to_compile>(std::initializer_list<shader_to_compile>{
+          shader_to_compile{
+              .m_shader_path =
+                  "wunder-renderer/resources/shaders/pathtrace.rmiss",
+              .m_on_successful_compile = nullptr,
+              .m_optional = false},
+          shader_to_compile{
+              .m_shader_path =
+                  "wunder-renderer/resources/shaders/pathtraceShadow.rmiss",
+              .m_on_successful_compile = nullptr,
+              .m_optional = false}});
   return shaders_to_compile;
 }
 
 void vulkan_renderer::create_descriptor_manager(const vulkan_shader &shader) {
   m_descriptor_set_manager = std::make_unique<vulkan_descriptor_set_manager>();
   m_descriptor_set_manager->initialize(shader);
+
+  m_pipeline->create_pipeline_layout(shader);
 }
 
 void vulkan_renderer::update(int dt) /*override*/

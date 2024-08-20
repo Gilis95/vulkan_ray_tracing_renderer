@@ -10,11 +10,13 @@
 #include "core/vector_map.h"
 #include "core/wunder_memory.h"
 #include "gla/renderer_api.h"
+#include "vulkan_pipeline.h"
 
 namespace wunder {
 
-class vulkan_shader;
 class vulkan_descriptor_set_manager;
+class vulkan_shader;
+class vulkanv_pipeline;
 
 struct shader_to_compile {
   std::filesystem::path m_shader_path;
@@ -44,6 +46,7 @@ class vulkan_renderer : public renderer_api {
   vector_map<VkShaderStageFlagBits, std::vector<unique_ptr<vulkan_shader>>>
       m_shaders;
   unique_ptr<vulkan_descriptor_set_manager> m_descriptor_set_manager;
+  unique_ptr<vulkan_pipeline> m_pipeline;
 };
 }  // namespace wunder
 #endif /* VULKAN_RENDERER_H */

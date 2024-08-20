@@ -18,7 +18,7 @@ class vulkan_extension_source {
 void add_supported_extensions(
     const vulkan_extension_source &source,
     const std::vector<vulkan_extension_data> &requested_extensions,
-    std::vector<vulkan_extension_data> &used_extensions);
+    std::vector<vulkan_extension_data> &out_used_extensions);
 
 void extract_extensions_names(
     std::vector<vulkan_extension_data> &used_extensions,

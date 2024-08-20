@@ -93,23 +93,23 @@ void properties_11O_old::write(
 }
 
 void init_physical_info(physical_device_info& info,
-                        VkPhysicalDevice physicalDevice, uint32_t versionMajor,
-                        uint32_t versionMinor) {
-  vkGetPhysicalDeviceMemoryProperties(physicalDevice,
+                        VkPhysicalDevice physical_device, uint32_t version_major,
+                        uint32_t version_minor) {
+  vkGetPhysicalDeviceMemoryProperties(physical_device,
                                       &info.m_memory_properties);
   uint32_t count;
-  vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &count, nullptr);
+  vkGetPhysicalDeviceQueueFamilyProperties(physical_device, &count, nullptr);
   info.m_queue_properties.resize(count);
-  vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &count,
+  vkGetPhysicalDeviceQueueFamilyProperties(physical_device, &count,
                                            info.m_queue_properties.data());
 
   static properties_11O_old properties_11_old;
   static features_11O_old features_11_old;
 
-  if (versionMajor == 1 && versionMinor == 1) {
+  if (version_major == 1 && version_minor == 1) {
     info.m_features_10.pNext = &features_11_old.m_multiview;
     info.m_properties_10.pNext = &properties_11_old.m_maintenance_3;
-  } else if (versionMajor == 1 && versionMinor >= 2) {
+  } else if (version_major == 1 && version_minor >= 2) {
     info.m_features_10.pNext = &info.m_vulkan_11_features;
     info.m_vulkan_11_features.pNext = &info.m_vulkan_12_features;
     info.m_vulkan_12_features.pNext = nullptr;
@@ -125,14 +125,14 @@ void init_physical_info(physical_device_info& info,
     info.m_vulkan_12_properties.pNext = nullptr;
   }
 
-  if (versionMajor == 1 && versionMinor >= 3) {
+  if (version_major == 1 && version_minor >= 3) {
     info.m_vulkan_12_features.pNext = &info.m_vulkan_13_features;
     info.m_vulkan_13_features.pNext = nullptr;
     info.m_vulkan_12_properties.pNext = &info.m_vulkan_13_properties;
     info.m_vulkan_13_properties.pNext = nullptr;
   }
 
-  if (versionMajor == 1 && versionMinor == 1) {
+  if (version_major == 1 && version_minor == 1) {
     properties_11_old.write(info.m_vulkan_11_properties);
     features_11_old.write(info.m_vulkan_11_features);
   }
@@ -140,8 +140,8 @@ void init_physical_info(physical_device_info& info,
   // VERY IMPORTANT: we must initialize the list of features, that are going to
   // be used, before retrieving their support from the device, otherwise only
   // the first one will be initialized
-  vkGetPhysicalDeviceFeatures2(physicalDevice, &info.m_features_10);
-  vkGetPhysicalDeviceProperties2(physicalDevice, &info.m_properties_10);
+  vkGetPhysicalDeviceFeatures2(physical_device, &info.m_features_10);
+  vkGetPhysicalDeviceProperties2(physical_device, &info.m_properties_10);
 }
 
 }  // namespace wunder

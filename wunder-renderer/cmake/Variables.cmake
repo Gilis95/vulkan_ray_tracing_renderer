@@ -2,6 +2,9 @@
 #Project Header directory
 set(HDR_DIR ${PROJECT_SOURCE_DIR}/include)
 
+set(RESOURCES_DIR ${PROJECT_SOURCE_DIR}/resources)
+set(SHADERS_DIR ${RESOURCES_DIR}/shaders)
+
 set(APPLICATION_HDR_DIR ${HDR_DIR}/application)
 set(CAMERA_HDR_DIR ${HDR_DIR}/camera)
 set(CORE_HDR_DIR ${HDR_DIR}/core)

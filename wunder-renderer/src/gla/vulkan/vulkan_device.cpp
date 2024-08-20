@@ -22,8 +22,7 @@ namespace wunder {
 // Vulkan Device
 ////////////////////////////////////////////////////////////////////////////////////
 
-vulkan_device::vulkan_device(
-    VkPhysicalDeviceFeatures enabled_features) {}
+vulkan_device::vulkan_device(VkPhysicalDeviceFeatures enabled_features) {}
 
 vulkan_device::~vulkan_device() = default;
 
@@ -70,6 +69,7 @@ void vulkan_device::create_extensions_list() {
       {.m_name = VK_KHR_SHADER_CLOCK_EXTENSION_NAME,
        .m_optional = false,
        .m_feature_struct = &clock_features_khr});
+
   // #VKRay: Activate the ray tracing extension
   static VkPhysicalDeviceAccelerationStructureFeaturesKHR
       acceleration_structure_features_khr{
@@ -78,6 +78,7 @@ void vulkan_device::create_extensions_list() {
       {.m_name = VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME,
        .m_optional = false,
        .m_feature_struct = &acceleration_structure_features_khr});
+
   static VkPhysicalDeviceRayTracingPipelineFeaturesKHR
       ray_tracing_pipeline_features_khr{
           VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_FEATURES_KHR};
@@ -92,8 +93,8 @@ void vulkan_device::create_logical_device() {
   // need to request the swapchain extension
   vulkan_context& vulkan_context =
       vulkan_layer_abstraction_factory::instance().get_vulkan_context();
-  const auto& physical_device = vulkan_context.get_physical_device();
-  auto& physical_device_info = physical_device.get_device_info();
+  auto& physical_device = vulkan_context.get_physical_device();
+  auto& physical_device_info = physical_device.mutable_device_info();
 
   add_supported_extensions(physical_device, m_requested_extensions,
                            m_used_extensions);
@@ -118,8 +119,8 @@ void vulkan_device::create_logical_device() {
     deviceCreateInfo.ppEnabledExtensionNames = extension_names.data();
   }
 
-  append_used_device_features(
-      physical_device_info, used_features, deviceCreateInfo);
+  append_used_device_features(physical_device_info, used_features,
+                              deviceCreateInfo);
 
   VK_CHECK_RESULT(vkCreateDevice(physical_device.get_vulkan_physical_device(),
                                  &deviceCreateInfo, nullptr,
@@ -127,10 +128,14 @@ void vulkan_device::create_logical_device() {
 }
 
 void vulkan_device::append_used_device_features(
-    const physical_device_info& physical_device_info,
+    physical_device_info& physical_device_info,
     const std::vector<void*>& used_features,
-    VkDeviceCreateInfo& out_device_create_info)
-    {  // use the features2 chain to append extensions
+    VkDeviceCreateInfo& out_device_create_info) {  // use the features2 chain to
+                                                   // append extensions
+  vulkan_context& vulkan_context =
+      vulkan_layer_abstraction_factory::instance().get_vulkan_context();
+  const auto& physical_device = vulkan_context.get_physical_device();
+
   if (!used_features.empty()) {
     // build up chain of all used extension features
     for (size_t i = 0; i < used_features.size(); i++) {
@@ -146,11 +151,13 @@ void vulkan_device::append_used_device_features(
     }
 
     // append required features to the end of physical device info
-    last_core_feature->pNext = used_features[0];  // there's at least one element
-                                                // in the vector, so we're safe
+    last_core_feature->pNext =
+        used_features[0];  // there's at least one element
+                           // in the vector, so we're safe
   }
 
   out_device_create_info.pNext = &physical_device_info.m_features_10;
+  vkGetPhysicalDeviceFeatures2(physical_device.get_vulkan_physical_device(), &physical_device_info.m_features_10);
 }
 
 void vulkan_device::destroy() {

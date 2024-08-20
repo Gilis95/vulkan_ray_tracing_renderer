@@ -72,8 +72,8 @@ struct properties_11O_old {
 };
 
 void init_physical_info(physical_device_info& info,
-                        VkPhysicalDevice physicalDevice, uint32_t versionMajor,
-                        uint32_t versionMinor);
+                        VkPhysicalDevice physical_device, uint32_t version_major,
+                        uint32_t version_minor);
 
 }  // namespace wunder
 

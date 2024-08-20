@@ -25,8 +25,8 @@ class vulkan_descriptor_set_manager {
 
  public:
 
-  void update_resource(const vulkan_resource_identifier& set_identifier,
-                       vulkan_resource);
+  void update_resource(const vulkan_resource_identifier& resource_identifier,
+                       vulkan_shader_resource_instance);
 
   void bake();
   void bind(const vulkan_pipeline& pipeline) const;

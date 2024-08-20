@@ -35,6 +35,9 @@ file(GLOB GLA_VULKAN_INLINE ${VULKAN_HDR_DIR}/*.hpp)
 file(GLOB ROOT_SOURCE ${SRC_DIR}/*.cpp)
 file(GLOB ROOT_HEADER ${HDR_DIR}/*.h)
 file(GLOB ROOT_INLINE ${HDR_DIR}/*.hpp)
+
+file(GLOB SHARED_HEADERS ${SHADERS_DIR}/*.h)
+
  #
  #file(GLOB SCENE_SOURCE ${SCENE_SRC_DIR}/*.cpp)
  #file(GLOB SCENE_HEADER ${SCENE_HDR_DIR}/*.h)
@@ -51,6 +54,7 @@ file(GLOB ROOT_INLINE ${HDR_DIR}/*.hpp)
  file(GLOB WINDOW_GLFW_SOURCE ${WINDOW_GLFW_SRC_DIR}/*.cpp)
  file(GLOB WINDOW_GLFW_HEADER ${WINDOW_GLFW_HDR_DIR}/*.h)
  file(GLOB WINDOW_GLFW_INLINE ${WINDOW_GLFW_HDR_DIR}/*.hpp)
+
  #
  #source_group("Header Files/application" FILES ${APPLICATION_HEADER})
  #source_group("Inline Files/application" FILES ${APPLICATION_INLINE})
@@ -122,6 +126,7 @@ set(WUNDER_RENDERER_HEADERS
          ${ROOT_INLINE}
          #${RENDERER_HEADER}
          #${RENDERER_INLINE}
+         ${SHARED_HEADERS}
          #${SCENE_HEADER}
          #${SCENE_INLINE}
          #${STB_HEADER}
