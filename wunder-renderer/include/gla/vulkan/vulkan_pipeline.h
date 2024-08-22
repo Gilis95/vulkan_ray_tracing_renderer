@@ -21,10 +21,21 @@ class vulkan_pipeline {
                            shaders_of_types);
 
  public:
-  VkPipelineLayout get_vulkan_pipeline_layout() const;
-  VkPipeline get_pipeline() const;
+  [[nodiscard]] VkPipelineLayout get_vulkan_pipeline_layout() const {
+    return m_vulkan_pipeline_layout;
+  }
+  [[nodiscard]] VkPipeline get_vulkan_pipeline() const {
+    return m_vulkan_pipeline;
+  }
 
-  VkPipelineBindPoint get_bind_point() const;
+  [[nodiscard]] VkPipelineBindPoint get_bind_point() const {
+    return VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR;
+  }
+
+  [[nodiscard]] const VkRayTracingPipelineCreateInfoKHR&
+  get_pipeline_create_info() const {
+    return m_pipeline_create_info;
+  }
 
  private:
   [[nodiscard]] std::vector<VkPipelineShaderStageCreateInfo>
@@ -37,8 +48,10 @@ class vulkan_pipeline {
       std::vector<VkPipelineShaderStageCreateInfo>& stages) const;
 
  private:
-  VkPipeline m_vulkan_pipeline;
-  VkPipelineLayout m_vulkan_pipeline_layout;
+  VkPipeline m_vulkan_pipeline = VK_NULL_HANDLE;
+  VkPipelineLayout m_vulkan_pipeline_layout = VK_NULL_HANDLE;
+  VkRayTracingPipelineCreateInfoKHR m_pipeline_create_info = {
+      VK_STRUCTURE_TYPE_RAY_TRACING_PIPELINE_CREATE_INFO_KHR};
 };
 }  // namespace wunder
 

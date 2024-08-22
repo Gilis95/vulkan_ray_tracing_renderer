@@ -3,9 +3,6 @@
 //
 #include "gla/vulkan/vulkan_context.h"
 
-#include <glad/vulkan.h>
-
-#include <optional>
 
 #include "core/wunder_logger.h"
 #include "core/wunder_macros.h"
@@ -15,6 +12,7 @@
 #include "gla/vulkan/vulkan_command_pool.h"
 #include "gla/vulkan/vulkan_device.h"
 #include "gla/vulkan/vulkan_macros.h"
+#include "gla/vulkan/vulkan_memory_allocator.h"
 #include "gla/vulkan/vulkan_physical_device.h"
 #include "window/window_factory.h"
 
@@ -35,18 +33,18 @@ void vulkan_context::init(const wunder::renderer_properties &properties) {
   AssertReturnUnless(gladLoaderLoadVulkan(
       m_vulkan->instance(), m_physical_device->get_vulkan_physical_device(),
       m_logical_device->get_vulkan_logical_device()));
+
+  create_allocator();
 }
 
 void vulkan_context::create_vulkan_instance(
     const renderer_properties &properties) {
-  m_vulkan = std::make_shared<vulkan>();
+  m_vulkan = std::make_unique<vulkan>();
   m_vulkan->init(properties);
 }
 
 void vulkan_context::select_physical_device() {
-  m_physical_device = std::make_shared<vulkan_physical_device>();
-  CrashUnless(m_physical_device);
-
+  m_physical_device = std::make_unique<vulkan_physical_device>();
   m_physical_device->initialize();
 
   auto &properties = m_physical_device->get_properties();
@@ -66,8 +64,25 @@ void vulkan_context::select_logical_device() {
   enabled_features.independentBlend = true;
   enabled_features.pipelineStatisticsQuery = true;
   enabled_features.shaderStorageImageReadWithoutFormat = true;
+
   m_logical_device = std::make_unique<vulkan_device>(enabled_features);
   m_logical_device->initialize();
+}
+
+void vulkan_context::create_allocator() {
+  VmaAllocatorCreateInfo vma_allocator_create_info;
+  memset(&vma_allocator_create_info, 0, sizeof(VmaAllocatorCreateInfo));
+
+  vma_allocator_create_info.instance = m_vulkan->instance();
+  vma_allocator_create_info.physicalDevice =
+      m_physical_device->get_vulkan_physical_device();
+  vma_allocator_create_info.device =
+      m_logical_device->get_vulkan_logical_device();
+  vma_allocator_create_info.vulkanApiVersion = m_vulkan->get_vulkan_version();
+  vma_allocator_create_info.flags |=
+      VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT;
+
+  vmaCreateAllocator(&vma_allocator_create_info, &m_resource_allocator);
 }
 
 const renderer_capabilities &vulkan_context::get_capabilities() const {
@@ -75,14 +90,16 @@ const renderer_capabilities &vulkan_context::get_capabilities() const {
   return m_renderer_capabilities ? *m_renderer_capabilities : s_empty;
 }
 
-vulkan_device &vulkan_context::get_device() {
-  return *m_logical_device;
-}
+vulkan &vulkan_context::get_vulkan() { return *m_vulkan; }
 
 vulkan_physical_device &vulkan_context::get_physical_device() {
   return *m_physical_device;
 }
 
-vulkan &vulkan_context::get_vulkan() { return *m_vulkan; }
+vulkan_device &vulkan_context::get_device() { return *m_logical_device; }
+
+VmaAllocator &vulkan_context::get_resource_allocator() {
+  return m_resource_allocator;
+}
 
 }  // namespace wunder

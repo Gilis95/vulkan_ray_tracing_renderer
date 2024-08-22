@@ -11,6 +11,7 @@
 #include "gla/vulkan/vulkan_layer_abstraction_factory.h"
 #include "gla/vulkan/vulkan_pipeline.h"
 #include "gla/vulkan/vulkan_shader.h"
+#include "gla/vulkan/vulkan_shader_binding_table.h"
 
 namespace wunder {
 
@@ -18,6 +19,7 @@ vulkan_renderer::~vulkan_renderer() = default;
 
 void vulkan_renderer::init_internal(const renderer_properties &properties) {
   m_pipeline = std::make_unique<vulkan_pipeline>();
+  m_shader_binding_table = std::make_unique<vulkan_shader_binding_table>();
 
   for (auto &[shader_type, shaders_compile_data] :
        get_shaders_for_compilation()) {
@@ -46,6 +48,7 @@ void vulkan_renderer::init_internal(const renderer_properties &properties) {
   }
 
   m_pipeline->create_pipeline(m_shaders);
+  m_shader_binding_table->initialize(*m_pipeline);
 }
 
 vector_map<VkShaderStageFlagBits, std::vector<shader_to_compile>>

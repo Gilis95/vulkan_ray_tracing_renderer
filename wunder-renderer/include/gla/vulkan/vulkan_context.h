@@ -6,6 +6,8 @@
 #define WUNDER_VULKAN_CONTEXT_H
 
 #include "core/wunder_memory.h"
+#include "gla/vulkan/vulkan_memory_allocator.h"
+
 
 namespace wunder {
 class vulkan;
@@ -27,19 +29,23 @@ class vulkan_context final {
   void init(const renderer_properties& properties);
  public:
   [[nodiscard]] const renderer_capabilities& get_capabilities() const;
-  [[nodiscard]] vulkan_device& get_device();
-  [[nodiscard]] vulkan_physical_device& get_physical_device();
+
   [[nodiscard]] vulkan& get_vulkan();
+  [[nodiscard]] vulkan_physical_device& get_physical_device();
+  [[nodiscard]] vulkan_device& get_device();
+  [[nodiscard]] VmaAllocator& get_resource_allocator();
 
  private:
   void create_vulkan_instance(const renderer_properties& properties);
-  void select_logical_device();
   void select_physical_device();
+  void select_logical_device();
+  void create_allocator();
  private:
-  shared_ptr<vulkan> m_vulkan;
+  unique_ptr<vulkan> m_vulkan;
   unique_ptr<renderer_capabilities> m_renderer_capabilities;
-  shared_ptr<vulkan_physical_device> m_physical_device;
+  unique_ptr<vulkan_physical_device> m_physical_device;
   unique_ptr<vulkan_device> m_logical_device;
+  VmaAllocator m_resource_allocator;
 };
 }
 #endif  // WUNDER_VULKAN_CONTEXT_H

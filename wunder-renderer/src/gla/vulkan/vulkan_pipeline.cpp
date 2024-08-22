@@ -15,10 +15,6 @@
 namespace wunder {
 class vulkan_shader;
 
-VkPipelineLayout vulkan_pipeline::get_vulkan_pipeline_layout() const {
-  return VK_NULL_HANDLE;
-}
-
 void vulkan_pipeline::create_pipeline_layout(
     const vulkan_shader& descriptor_declaring_shader) {
   auto& device = vulkan_layer_abstraction_factory::instance()
@@ -68,17 +64,15 @@ void vulkan_pipeline::create_pipeline(
   // --- Pipeline ---
   // Assemble the shader stages and recursion depth info into the ray tracing
   // pipeline
-  VkRayTracingPipelineCreateInfoKHR ray_tracing_pipeline_create_info_khr{
-      VK_STRUCTURE_TYPE_RAY_TRACING_PIPELINE_CREATE_INFO_KHR};
-  ray_tracing_pipeline_create_info_khr.stageCount =
+  m_pipeline_create_info.stageCount =
       static_cast<uint32_t>(stages.size());  // Stages are shaders
-  ray_tracing_pipeline_create_info_khr.pStages = stages.data();
+  m_pipeline_create_info.pStages = stages.data();
 
-  ray_tracing_pipeline_create_info_khr.groupCount = static_cast<uint32_t>(groups.size());
-  ray_tracing_pipeline_create_info_khr.pGroups = groups.data();
+  m_pipeline_create_info.groupCount = static_cast<uint32_t>(groups.size());
+  m_pipeline_create_info.pGroups = groups.data();
 
-  ray_tracing_pipeline_create_info_khr.maxPipelineRayRecursionDepth = 2;  // Ray depth
-  ray_tracing_pipeline_create_info_khr.layout = m_vulkan_pipeline_layout;
+  m_pipeline_create_info.maxPipelineRayRecursionDepth = 2;  // Ray depth
+  m_pipeline_create_info.layout = m_vulkan_pipeline_layout;
 
   // Create a deferred operation (compiling in parallel)
   bool use_deferred{true};
@@ -89,7 +83,7 @@ void vulkan_pipeline::create_pipeline(
   }
 
   vkCreateRayTracingPipelinesKHR(device.get_vulkan_logical_device(), deferred_op,
-                                 {}, 1, &ray_tracing_pipeline_create_info_khr, nullptr,
+                                 {}, 1, &m_pipeline_create_info, nullptr,
                                  &m_vulkan_pipeline);
 
   if (use_deferred) {
@@ -228,9 +222,4 @@ vulkan_pipeline::get_shader_group_create_info(
   return groups;
 }
 
-VkPipeline vulkan_pipeline::get_pipeline() const { return VK_NULL_HANDLE; }
-
-VkPipelineBindPoint vulkan_pipeline::get_bind_point() const {
-  return VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR;
-}
 }  // namespace wunder

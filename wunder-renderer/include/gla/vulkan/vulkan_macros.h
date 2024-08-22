@@ -155,9 +155,10 @@ static const char* vulkan_vendor_id_to_string(uint32_t vendorID) {
   return "Unknown";
 }
 
-
-inline static void set_debug_utils_object_name(VkDevice device, const VkObjectType objectType, const std::string& name, const void* handle)
-{
+inline static void set_debug_utils_object_name(VkDevice device,
+                                               const VkObjectType objectType,
+                                               const std::string& name,
+                                               const void* handle) {
   VkDebugUtilsObjectNameInfoEXT nameInfo;
   nameInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT;
   nameInfo.objectType = objectType;
@@ -166,6 +167,13 @@ inline static void set_debug_utils_object_name(VkDevice device, const VkObjectTy
   nameInfo.pNext = VK_NULL_HANDLE;
 
   VK_CHECK_RESULT(vkSetDebugUtilsObjectNameEXT(device, &nameInfo));
+}
+
+inline static void set_debug_utils_object_name(VkDevice device,
+                                               const std::string& name,
+                                               VkBuffer handle) {
+  set_debug_utils_object_name(device, VkObjectType::VK_OBJECT_TYPE_BUFFER, name,
+                              handle);
 }
 
 }  // namespace wunder

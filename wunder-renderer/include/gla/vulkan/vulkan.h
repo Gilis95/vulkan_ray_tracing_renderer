@@ -26,6 +26,7 @@ class vulkan {
  public:
   std::uint32_t get_api_major_version() const { return m_api_minor_version; }
   std::uint32_t get_api_minor_version() const { return m_api_minor_version; }
+  std::uint32_t get_vulkan_version() const { return VK_MAKE_VERSION(m_api_major_version, m_api_minor_version, 0); }
 
  private:
   static VkResult extract_supported_extensions(

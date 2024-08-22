@@ -38,7 +38,8 @@ class vulkan_command_pool {
  private:
   VkCommandBuffer allocate_command_buffer(bool begin, VkCommandPool& out_pool,
                                           VkCommandBuffer& out_buffer);
-  void flush_command_buffer(VkCommandBuffer command_buffer, VkQueue queue);
+  void flush_command_buffer(VkCommandBuffer command_buffer,
+                            VkCommandPool source_pool, VkQueue queue);
 
  private:
   VkCommandPool m_graphics_command_pool = VK_NULL_HANDLE;

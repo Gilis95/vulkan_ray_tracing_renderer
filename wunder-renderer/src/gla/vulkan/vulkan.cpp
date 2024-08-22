@@ -17,6 +17,9 @@ namespace wunder {
 vulkan::~vulkan() = default;
 
 void vulkan::init(const renderer_properties &properties) {
+  m_api_major_version = 1;
+  m_api_minor_version = 3;
+
   VkApplicationInfo app_info = {};
   std::memset(&app_info, 0, sizeof(app_info));
 
@@ -24,11 +27,8 @@ void vulkan::init(const renderer_properties &properties) {
   app_info.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
   app_info.pApplicationName = "Wunder_Renderer";
   app_info.pEngineName = "Wunder_Renderer";
-  app_info.apiVersion = VK_API_VERSION_1_3;
+  app_info.apiVersion =get_vulkan_version();
   app_info.pNext = nullptr;
-
-  m_api_major_version = 1;
-  m_api_minor_version = 3;
 
   VkValidationFeatureEnableEXT enables[] = {
       VK_VALIDATION_FEATURE_ENABLE_BEST_PRACTICES_EXT};

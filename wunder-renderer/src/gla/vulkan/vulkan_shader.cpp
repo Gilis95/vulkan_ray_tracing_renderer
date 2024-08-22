@@ -337,13 +337,14 @@ void vulkan_shader::initialize_descriptor_set_layout() {
              std::vector<VkDescriptorSetLayoutBinding>>
       per_set_layout_bindings;
 
+  auto layout_creator = descriptor_set_layout_creator();
   for (auto& [_, resource_declaration_variant] :
        m_reflection_data.m_shader_resources_declaration) {
     const vulkan_shader_resource_declaration_base& resource_declaration = std::visit(
         downcast_vulkan_shader_resource, resource_declaration_variant);
 
     auto& layout_bindings = per_set_layout_bindings[resource_declaration.m_set];
-    layout_bindings.emplace_back(std::visit(descriptor_set_layout_creator(),
+    layout_bindings.emplace_back(std::visit(layout_creator,
                                             resource_declaration_variant));
   }
 

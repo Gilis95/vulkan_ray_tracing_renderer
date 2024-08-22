@@ -11,9 +11,11 @@
 #include "gla/vulkan/vulkan_context.h"
 #include "gla/vulkan/vulkan_descriptor_set_manager.h"
 #include "gla/vulkan/vulkan_device.h"
+#include "gla/vulkan/vulkan_pipeline.h"
 #include "gla/vulkan/vulkan_physical_device.h"
 #include "gla/vulkan/vulkan_renderer.h"
 #include "gla/vulkan/vulkan_shader.h"
+#include "gla/vulkan/vulkan_shader_binding_table.h"
 
 namespace {
 std::unique_ptr<wunder::vulkan_renderer> create_ray_trace_vulkan_render(

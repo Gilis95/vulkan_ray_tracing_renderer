@@ -37,7 +37,15 @@ FetchContent_Declare(
         GIT_TAG 747a3cd
 )
 
-FetchContent_MakeAvailable(EnTT glad glfw glm spdlog tracy)
+FetchContent_Declare(
+        vulkan-memory-allocator
+        GIT_REPOSITORY git@github.com:GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator.git
+        GIT_TAG b8e5747
+)
+
+set(VMA_ENABLE_INSTALL OFF CACHE BOOL "" FORCE)
+
+FetchContent_MakeAvailable(EnTT glad glfw glm spdlog tracy vulkan-memory-allocator)
 
 include(cmake/FetchShadercDependency.cmake)
 include(cmake/FetchSPIRVCrossDependency.cmake)

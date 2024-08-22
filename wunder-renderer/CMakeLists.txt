@@ -18,7 +18,7 @@ option(WANDER_ENGINE_INSTALL "Generate installation target" OFF)
 include(cmake/Variables.cmake)
 include(cmake/Files.cmake)
 
-glad_add_library(glad_vulkan REPRODUCIBLE LOADER API vulkan=1.3)
+glad_add_library(Vulkan REPRODUCIBLE LOADER API vulkan=1.3)
 
 ################################################################################################
 add_library(wunder-renderer STATIC ${WUNDER_RENDERER_HEADERS} ${WUNDER_RENDERER_SOURCES})
@@ -30,13 +30,12 @@ target_include_directories(wunder-renderer PUBLIC
 
 target_link_libraries(wunder-renderer PRIVATE
         EnTT
-        glad_vulkan
+        Vulkan
         glfw
         glm
         spdlog
         TracyClient
-#        spirv-headers
-#        spirv-tools
+        GPUOpen::VulkanMemoryAllocator
         glslang
         shaderc
         shaderc_util

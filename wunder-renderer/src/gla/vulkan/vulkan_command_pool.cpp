@@ -43,8 +43,8 @@ vulkan_command_pool::~vulkan_command_pool() {
   vkDestroyCommandPool(vulkanDevice, m_compute_command_pool, nullptr);
 }
 
-VkCommandBuffer vulkan_command_pool::allocate_command_buffer(bool begin,
-                                                             VkCommandPool& out_pool, VkCommandBuffer& out_buffer) {
+VkCommandBuffer vulkan_command_pool::allocate_command_buffer(
+    bool begin, VkCommandPool& out_pool, VkCommandBuffer& out_buffer) {
   auto& logical_device = vulkan_layer_abstraction_factory::instance()
                              .get_vulkan_context()
                              .get_device();
@@ -60,10 +60,10 @@ VkCommandBuffer vulkan_command_pool::allocate_command_buffer(bool begin,
   command_buffer_allocate_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
   command_buffer_allocate_info.commandBufferCount = 1;
 
-  AssertReturnUnless(
-      vkAllocateCommandBuffers(
-          vulkan_logical_device, &command_buffer_allocate_info,&out_buffer) == VkResult::VK_SUCCESS,
-      nullptr);
+  AssertReturnUnless(vkAllocateCommandBuffers(
+                         vulkan_logical_device, &command_buffer_allocate_info,
+                         &out_buffer) == VkResult::VK_SUCCESS,
+                     nullptr);
 
   // If requested, also start the new command buffer
   ReturnUnless(begin, command_buffer);
@@ -78,14 +78,10 @@ VkCommandBuffer vulkan_command_pool::allocate_command_buffer(bool begin,
   return command_buffer;
 }
 
-VkCommandBuffer vulkan_command_pool::allocate_graphics_command_buffer(bool begin)
-{
-
-}
-VkCommandBuffer vulkan_command_pool::allocate_compute_command_buffer(bool begin)
-{
-
-}
+VkCommandBuffer vulkan_command_pool::allocate_graphics_command_buffer(
+    bool begin) {}
+VkCommandBuffer vulkan_command_pool::allocate_compute_command_buffer(
+    bool begin) {}
 
 void vulkan_command_pool::flush_graphics_command_buffer() {
   auto& logical_device = vulkan_layer_abstraction_factory::instance()
@@ -93,6 +89,7 @@ void vulkan_command_pool::flush_graphics_command_buffer() {
                              .get_device();
 
   flush_command_buffer(m_current_graphics_command_buffer,
+                       m_graphics_command_pool,
                        logical_device.get_graphics_queue());
 }
 
@@ -102,10 +99,12 @@ void vulkan_command_pool::flush_compute_command_buffer() {
                              .get_device();
 
   flush_command_buffer(m_current_compute_command_buffer,
+                       m_compute_command_pool,
                        logical_device.get_compute_queue());
 }
 
 void vulkan_command_pool::flush_command_buffer(VkCommandBuffer command_buffer,
+                                               VkCommandPool source_pool,
                                                VkQueue queue) {
   auto& logical_device = vulkan_layer_abstraction_factory::instance()
                              .get_vulkan_context()
@@ -142,7 +141,7 @@ void vulkan_command_pool::flush_command_buffer(VkCommandBuffer command_buffer,
                  VkResult::VK_SUCCESS);
 
   vkDestroyFence(vulkan_logical_device, fence, nullptr);
-  vkFreeCommandBuffers(vulkan_logical_device, m_graphics_command_pool, 1,
+  vkFreeCommandBuffers(vulkan_logical_device, source_pool, 1,
                        &command_buffer);
 }
 
