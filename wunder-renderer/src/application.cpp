@@ -3,10 +3,13 @@
 #include <tracy/Tracy.hpp>
 
 #include "application_properties.h"
+#include "assets/scene_asset.h"
 #include "core/wunder_macros.h"
 #include "event/event_handler.hpp"
-#include "gla/vulkan/vulkan_renderer.h"
 #include "gla/vulkan/vulkan_layer_abstraction_factory.h"
+#include "gla/vulkan/vulkan_renderer.h"
+#include "gla/vulkan/vulkan_scene.h"
+#include "scene/scene.h"
 #include "window/window_factory.h"
 
 namespace wunder {
@@ -36,7 +39,7 @@ void application::init() {
       m_properties->m_window_properties));
   vulkan_layer_abstraction_factory::instance().init_instance(
       m_properties->m_renderer_properties);
-
+  m_scene = std::make_unique<scene>();
   init_internal();
 }
 

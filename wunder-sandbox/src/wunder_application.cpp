@@ -3,6 +3,7 @@
 #include <application_properties.h>
 #include <core/wunder_filesystem.h>
 #include <gla/renderer_properties.h>
+#include <scene/scene.h>
 #include <window/window_properties.h>
 
 #include <entry_point.h>
@@ -14,7 +15,9 @@ namespace wunder {
 wunder_application::wunder_application(application_properties&& properties)
     : application(std::move(properties)) {}
 
-void wunder_application::init_internal() {}
+void wunder_application::init_internal() {
+  m_scene->load_scene("wunder-sandbox/resources/cube.gltf");
+}
 
 /////////////////////////////////////////////////////////////////////////////////////////
 application *create_application() {

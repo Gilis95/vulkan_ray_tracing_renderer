@@ -9,6 +9,8 @@
 /////////////////////////////////////////////////////////////////////////////////////////
 namespace wunder {
 
+class scene;
+
 struct application_properties;
 
 class application : private event_handler<window_close_event>{
@@ -47,6 +49,9 @@ class application : private event_handler<window_close_event>{
  private:
   bool m_is_running;
   unique_ptr<application_properties> m_properties;
+
+ protected:
+  unique_ptr<scene> m_scene;
 };
 
 extern application *create_application(application_properties& m_properties);

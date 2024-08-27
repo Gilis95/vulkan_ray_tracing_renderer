@@ -38,14 +38,17 @@ FetchContent_Declare(
 )
 
 FetchContent_Declare(
-        vulkan-memory-allocator
-        GIT_REPOSITORY git@github.com:GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator.git
-        GIT_TAG b8e5747
+        tinygltf
+        GIT_REPOSITORY git@github.com:syoyo/tinygltf.git
+        GIT_TAG v2.9.3
 )
 
-set(VMA_ENABLE_INSTALL OFF CACHE BOOL "" FORCE)
+set(TINYGLTF_BUILD_LOADER_EXAMPLE OFF CACHE INTERNAL "" FORCE)
+set(TINYGLTF_HEADER_ONLY ON CACHE INTERNAL "" FORCE)
+set(TINYGLTF_INSTALL OFF CACHE INTERNAL "" FORCE)
 
-FetchContent_MakeAvailable(EnTT glad glfw glm spdlog tracy vulkan-memory-allocator)
+FetchContent_MakeAvailable(EnTT glad glfw glm spdlog tracy tinygltf)
 
 include(cmake/FetchShadercDependency.cmake)
 include(cmake/FetchSPIRVCrossDependency.cmake)
+include(cmake/FetchVMADependency.cmake)

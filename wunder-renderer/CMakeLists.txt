@@ -31,6 +31,7 @@ target_include_directories(wunder-renderer PUBLIC
 target_link_libraries(wunder-renderer PRIVATE
         EnTT
         Vulkan
+        tinygltf
         glfw
         glm
         spdlog
