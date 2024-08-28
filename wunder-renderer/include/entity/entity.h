@@ -6,8 +6,23 @@
 #define WUNDER_ENTITY_H
 
 #include <optional>
+#include <tuple>
+#include <type_traits>
 #include <variant>
 #include <vector>
+
+namespace {
+
+template <typename T, typename... Ts>
+constexpr bool contains = (std::is_same<T, Ts>{} || ...);
+
+template <typename Subset, typename Set>
+constexpr bool is_subset_of = false;
+
+template <typename... Ts, typename... Us>
+constexpr bool is_subset_of<std::tuple<Ts...>, std::tuple<Us...>> =
+    (contains<Ts, Us...> && ...);
+}  // namespace
 
 namespace wunder {
 
@@ -21,7 +36,10 @@ class entity {
   void add_component(component_type&& component);
 
   template <typename component_type>
-  void has_component();
+  bool has_component();
+
+  template <typename... component_types>
+  bool has_components();
 
   template <typename component_type>
   std::optional<std::reference_wrapper<component_type>> get_component();
@@ -40,15 +58,20 @@ void entity<types...>::iterate_components(visitor_type& visitor) {
 
 template <typename... types>
 template <typename component_type>
-void entity<types...>::add_component(component_type&& component)
-{
+void entity<types...>::add_component(component_type&& component) {
   m_components.emplace_back(component);
 }
 
 template <typename... types>
 template <typename component_type>
-void entity<types...>::has_component() {
+bool entity<types...>::has_component() {
   std::holds_alternative<component_type>(m_components);
+}
+
+template <typename... types>
+template <typename... component_types>
+bool entity<types...>::has_components() {
+  return is_subset_of<std::tuple<component_types...>, std::tuple<types...>>;
 }
 
 template <typename... types>

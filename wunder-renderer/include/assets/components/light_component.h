@@ -6,6 +6,8 @@
 #define WUNDER_LIGHT_COMPONENT_H
 
 #include <glm/vec4.hpp>
+#include <variant>
+
 namespace wunder {
 struct spot_light {
   double inner_cone_angle;

@@ -24,8 +24,6 @@ struct material_component {
   int m_double_sided;            // 64 byte
   int m_normal_texture;          // 68 byte
   float m_normal_texture_scale;  // 72 byte
-  int   m_occlusion_texture{-1};
-  float m_occlusion_texture_strength{1};
   // 18
   glm::mat4 m_uv_transform;  // 136 byte
   // 22

@@ -3,10 +3,11 @@
 #include <glad/vulkan.h>
 
 #include <filesystem>
+#include <tiny_gltf.h>
 
 #include "assets/asset_types.h"
-#include "assets/gltf_scene_serializer.h"
 #include "assets/scene_asset.h"
+#include "assets/gltf/gltf_scene_serializer.h"
 #include "core/wunder_filesystem.h"
 #include "gla/vulkan/vulkan_scene.h"
 
@@ -51,9 +52,7 @@ bool scene::activate_scene(scene_id id) {
   AssertReturnIf(found_scene_asset_it == m_loaded_scenes.end(), false);
 
   auto api_scene = vulkan_scene();
-  api_scene.start_binding();
-  found_scene_asset_it->second.iterate_nodes_components(api_scene);
-  api_scene.finish_binding();
+  api_scene.load_scene(found_scene_asset_it->second);
 
   m_active_scenes.emplace_back(std::make_pair(id, std::move(api_scene)));
 

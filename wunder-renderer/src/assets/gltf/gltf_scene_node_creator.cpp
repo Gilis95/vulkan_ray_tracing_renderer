@@ -1,11 +1,11 @@
 
-#include "assets/gltf_scene_node_creator.h"
+#include "include/assets/gltf/gltf_scene_node_creator.h"
 
 #include "assets/components/camera_component.h"
-#include "assets/gltf_scene_serializer.h"
 #include "assets/scene_asset.h"
 #include "assets/scene_node.h"
-#include "include/tinygltf/tinygltf_utils.h"
+#include "include/assets/gltf/gltf_scene_serializer.h"
+#include "tinygltf/tinygltf_utils.h"
 
 namespace wunder {
 gltf_scene_node_creator::gltf_scene_node_creator(glm::mat4& model_matrix,

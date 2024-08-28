@@ -41,13 +41,13 @@ wunder::vector_map<wunder::renderer_type, renderer_create_fn>
 }  // namespace
 
 namespace wunder {
-vulkan_layer_abstraction_factory vulkan_layer_abstraction_factory::s_instance;
 
 vulkan_layer_abstraction_factory::vulkan_layer_abstraction_factory() = default;
 
 vulkan_layer_abstraction_factory::~vulkan_layer_abstraction_factory() = default;
 
 vulkan_layer_abstraction_factory &vulkan_layer_abstraction_factory::instance() {
+  static vulkan_layer_abstraction_factory s_instance;
   return s_instance;
 }
 

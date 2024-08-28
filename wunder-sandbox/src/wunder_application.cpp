@@ -16,7 +16,8 @@ wunder_application::wunder_application(application_properties&& properties)
     : application(std::move(properties)) {}
 
 void wunder_application::init_internal() {
-  m_scene->load_scene("wunder-sandbox/resources/cube.gltf");
+  auto scene_id = m_scene->load_scene("wunder-sandbox/resources/cube.gltf");
+  m_scene->activate_scene(scene_id.value());
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

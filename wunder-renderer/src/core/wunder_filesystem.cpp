@@ -3,11 +3,12 @@
 #include "core/wunder_macros.h"
 
 namespace wunder {
-wunder_filesystem wunder_filesystem::s_instance;
 
 wunder_filesystem::wunder_filesystem() = default;
 
-wunder_filesystem& wunder_filesystem::instance() { return s_instance; }
+wunder_filesystem& wunder_filesystem::instance() {
+  static wunder_filesystem s_instance;
+  return s_instance; }
 
 void wunder_filesystem::set_work_dir(std::filesystem::path work_dir) {
   m_work_dir = std::filesystem::canonical(work_dir);

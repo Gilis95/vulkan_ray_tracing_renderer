@@ -18,10 +18,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "include/tinygltf/tinygltf_utils.h"
+#include "tinygltf/tinygltf_utils.h"
 
-namespace tinygltf {
-namespace utils {
+namespace tinygltf::utils {
 
 KHR_materials_displacement get_displacement(const tinygltf::Material& tmat) {
   KHR_materials_displacement gmat;
@@ -80,7 +79,8 @@ KHR_materials_specular get_specular(const tinygltf::Material& tmat) {
         tmat.extensions, KHR_MATERIALS_SPECULAR_EXTENSION_NAME);
     get_value(ext, "m_specular_factor", gmat.m_specular_factor);
     get_value(ext, "m_specular_texture", gmat.m_specular_texture);
-    get_array_value(ext, "m_specular_color_factor", gmat.m_specular_color_factor);
+    get_array_value(ext, "m_specular_color_factor",
+                    gmat.m_specular_color_factor);
     get_value(ext, "m_specular_color_texture", gmat.m_specular_color_texture);
   }
   return gmat;
@@ -185,7 +185,8 @@ KHR_materials_iridescence get_iridescence(const tinygltf::Material& tmat) {
   return gmat;
 }
 
-tinygltf::Value convert_to_tinygltf_value(int numElements, const float* elements) {
+tinygltf::Value convert_to_tinygltf_value(int numElements,
+                                          const float* elements) {
   tinygltf::Value::Array result;
   result.reserve(numElements);
 
@@ -197,7 +198,7 @@ tinygltf::Value convert_to_tinygltf_value(int numElements, const float* elements
 }
 
 void get_node_trs(const tinygltf::Node& node, glm::vec3& translation,
-                glm::quat& rotation, glm::vec3& scale) {
+                  glm::quat& rotation, glm::vec3& scale) {
   // Initialize translation, rotation, and scale to default values
   translation = glm::vec3(0.0f, 0.0f, 0.0f);
   rotation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
@@ -232,7 +233,7 @@ void get_node_trs(const tinygltf::Node& node, glm::vec3& translation,
 }
 
 void set_node_trs(tinygltf::Node& node, const glm::vec3& translation,
-                const glm::quat& rotation, const glm::vec3& scale) {
+                  const glm::quat& rotation, const glm::vec3& scale) {
   node.translation = {translation.x, translation.y, translation.z};
   node.rotation = {rotation.x, rotation.y, rotation.z, rotation.w};
   node.scale = {scale.x, scale.y, scale.z};
@@ -283,5 +284,4 @@ glm::mat4 getLocalMatrix(const tinygltf::Node& tnode) {
   }
   return mtranslation * mrot * mscale * matrix;
 }
-}  // namespace utils
-}  // namespace tinygltf
+}  // namespace tinygltf::utils

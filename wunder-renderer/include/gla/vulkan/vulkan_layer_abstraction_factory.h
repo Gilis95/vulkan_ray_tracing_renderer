@@ -25,8 +25,6 @@ class vulkan_layer_abstraction_factory {
  private:
   void create_renderer(const renderer_properties &properties);
  private:
-  static vulkan_layer_abstraction_factory s_instance;
-
   unique_ptr<vulkan_renderer> m_renderer;
   unique_ptr<vulkan_context> m_context;
   void create_vulkan_context(const renderer_properties &properties);

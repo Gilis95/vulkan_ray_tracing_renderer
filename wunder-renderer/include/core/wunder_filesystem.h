@@ -18,7 +18,6 @@ class wunder_filesystem {
 
   std::filesystem::path resolve_path(const std::filesystem::path& resource_path);
  private:
-  static wunder_filesystem s_instance;
   std::filesystem::path m_work_dir;
 };
 }  // namespace wunder

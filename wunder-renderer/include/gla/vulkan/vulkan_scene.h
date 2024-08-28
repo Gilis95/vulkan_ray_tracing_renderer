@@ -17,23 +17,15 @@ struct material_component;
 struct mesh_component;
 struct transform_component;
 struct light_component;
-
+struct texture_component;
+struct scene_asset;
 class vulkan_resource {
   std::vector<VkBuffer> m_buffers;
 };
 
 class vulkan_scene {
  public:
-  void start_binding();
-  void finish_binding();
-
- public:
-  void operator()(const camera_component& component);
-  void operator()(const material_component& component);
-  void operator()(const mesh_component&);
-  void operator()(const transform_component& component);
-  void operator()(const light_component& component);
-
+  void load_scene(scene_asset& asset);
  private:
   std::vector<vulkan_resource> binded_resources;
 };
