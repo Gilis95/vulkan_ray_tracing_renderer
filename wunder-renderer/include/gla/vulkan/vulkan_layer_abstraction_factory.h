@@ -15,19 +15,21 @@ class vulkan_layer_abstraction_factory {
   vulkan_layer_abstraction_factory();
  public:
   ~vulkan_layer_abstraction_factory();
+  void shutdown();
+
  public:
   static vulkan_layer_abstraction_factory &instance();
  public:
-  void init_instance(const renderer_properties &properties);
+  void initialize(const renderer_properties &properties);
 
   [[nodiscard]] vulkan_renderer &get_renderer_api();
   [[nodiscard]] vulkan_context &get_vulkan_context();
  private:
   void create_renderer(const renderer_properties &properties);
+  void create_vulkan_context(const renderer_properties &properties);
  private:
   unique_ptr<vulkan_renderer> m_renderer;
   unique_ptr<vulkan_context> m_context;
-  void create_vulkan_context(const renderer_properties &properties);
 };
 
 }  // namespace wunder

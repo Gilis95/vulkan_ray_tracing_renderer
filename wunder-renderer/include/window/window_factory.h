@@ -12,15 +12,15 @@ class window_factory {
   window_factory() = default;
 
  public:
-  static window_factory& get_instance() { return s_instance; }
+  static window_factory& instance();
+
+  void shutdown();
 
  public:
-  bool create_window(const window_properties& window_properties);
+  bool initialize(const window_properties& window_properties);
   window& get_window();
 
  private:
-  static window_factory s_instance;
-
   unique_ptr<window> m_window;
 };
 }  // namespace wunder

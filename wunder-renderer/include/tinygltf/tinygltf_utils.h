@@ -35,6 +35,9 @@
 #include "glm/gtx/transform.hpp"
 #include "include/core/wunder_macros.h"
 
+#define GLTF_PERSPECTIVE_CAMERA_TYPE  "perspective"
+#define GLTF_ORTHOGRAPHIC_CAMERA_TYPE  "orthographic"
+
 #define KHR_MATERIALS_VARIANTS_EXTENSION_NAME "KHR_materials_variants"
 #define EXT_MESH_GPU_INSTANCING_EXTENSION_NAME "EXT_mesh_gpu_instancing"
 #define EXTENSION_ATTRIB_IRAY "NV_attributes_iray"

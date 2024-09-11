@@ -4,12 +4,7 @@
 #include <variant>
 #include <vector>
 
-#include "assets/components/camera_component.h"
-#include "assets/components/light_component.h"
-#include "assets/components/material_component.h"
-#include "assets/components/mesh_component.h"
-#include "assets/components/texture_component.h"
-#include "assets/components/transform_component.h"
+#include "assets/components/scene_components.h"
 #include "entity/entity.h"
 
 namespace wunder {

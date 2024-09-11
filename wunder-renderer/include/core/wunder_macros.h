@@ -25,17 +25,19 @@
 // instruction
 #define CRASH *((volatile unsigned int*)0) = 0xDEAD
 
-#define AssertLogIf(x, ...)                               \
-  {                                                       \
-    if ((x)) {                                            \
-      WUNDER_ERROR("Assertion Failed: {0}", __VA_ARGS__); \
-    }                                                     \
+#define AssertLogIf(x, ...)                                             \
+  {                                                                     \
+    if ((x)) {                                                          \
+      WUNDER_ERROR("Assertion Failed: {0} {1} {2}", __FILE__, __LINE__, \
+                   __FUNCTION__);                                       \
+    }                                                                   \
   }
-#define AssertLogUnless(x, ...)                           \
-  {                                                       \
-    if (!(x)) {                                           \
-      WUNDER_ERROR("Assertion Failed: {0}", __VA_ARGS__); \
-    }                                                     \
+#define AssertLogUnless(x, ...)                                         \
+  {                                                                     \
+    if (!(x)) {                                                         \
+      WUNDER_ERROR("Assertion Failed: {0} {1} {2}", __FILE__, __LINE__, \
+                   __FUNCTION__);                                       \
+    }                                                                   \
   }
 
 #define ReturnIf(x, ...)  \

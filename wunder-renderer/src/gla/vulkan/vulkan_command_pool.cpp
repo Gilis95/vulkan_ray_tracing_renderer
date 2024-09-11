@@ -4,6 +4,7 @@
 #include "gla/vulkan/vulkan_context.h"
 #include "gla/vulkan/vulkan_device.h"
 #include "gla/vulkan/vulkan_layer_abstraction_factory.h"
+#include "gla/vulkan/vulkan_macros.h"
 #include "gla/vulkan/vulkan_physical_device.h"
 
 namespace wunder {
@@ -43,6 +44,17 @@ vulkan_command_pool::~vulkan_command_pool() {
   vkDestroyCommandPool(vulkanDevice, m_compute_command_pool, nullptr);
 }
 
+VkCommandBuffer vulkan_command_pool::allocate_graphics_command_buffer(
+    bool begin) {
+  return allocate_command_buffer(begin, m_graphics_command_pool,
+                          m_current_graphics_command_buffer);
+}
+VkCommandBuffer vulkan_command_pool::allocate_compute_command_buffer(
+    bool begin) {
+  return allocate_command_buffer(begin, m_compute_command_pool,
+                          m_current_compute_command_buffer);
+}
+
 VkCommandBuffer vulkan_command_pool::allocate_command_buffer(
     bool begin, VkCommandPool& out_pool, VkCommandBuffer& out_buffer) {
   auto& logical_device = vulkan_layer_abstraction_factory::instance()
@@ -50,8 +62,6 @@ VkCommandBuffer vulkan_command_pool::allocate_command_buffer(
                              .get_device();
 
   auto vulkan_logical_device = logical_device.get_vulkan_logical_device();
-
-  VkCommandBuffer command_buffer;
 
   VkCommandBufferAllocateInfo command_buffer_allocate_info = {};
   command_buffer_allocate_info.sType =
@@ -66,22 +76,15 @@ VkCommandBuffer vulkan_command_pool::allocate_command_buffer(
                      nullptr);
 
   // If requested, also start the new command buffer
-  ReturnUnless(begin, command_buffer);
+  ReturnUnless(begin, out_buffer);
 
   VkCommandBufferBeginInfo command_buffer_begin_info{};
   command_buffer_begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-  AssertReturnUnless(
-      vkBeginCommandBuffer(command_buffer, &command_buffer_begin_info) ==
-          VkResult::VK_SUCCESS,
-      nullptr);
 
-  return command_buffer;
+  VK_CHECK_RESULT(vkBeginCommandBuffer(out_buffer, &command_buffer_begin_info));
+
+  return out_buffer;
 }
-
-VkCommandBuffer vulkan_command_pool::allocate_graphics_command_buffer(
-    bool begin) {}
-VkCommandBuffer vulkan_command_pool::allocate_compute_command_buffer(
-    bool begin) {}
 
 void vulkan_command_pool::flush_graphics_command_buffer() {
   auto& logical_device = vulkan_layer_abstraction_factory::instance()
@@ -98,8 +101,7 @@ void vulkan_command_pool::flush_compute_command_buffer() {
                              .get_vulkan_context()
                              .get_device();
 
-  flush_command_buffer(m_current_compute_command_buffer,
-                       m_compute_command_pool,
+  flush_command_buffer(m_current_compute_command_buffer, m_compute_command_pool,
                        logical_device.get_compute_queue());
 }
 
@@ -112,7 +114,8 @@ void vulkan_command_pool::flush_command_buffer(VkCommandBuffer command_buffer,
 
   auto vulkan_logical_device = logical_device.get_vulkan_logical_device();
 
-  const uint64_t DEFAULT_FENCE_TIMEOUT = 100000000000;
+  const uint64_t DEFAULT_FENCE_TIMEOUT =
+      std::numeric_limits<std::uint64_t>::max();
 
   AssertReturnIf(command_buffer == VK_NULL_HANDLE);
   AssertReturnIf(vkEndCommandBuffer(command_buffer) != VkResult::VK_SUCCESS);
@@ -141,8 +144,7 @@ void vulkan_command_pool::flush_command_buffer(VkCommandBuffer command_buffer,
                  VkResult::VK_SUCCESS);
 
   vkDestroyFence(vulkan_logical_device, fence, nullptr);
-  vkFreeCommandBuffers(vulkan_logical_device, source_pool, 1,
-                       &command_buffer);
+  vkFreeCommandBuffers(vulkan_logical_device, source_pool, 1, &command_buffer);
 }
 
 }  // namespace wunder

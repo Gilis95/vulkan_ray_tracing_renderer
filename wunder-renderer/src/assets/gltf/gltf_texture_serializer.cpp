@@ -2,7 +2,7 @@
 
 #include <tiny_gltf.h>
 
-#include "assets/components/texture_component.h"
+#include "assets/components/texture_asset.h"
 #include "core/wunder_macros.h"
 
 namespace wunder {
@@ -27,40 +27,36 @@ std::unordered_map<int, mipmap_mode_type> s_gltf_mipmap_type_to_internal{
 std::unordered_map<int, address_mode_type> s_gltf_address_mode_to_internal{
     {33071, address_mode_type::CLAMP_TO_EDGE},
     {33648, address_mode_type::MIRRORED_REPEAT},
-    {10497, address_mode_type::REPEAT}
-};
+    {10497, address_mode_type::REPEAT}};
 
 }  // namespace
 
-namespace gltf_texture_serializer {
-std::vector<texture_component> process_textures(
-    tinygltf::Model& gltf_scene_root) {
-  std::vector<texture_component> result;
+std::optional<texture_asset> gltf_texture_serializer::process_texture(
+    const tinygltf::Model& gltf_scene_root,
+    const tinygltf::Texture& gltf_texture) {
+  std::vector<texture_asset> result;
+  int gltf_source_image_idx = gltf_texture.source;
+  AssertReturnUnless(gltf_source_image_idx < gltf_scene_root.images.size(),
+                     std::nullopt);
 
-  for (auto& gltf_texture : gltf_scene_root.textures) {
-    int gltf_source_image_idx = gltf_texture.source;
-    AssertContinueUnless(gltf_source_image_idx < gltf_scene_root.images.size());
+  auto& gltf_source_image = gltf_scene_root.images[gltf_source_image_idx];
+  texture_asset texture{.m_texture_data = std::move(gltf_source_image.image)};
 
-    auto& gltf_source_image = gltf_scene_root.images[gltf_source_image_idx];
-    texture_component texture{.m_texture_data =
-                                  std::move(gltf_source_image.image)};
+  if (gltf_texture.sampler > -1) {
+    const auto& gltf_sampler = gltf_scene_root.samplers[gltf_texture.sampler];
 
-    if (gltf_texture.sampler > -1) {
-      const auto& gltf_sampler = gltf_scene_root.samplers[gltf_texture.sampler];
-
-      texture.m_mag_filter  = s_gltf_filter_type_to_internal[gltf_sampler.magFilter];
-      texture.m_min_filter  = s_gltf_filter_type_to_internal[gltf_sampler.minFilter];
-      texture.m_mipmap_mode = s_gltf_mipmap_type_to_internal[gltf_sampler.minFilter];
-      texture.m_address_mode_u = s_gltf_address_mode_to_internal[gltf_sampler.wrapS];
-      texture.m_address_mode_v = s_gltf_address_mode_to_internal[gltf_sampler.wrapT];
-
-    }
-
-    result.push_back(std::move(texture));
+    texture.m_mag_filter =
+        s_gltf_filter_type_to_internal[gltf_sampler.magFilter];
+    texture.m_min_filter =
+        s_gltf_filter_type_to_internal[gltf_sampler.minFilter];
+    texture.m_mipmap_mode =
+        s_gltf_mipmap_type_to_internal[gltf_sampler.minFilter];
+    texture.m_address_mode_u =
+        s_gltf_address_mode_to_internal[gltf_sampler.wrapS];
+    texture.m_address_mode_v =
+        s_gltf_address_mode_to_internal[gltf_sampler.wrapT];
   }
 
-  return result;
+  return texture;
 }
-
-}  // namespace gltf_texture_serializer
 }  // namespace wunder

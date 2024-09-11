@@ -24,10 +24,10 @@ namespace wunder {
 
 vulkan_device::vulkan_device(VkPhysicalDeviceFeatures enabled_features) {}
 
-vulkan_device::~vulkan_device() = default;
+vulkan_device::~vulkan_device() { destroy(); }
 
 void vulkan_device::initialize() {
-  auto physical_device = vulkan_layer_abstraction_factory::instance()
+  auto& physical_device = vulkan_layer_abstraction_factory::instance()
                              .get_vulkan_context()
                              .get_physical_device();
   create_extensions_list();
@@ -61,6 +61,9 @@ void vulkan_device::create_extensions_list() {
        .m_optional = false});
   m_requested_extensions.push_back(
       {.m_name = VK_KHR_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME,
+       .m_optional = false});
+  m_requested_extensions.push_back(
+      {.m_name = VK_EXT_OPACITY_MICROMAP_EXTENSION_NAME,
        .m_optional = false});
 
   static VkPhysicalDeviceShaderClockFeaturesKHR clock_features_khr{
@@ -157,7 +160,8 @@ void vulkan_device::append_used_device_features(
   }
 
   out_device_create_info.pNext = &physical_device_info.m_features_10;
-  vkGetPhysicalDeviceFeatures2(physical_device.get_vulkan_physical_device(), &physical_device_info.m_features_10);
+  vkGetPhysicalDeviceFeatures2(physical_device.get_vulkan_physical_device(),
+                               &physical_device_info.m_features_10);
 }
 
 void vulkan_device::destroy() {

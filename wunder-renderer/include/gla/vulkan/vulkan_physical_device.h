@@ -77,7 +77,8 @@ class vulkan_physical_device : public vulkan_extension_source {
   void select_queue_family();
 
   [[nodiscard]] VkFormat find_depth_format() const;
-
+ private:
+  void load_supported_gpu_extensions();
  private:
   physical_device_info m_device_info;
   queue_family_indices m_queue_family_indices;
@@ -90,7 +91,6 @@ class vulkan_physical_device : public vulkan_extension_source {
 
   std::vector<VkQueueFamilyProperties> m_queue_family_properties;
   std::vector<VkDeviceQueueCreateInfo> m_queue_create_infos;
-  void load_supported_gpu_extensions();
 };
 
 }  // namespace wunder

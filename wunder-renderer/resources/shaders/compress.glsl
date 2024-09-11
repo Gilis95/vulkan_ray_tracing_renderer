@@ -31,6 +31,10 @@
 #ifdef __cplusplus
 #define INLINE inline
 
+using vec3 = glm::vec3;
+using vec4 = glm::vec4;
+using std::isinf;
+
 INLINE float uintBitsToFloat(uint32_t const& v)
 {
   union

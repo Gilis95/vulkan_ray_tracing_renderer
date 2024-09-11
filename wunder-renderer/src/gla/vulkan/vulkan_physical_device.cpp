@@ -28,7 +28,7 @@ void vulkan_physical_device::initialize() {
 }
 
 VkResult vulkan_physical_device::select_gpu() {
-  auto vulkan = vulkan_layer_abstraction_factory::instance()
+  auto& vulkan = vulkan_layer_abstraction_factory::instance()
                     .get_vulkan_context()
                     .get_vulkan();
 

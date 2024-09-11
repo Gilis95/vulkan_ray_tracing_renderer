@@ -14,7 +14,9 @@ const char *s_validation_layer_name = "VK_LAYER_KHRONOS_validation";
 
 namespace wunder {
 
-vulkan::~vulkan() = default;
+vulkan::~vulkan() {
+  vkDestroyInstance(m_vk_instance, VK_NULL_HANDLE);
+}
 
 void vulkan::init(const renderer_properties &properties) {
   m_api_major_version = 1;
@@ -27,7 +29,7 @@ void vulkan::init(const renderer_properties &properties) {
   app_info.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
   app_info.pApplicationName = "Wunder_Renderer";
   app_info.pEngineName = "Wunder_Renderer";
-  app_info.apiVersion =get_vulkan_version();
+  app_info.apiVersion = get_vulkan_version();
   app_info.pNext = nullptr;
 
   VkValidationFeatureEnableEXT enables[] = {
@@ -49,7 +51,7 @@ void vulkan::init(const renderer_properties &properties) {
   instance_create_info.enabledLayerCount = 0;
 
   vulkan_extensions vulkan_extensions;
-  window_factory::get_instance().get_window().fill_vulkan_extensions(
+  window_factory::instance().get_window().fill_vulkan_extensions(
       vulkan_extensions);
 
   std::vector<VkExtensionProperties> supported_extensions;

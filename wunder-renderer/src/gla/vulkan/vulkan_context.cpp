@@ -3,7 +3,6 @@
 //
 #include "gla/vulkan/vulkan_context.h"
 
-
 #include "core/wunder_logger.h"
 #include "core/wunder_macros.h"
 #include "gla/renderer_capabilities .h"
@@ -20,7 +19,24 @@ namespace wunder {
 
 vulkan_context::vulkan_context() = default;
 
-vulkan_context::~vulkan_context() = default;
+vulkan_context::~vulkan_context() {
+  // release them in reverse order
+  if (m_renderer_capabilities.get()) {
+    AssertLogUnless(m_renderer_capabilities.release());
+  }
+  if (m_resource_allocator.get()) {
+    AssertLogUnless(m_resource_allocator.release());
+  }
+  if (m_logical_device.get()) {
+    AssertLogUnless(m_logical_device.release());
+  }
+  if (m_physical_device.get()) {
+    AssertLogUnless(m_physical_device.release());
+  }
+  if (m_vulkan.get()) {
+    AssertLogUnless(m_vulkan.release());
+  }
+}
 
 void vulkan_context::init(const wunder::renderer_properties &properties) {
   AssertReturnUnless(gladLoaderLoadVulkan(NULL, NULL, NULL));
@@ -70,19 +86,8 @@ void vulkan_context::select_logical_device() {
 }
 
 void vulkan_context::create_allocator() {
-  VmaAllocatorCreateInfo vma_allocator_create_info;
-  memset(&vma_allocator_create_info, 0, sizeof(VmaAllocatorCreateInfo));
-
-  vma_allocator_create_info.instance = m_vulkan->instance();
-  vma_allocator_create_info.physicalDevice =
-      m_physical_device->get_vulkan_physical_device();
-  vma_allocator_create_info.device =
-      m_logical_device->get_vulkan_logical_device();
-  vma_allocator_create_info.vulkanApiVersion = m_vulkan->get_vulkan_version();
-  vma_allocator_create_info.flags |=
-      VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT;
-
-  vmaCreateAllocator(&vma_allocator_create_info, &m_resource_allocator);
+  m_resource_allocator = make_unique<vulkan_memory_allocator>();
+  m_resource_allocator->initialize();
 }
 
 const renderer_capabilities &vulkan_context::get_capabilities() const {
@@ -98,8 +103,8 @@ vulkan_physical_device &vulkan_context::get_physical_device() {
 
 vulkan_device &vulkan_context::get_device() { return *m_logical_device; }
 
-VmaAllocator &vulkan_context::get_resource_allocator() {
-  return m_resource_allocator;
+vulkan_memory_allocator &vulkan_context::get_resource_allocator() {
+  return *m_resource_allocator;
 }
 
 }  // namespace wunder

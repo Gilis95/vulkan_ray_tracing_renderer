@@ -9,7 +9,8 @@
 /////////////////////////////////////////////////////////////////////////////////////////
 namespace wunder {
 
-class scene;
+class scene_manager;
+class asset_manager;
 
 struct application_properties;
 
@@ -22,9 +23,9 @@ class application : private event_handler<window_close_event>{
    * This is second function called after class creation.
    * It's used for initializing debugger, logger and window.
    */
-  void init();
+  void initialize();
 
-  virtual void init_internal() = 0;
+  virtual void initialize_internal() = 0;
 
   void close();
 
@@ -49,9 +50,6 @@ class application : private event_handler<window_close_event>{
  private:
   bool m_is_running;
   unique_ptr<application_properties> m_properties;
-
- protected:
-  unique_ptr<scene> m_scene;
 };
 
 extern application *create_application(application_properties& m_properties);

@@ -9,6 +9,9 @@
 #include <array>
 #include <cstdint>
 #include <vector>
+
+#include "gla/vulkan/vulkan_types.h"
+
 namespace wunder {
 class vulkan_pipeline;
 
@@ -18,6 +21,7 @@ class vulkan_shader_binding_table {
 
  public:
   vulkan_shader_binding_table() noexcept;
+  ~vulkan_shader_binding_table();
 
  public:
   void initialize(const vulkan_pipeline& pipeline);
@@ -25,22 +29,27 @@ class vulkan_shader_binding_table {
  private:
   void initialize_shader_indices(const vulkan_pipeline& pipeline);
 
+  std::array<std::vector<uint8_t>, 4> create_shader_stages_handles(
+      const vulkan_pipeline& pipeline);
+  void create_sbt_buffer(
+      const std::array<std::vector<uint8_t>, 4>& shader_stages_handles);
+
  private:
   std::array<std::vector<std::uint32_t>, 4>
-      m_shader_handles_indeces;  // Offset index in pipeline. It consists of
-                                 // raygen, miss, hit and callable. The amount
-                                 // of shaders won't change
+      m_shader_handles_indeces{};  // Offset index in pipeline. It consists of
+                                   // raygen, miss, hit and callable. The amount
+                                   // of shaders won't change
   std::array<std::uint32_t, 4>
-      m_shader_stage_stride;  // size of single shader stage handle. The only
-                              // ones currently available are: raygen, miss, hit
-                              // and callable. IMPORTANT: In case we want to
-                              // attach specific data to specific stage, this
-                              // will be included in stage stride size. However
-                              // this is not supported at the moment
+      m_shader_stage_stride{};  // size of single shader stage handle. The only
+                                // ones currently available are: raygen, miss,
+                                // hit and callable. IMPORTANT: In case we want
+                                // to attach specific data to specific stage,
+                                // this will be included in stage stride size.
+                                // However this is not supported at the moment
 
-  std::array<VkBuffer, 4>
-      m_shader_group_buffers;  // buffer resembles handler to shader in group +
-                               // data given to sbt
+  std::array<vulkan_buffer, 4>
+      m_shader_group_buffers{};  // buffer resembles handler to shader in group
+                                 // + data given to sbt
 
   VkPhysicalDeviceRayTracingPipelinePropertiesKHR m_vulkan_pipeline_properties{
       VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_PROPERTIES_KHR};

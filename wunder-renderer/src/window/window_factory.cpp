@@ -6,9 +6,16 @@
 #include "window/glfw/glfw_window.h"
 
 namespace wunder {
-window_factory window_factory::s_instance;
 
-bool window_factory::create_window(const window_properties & window_properties) {
+
+ window_factory& window_factory::instance()
+{
+   static window_factory s_instance;
+   return s_instance;
+ }
+
+
+bool window_factory::initialize(const window_properties & window_properties) {
   switch (window_properties.m_type) {
     case window_type::glfw: {
       m_window = make_unique<wunder::glfw_window>();
@@ -23,4 +30,9 @@ bool window_factory::create_window(const window_properties & window_properties) 
 }
 
 window& window_factory::get_window() { return *m_window; }
+void window_factory::shutdown() {
+  AssertReturnUnless(m_window.get());
+
+  m_window->shutdown();
+}
 }  // namespace wunder

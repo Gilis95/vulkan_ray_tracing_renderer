@@ -1,104 +1,95 @@
 #include "include/assets/gltf/gltf_mesh_serializer.h"
 
-#include "assets/components/mesh_component.h"
-#include "glm/vec4.hpp"
-#include "tinygltf/tinygltf_utils.h"
 #include <tiny_gltf.h>
 
-namespace wunder::gltf_mesh_serializer {
-static std::optional<mesh_component> process_mesh(
-    const tinygltf::Model& gltf_scene_root,
-    const tinygltf::Primitive& gltf_primitive, const std::string& mesh_name);
+#include "assets/asset_storage.h"
+#include "assets/asset_types.h"
+#include "assets/components/mesh_asset.h"
+#include "glm/vec4.hpp"
+#include "tinygltf/tinygltf_utils.h"
+
+namespace wunder {
 
 static bool try_parse_indices(const tinygltf::Model& gltf_scene_root,
                               const tinygltf::Primitive& gltf_primitive,
-                              mesh_component& mesh_component);
+                              mesh_asset& mesh_asset);
 
 static bool try_parse_positions(const tinygltf::Model& gltf_scene_root,
                                 const tinygltf::Primitive& gltf_primitive,
-                                mesh_component& mesh_component);
+                                mesh_asset& mesh_asset);
 static void try_parse_mesh_tangents(const tinygltf::Model& gltf_scene_root,
                                     const tinygltf::Primitive& gltf_primitive,
-                                    mesh_component& mesh_component);
+                                    mesh_asset& mesh_asset);
 static void try_parse_mesh_colour(const tinygltf::Model& gltf_scene_root,
                                   const tinygltf::Primitive& gltf_primitive,
-                                  mesh_component& mesh_component);
+                                  mesh_asset& mesh_asset);
 static void try_parse_uvs(const tinygltf::Model& gltf_scene_root,
                           const tinygltf::Primitive& gltf_primitive,
-                          mesh_component& out_mesh_component);
+                          mesh_asset& out_mesh_asset);
 static void try_parse_normals(const tinygltf::Model& gltf_scene_root,
                               const tinygltf::Primitive& gltf_primitive,
-                              mesh_component& out_mesh_component);
+                              mesh_asset& out_mesh_asset);
 static void try_parse_aabb(const tinygltf::Model& gltf_scene_root,
                            const tinygltf::Primitive& gltf_primitive,
-                           mesh_component& mesh_component);
+                           mesh_asset& mesh_asset);
 
-std::unordered_map<std::uint32_t /*mesh_id*/, std::vector<mesh_component>>
-process_meshes(tinygltf::Model& gltf_scene_root,
-               const std::unordered_set<uint32_t>& mesh_indices) {
-  // Convert all mesh/primitives+ to a single primitive per mesh
-  std::unordered_map<std::uint32_t /*mesh_id*/, std::vector<mesh_component>>
-      mesh_id_to_primitives;
-  for (const auto& mesh_index : mesh_indices) {
-    auto& gltf_mesh = gltf_scene_root.meshes[mesh_index];
-    std::vector<mesh_component> mesh_nodes;
-    for (const auto& gltf_primitive : gltf_mesh.primitives) {
-      auto maybe_mesh_node =
-          process_mesh(gltf_scene_root, gltf_primitive, gltf_mesh.name);
-      ContinueUnless(maybe_mesh_node.has_value());
-      mesh_nodes.push_back(std::move(maybe_mesh_node.value()));
-    }
-
-    mesh_id_to_primitives[mesh_index] = std::move(mesh_nodes);
-  }
-
-  return mesh_id_to_primitives;
-}
-
-std::optional<mesh_component> process_mesh(
+std::optional<mesh_asset> gltf_mesh_serializer::process_mesh(
     const tinygltf::Model& gltf_scene_root,
-    const tinygltf::Primitive& gltf_primitive, const std::string& mesh_name) {
+    const tinygltf::Primitive& gltf_primitive, const std::string& mesh_name,
+    const std::unordered_map<uint32_t, asset_handle>& material_map) {
   // Only triangles are supported
   // 0:point, 1:lines, 2:line_loop, 3:line_strip, 4:triangles, 5:triangle_strip,
   // 6:triangle_fan
   ReturnUnless(gltf_primitive.mode == 4, std::nullopt);
 
-  mesh_component mesh_component;
-  mesh_component.m_material_index = std::max(0, gltf_primitive.material);
+  mesh_asset mesh_asset;
+  auto found_material_it = material_map.find(gltf_primitive.material);
+  mesh_asset.m_material_handle =
+      found_material_it == material_map.end() ? 0 : found_material_it->second;
 
   AssertReturnUnless(
-      try_parse_indices(gltf_scene_root, gltf_primitive, mesh_component),
+      try_parse_indices(gltf_scene_root, gltf_primitive, mesh_asset),
       std::nullopt);
 
   AssertReturnUnless(
-      try_parse_positions(gltf_scene_root, gltf_primitive, mesh_component),
+      try_parse_positions(gltf_scene_root, gltf_primitive, mesh_asset),
       std::nullopt);
-  try_parse_aabb(gltf_scene_root, gltf_primitive, mesh_component);
-  try_parse_normals(gltf_scene_root, gltf_primitive, mesh_component);
-  try_parse_uvs(gltf_scene_root, gltf_primitive, mesh_component);
-  try_parse_mesh_tangents(gltf_scene_root, gltf_primitive, mesh_component);
-  try_parse_mesh_colour(gltf_scene_root, gltf_primitive, mesh_component);
+  try_parse_aabb(gltf_scene_root, gltf_primitive, mesh_asset);
+  try_parse_normals(gltf_scene_root, gltf_primitive, mesh_asset);
+  try_parse_uvs(gltf_scene_root, gltf_primitive, mesh_asset);
+  try_parse_mesh_tangents(gltf_scene_root, gltf_primitive, mesh_asset);
+  try_parse_mesh_colour(gltf_scene_root, gltf_primitive, mesh_asset);
 
-  return mesh_component;
+  return mesh_asset;
 }
 
 bool try_parse_indices(const tinygltf::Model& gltf_scene_root,
                        const tinygltf::Primitive& gltf_primitive,
-                       mesh_component& mesh_component) {
+                       mesh_asset& mesh_asset) {
   if (gltf_primitive.indices > -1) {
     const tinygltf::Accessor& indexAccessor =
         gltf_scene_root.accessors[gltf_primitive.indices];
-    mesh_component.m_indecies.resize(
-        static_cast<uint32_t>(indexAccessor.count));
+    mesh_asset.m_indecies.reserve(static_cast<uint32_t>(indexAccessor.count));
+
+    auto lambda = [&gltf_scene_root, &indexAccessor,
+                   &mesh_asset]<typename T>() {
+      std::vector<T> indices(indexAccessor.count);
+      tinygltf::utils::copy_accessor_data(
+          indices, 0, gltf_scene_root, indexAccessor, 0, indexAccessor.count);
+
+      std::move(indices.begin(), indices.end(),
+                std::back_inserter(mesh_asset.m_indecies));
+    };
 
     switch (indexAccessor.componentType) {
-      case TINYGLTF_PARAMETER_TYPE_UNSIGNED_INT:
-      case TINYGLTF_PARAMETER_TYPE_UNSIGNED_SHORT:
+      case TINYGLTF_PARAMETER_TYPE_UNSIGNED_INT: {
+        lambda.operator()<std::int32_t>();
+      } break;
+      case TINYGLTF_PARAMETER_TYPE_UNSIGNED_SHORT: {
+        lambda.operator()<std::int16_t>();
+      } break;
       case TINYGLTF_PARAMETER_TYPE_UNSIGNED_BYTE: {
-        tinygltf::utils::copy_accessor_data(mesh_component.m_indecies, 0,
-                                            gltf_scene_root, indexAccessor, 0,
-                                            indexAccessor.count);
-
+        lambda.operator()<std::int16_t>();
       } break;
       default:
         WUNDER_ERROR_TAG("Asset", "Index component type %i not supported!\n",
@@ -114,7 +105,7 @@ bool try_parse_indices(const tinygltf::Model& gltf_scene_root,
       gltf_scene_root
           .accessors[gltf_primitive.attributes.find("POSITION")->second];
   for (auto i = 0; i < accessor.count; i++) {
-    mesh_component.m_indecies.push_back(i);
+    mesh_asset.m_indecies.push_back(i);
   }
 
   return true;
@@ -122,16 +113,16 @@ bool try_parse_indices(const tinygltf::Model& gltf_scene_root,
 
 bool try_parse_positions(const tinygltf::Model& gltf_scene_root,
                          const tinygltf::Primitive& gltf_primitive,
-                         mesh_component& mesh_component) {
+                         mesh_asset& mesh_asset) {
   std::vector<glm::vec3> positions;
   ReturnUnless(tinygltf::utils::get_attribute<glm::vec3>(
                    gltf_scene_root, gltf_primitive, positions, "POSITION"),
                false);
 
-  mesh_component.m_verticies.resize(positions.size());
+  mesh_asset.m_verticies.resize(positions.size());
   for (std::uint32_t i = 0; i < positions.size(); ++i) {
     auto& position = positions[i];
-    mesh_component.m_verticies[i].m_position = position;
+    mesh_asset.m_verticies[i].m_position = position;
   }
 
   return true;
@@ -139,36 +130,36 @@ bool try_parse_positions(const tinygltf::Model& gltf_scene_root,
 
 void try_parse_aabb(const tinygltf::Model& gltf_scene_root,
                     const tinygltf::Primitive& gltf_primitive,
-                    mesh_component& mesh_component) {
+                    mesh_asset& mesh_asset) {
   const auto& accessor =
       gltf_scene_root
           .accessors[gltf_primitive.attributes.find("POSITION")->second];
 
   if (!accessor.minValues.empty()) {
-    mesh_component.m_bounding_box.min = glm::vec3(
+    mesh_asset.m_bounding_box.min = glm::vec3(
         accessor.minValues[0], accessor.minValues[1], accessor.minValues[2]);
   } else {
-    mesh_component.m_bounding_box.min =
+    mesh_asset.m_bounding_box.min =
         glm::vec3(std::numeric_limits<float>::max());
-    for (const auto& vertex : mesh_component.m_verticies) {
+    for (const auto& vertex : mesh_asset.m_verticies) {
       for (int i = 0; i < 3; i++) {
-        if (vertex.m_position[i] < mesh_component.m_bounding_box.min[i]) {
-          mesh_component.m_bounding_box.min[i] = vertex.m_position[i];
+        if (vertex.m_position[i] < mesh_asset.m_bounding_box.min[i]) {
+          mesh_asset.m_bounding_box.min[i] = vertex.m_position[i];
         }
       }
     }
   }
 
   if (!accessor.maxValues.empty()) {
-    mesh_component.m_bounding_box.max = glm::vec3(
+    mesh_asset.m_bounding_box.max = glm::vec3(
         accessor.maxValues[0], accessor.maxValues[1], accessor.maxValues[2]);
   } else {
-    mesh_component.m_bounding_box.max =
+    mesh_asset.m_bounding_box.max =
         glm::vec3(-std::numeric_limits<float>::max());
-    for (const auto& vertex : mesh_component.m_verticies) {
+    for (const auto& vertex : mesh_asset.m_verticies) {
       for (int i = 0; i < 3; i++) {
-        if (vertex.m_position[i] > mesh_component.m_bounding_box.max[i]) {
-          mesh_component.m_bounding_box.max[i] = vertex.m_position[i];
+        if (vertex.m_position[i] > mesh_asset.m_bounding_box.max[i]) {
+          mesh_asset.m_bounding_box.max[i] = vertex.m_position[i];
         }
       }
     }
@@ -177,20 +168,20 @@ void try_parse_aabb(const tinygltf::Model& gltf_scene_root,
 
 void try_parse_normals(const tinygltf::Model& gltf_scene_root,
                        const tinygltf::Primitive& gltf_primitive,
-                       mesh_component& out_mesh_component) {
+                       mesh_asset& out_mesh_asset) {
   std::vector<glm::vec3> normals;
   ReturnUnless(tinygltf::utils::get_attribute<glm::vec3>(
       gltf_scene_root, gltf_primitive, normals, "NORMAL"));
 
   for (uint32_t i = 0; i < normals.size(); ++i) {
     auto& normal = normals[i];
-    out_mesh_component.m_verticies[i].m_normal = normal;
+    out_mesh_asset.m_verticies[i].m_normal = normal;
   }
 }
 
 void try_parse_uvs(const tinygltf::Model& gltf_scene_root,
                    const tinygltf::Primitive& gltf_primitive,
-                   mesh_component& out_mesh_component) {
+                   mesh_asset& out_mesh_asset) {
   std::vector<glm::vec2> tex_coords;
   bool texcoord_created = tinygltf::utils::get_attribute<glm::vec2>(
       gltf_scene_root, gltf_primitive, tex_coords, "TEXCOORD_0");
@@ -201,33 +192,33 @@ void try_parse_uvs(const tinygltf::Model& gltf_scene_root,
 
   for (uint32_t i = 0; i < tex_coords.size(); ++i) {
     auto& tex_coord = tex_coords[i];
-    out_mesh_component.m_verticies[i].m_texcoord = tex_coord;
+    out_mesh_asset.m_verticies[i].m_texcoord = tex_coord;
   }
 }
 
 void try_parse_mesh_tangents(const tinygltf::Model& gltf_scene_root,
                              const tinygltf::Primitive& gltf_primitive,
-                             mesh_component& mesh_component) {
+                             mesh_asset& mesh_asset) {
   std::vector<glm::vec4> tangents;
   ReturnUnless(tinygltf::utils::get_attribute<glm::vec4>(
       gltf_scene_root, gltf_primitive, tangents, "TANGENT"));
 
   for (uint32_t i = 0; i < tangents.size(); ++i) {
     auto& tangent = tangents[i];
-    mesh_component.m_verticies[i].m_tangent = tangent;
+    mesh_asset.m_verticies[i].m_tangent = tangent;
   }
 }
 
 void try_parse_mesh_colour(const tinygltf::Model& gltf_scene_root,
                            const tinygltf::Primitive& gltf_primitive,
-                           mesh_component& mesh_component) {  // COLOR_0
+                           mesh_asset& mesh_asset) {  // COLOR_0
   std::vector<glm::vec4> colors;
   ReturnUnless(tinygltf::utils::get_attribute<glm::vec4>(
       gltf_scene_root, gltf_primitive, colors, "COLOR_0"));
 
   for (uint32_t i = 0; i < colors.size(); ++i) {
     auto& color = colors[i];
-    mesh_component.m_verticies[i].m_color = color;
+    mesh_asset.m_verticies[i].m_color = color;
   }
 }
-}  // namespace wunder::gltf_mesh_serializer
+}  // namespace wunder

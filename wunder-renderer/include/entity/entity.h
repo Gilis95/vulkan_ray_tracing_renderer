@@ -11,6 +11,8 @@
 #include <variant>
 #include <vector>
 
+#include "core/wunder_macros.h"
+
 namespace {
 
 template <typename T, typename... Ts>
@@ -44,6 +46,10 @@ class entity {
   template <typename component_type>
   std::optional<std::reference_wrapper<component_type>> get_component();
 
+  template <typename component_type>
+  std::optional<std::reference_wrapper<const component_type>> get_component()
+      const;
+
  private:
   std::vector<std::variant<types...>> m_components;
 };
@@ -65,7 +71,7 @@ void entity<types...>::add_component(component_type&& component) {
 template <typename... types>
 template <typename component_type>
 bool entity<types...>::has_component() {
-  std::holds_alternative<component_type>(m_components);
+  return std::holds_alternative<component_type>(m_components);
 }
 
 template <typename... types>
@@ -78,9 +84,24 @@ template <typename... types>
 template <typename component_type>
 std::optional<std::reference_wrapper<component_type>>
 entity<types...>::get_component() {
-  auto result = std::get_if<component_type>(m_components);
-  return result ? std::nullopt : *result;
+  for(auto& component : m_components) {
+    auto result = std::get_if<component_type>(&component);
+    ReturnIf(result, *result);
+  }
+
+  return std::nullopt;
 }
 
+template <typename... types>
+template <typename component_type>
+std::optional<std::reference_wrapper<const component_type>>
+entity<types...>::get_component() const {
+  for(auto& component : m_components) {
+    auto result = std::get_if<component_type>(&component);
+    ReturnIf(result, *result);
+  }
+
+  return std::nullopt;
+}
 }  // namespace wunder
 #endif  // WUNDER_ENTITY_H

@@ -12,8 +12,13 @@ class vulkan_command_pool {
   virtual ~vulkan_command_pool();
 
  public:
-  VkCommandBuffer allocate_graphics_command_buffer(bool begin);
-  VkCommandBuffer allocate_compute_command_buffer(bool begin);
+  [[nodiscard]] VkCommandBuffer get_current_graphics_command_buffer() {
+    return allocate_graphics_command_buffer(true);
+  }
+
+  [[nodiscard]] VkCommandBuffer get_current_compute_command_buffer() {
+    return allocate_compute_command_buffer(true);
+  }
 
   void flush_graphics_command_buffer();
   void flush_compute_command_buffer();
@@ -26,16 +31,10 @@ class vulkan_command_pool {
   [[nodiscard]] VkCommandPool get_compute_command_pool() const {
     return m_compute_command_pool;
   }
-
-  [[nodiscard]] VkCommandBuffer get_current_graphics_command_buffer() const {
-    return m_current_graphics_command_buffer;
-  }
-
-  [[nodiscard]] VkCommandBuffer get_current_compute_command_buffer() const {
-    return m_current_compute_command_buffer;
-  }
-
  private:
+  VkCommandBuffer allocate_graphics_command_buffer(bool begin);
+  VkCommandBuffer allocate_compute_command_buffer(bool begin);
+
   VkCommandBuffer allocate_command_buffer(bool begin, VkCommandPool& out_pool,
                                           VkCommandBuffer& out_buffer);
   void flush_command_buffer(VkCommandBuffer command_buffer,

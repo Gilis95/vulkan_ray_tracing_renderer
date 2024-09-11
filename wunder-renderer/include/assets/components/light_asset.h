@@ -2,8 +2,8 @@
 // Created by christian on 8/26/24.
 //
 
-#ifndef WUNDER_LIGHT_COMPONENT_H
-#define WUNDER_LIGHT_COMPONENT_H
+#ifndef WUNDER_LIGHT_ASSET_H
+#define WUNDER_LIGHT_ASSET_H
 
 #include <glm/vec4.hpp>
 #include <variant>
@@ -21,11 +21,11 @@ struct point_light {};
 using speecific_light_type_data =
     std::variant<spot_light, directional_light, point_light>;
 
-struct light_component {
+struct light_asset {
   glm::vec4 color;
   double intensity{1.0};
   double range{0.0};  // 0.0 = infinite
   speecific_light_type_data specific_data;
 };
 }  // namespace wunder
-#endif  // WUNDER_LIGHT_COMPONENT_H
+#endif  // WUNDER_LIGHT_ASSET_H

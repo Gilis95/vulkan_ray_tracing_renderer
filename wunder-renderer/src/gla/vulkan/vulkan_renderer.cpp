@@ -15,7 +15,14 @@
 
 namespace wunder {
 
-vulkan_renderer::~vulkan_renderer() = default;
+vulkan_renderer::~vulkan_renderer() {
+  if(m_pipeline.get()) {
+    AssertLogUnless(m_pipeline.release());
+  }
+  if(m_shader_binding_table.get()) {
+    AssertLogUnless(m_shader_binding_table.release());
+  }
+}
 
 void vulkan_renderer::init_internal(const renderer_properties &properties) {
   m_pipeline = std::make_unique<vulkan_pipeline>();

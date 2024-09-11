@@ -6,7 +6,7 @@
 int main(int argc, char **argv) {
   auto app = wunder::create_application();
 
-  app->init();
+  app->initialize();
 
   app->run();
 

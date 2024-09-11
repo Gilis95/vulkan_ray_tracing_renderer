@@ -6,6 +6,7 @@
 #define WUNDER_VULKAN_TYPES_H
 
 #include <glad/vulkan.h>
+#include <vk_mem_alloc.h>
 
 #include <cstdint>
 #include <string>
@@ -115,5 +116,9 @@ struct vulkan_extension_data {
   uint32_t m_version{0};
 };
 
+struct vulkan_buffer {
+  VkBuffer m_vk_buffer;
+  VmaAllocation m_allocation;
+};
 }  // namespace wunder
 #endif  // WUNDER_VULKAN_TYPES_H

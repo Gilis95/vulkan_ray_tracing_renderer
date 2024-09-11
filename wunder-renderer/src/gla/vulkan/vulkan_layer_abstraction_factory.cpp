@@ -11,8 +11,8 @@
 #include "gla/vulkan/vulkan_context.h"
 #include "gla/vulkan/vulkan_descriptor_set_manager.h"
 #include "gla/vulkan/vulkan_device.h"
-#include "gla/vulkan/vulkan_pipeline.h"
 #include "gla/vulkan/vulkan_physical_device.h"
+#include "gla/vulkan/vulkan_pipeline.h"
 #include "gla/vulkan/vulkan_renderer.h"
 #include "gla/vulkan/vulkan_shader.h"
 #include "gla/vulkan/vulkan_shader_binding_table.h"
@@ -51,7 +51,7 @@ vulkan_layer_abstraction_factory &vulkan_layer_abstraction_factory::instance() {
   return s_instance;
 }
 
-void vulkan_layer_abstraction_factory::init_instance(
+void vulkan_layer_abstraction_factory::initialize(
     const renderer_properties &properties) {
   create_vulkan_context(properties);
   create_renderer(properties);
@@ -77,6 +77,15 @@ vulkan_renderer &vulkan_layer_abstraction_factory::get_renderer_api() {
 
 vulkan_context &vulkan_layer_abstraction_factory::get_vulkan_context() {
   return *m_context;
+}
+void vulkan_layer_abstraction_factory::shutdown() {
+  if (m_renderer.get()) {
+    AssertLogUnless(m_renderer.release());
+  }
+
+  if (m_context.get()) {
+    AssertLogUnless(m_context.release());
+  }
 }
 
 }  // namespace wunder
