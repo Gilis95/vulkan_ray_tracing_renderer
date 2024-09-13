@@ -7,6 +7,7 @@
 #include <filesystem>
 #include <vector>
 
+#include "core/non_copyable.h"
 #include "core/wunder_memory.h"
 #include "gla/vulkan/vulkan_types.h"
 
@@ -20,7 +21,7 @@ enum class shader_operation_output_code {
   NoSetAllocated
 };
 
-class vulkan_shader {
+class vulkan_shader : public non_copyable {
  public:
   explicit vulkan_shader(std::string&& shader_name,
                          VkShaderStageFlagBits vulkan_shader_type);

@@ -7,13 +7,14 @@
 
 #include <glad/vulkan.h>
 
+#include "core/non_copyable.h"
 #include "core/vector_map.h"
 #include "core/wunder_memory.h"
 
 namespace wunder {
 class vulkan_shader;
 
-class vulkan_pipeline {
+class vulkan_pipeline : public non_copyable{
  public:
   void create_pipeline_layout(const vulkan_shader& descriptor_declaring_shader);
   void create_pipeline(const vector_map<VkShaderStageFlagBits,

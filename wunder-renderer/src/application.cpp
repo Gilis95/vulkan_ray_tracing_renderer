@@ -9,7 +9,7 @@
 #include "event/event_handler.hpp"
 #include "gla/vulkan/vulkan_layer_abstraction_factory.h"
 #include "gla/vulkan/vulkan_renderer.h"
-#include "gla/vulkan/vulkan_scene.h"
+#include "include/gla/vulkan/scene/vulkan_scene.h"
 #include "scene/scene_manager.h"
 #include "window/window_factory.h"
 

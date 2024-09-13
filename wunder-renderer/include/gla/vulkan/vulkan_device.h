@@ -10,6 +10,7 @@
 #include <memory>
 #include <vector>
 
+#include "core/non_copyable.h"
 #include "core/wunder_memory.h"
 
 namespace wunder {
@@ -20,16 +21,14 @@ struct vulkan_extension_data;
 struct physical_device_info;
 
 // Represents a logical device
-class vulkan_device {
+class vulkan_device : public non_copyable{
  public:
-  vulkan_device(VkPhysicalDeviceFeatures enabled_features);
+  explicit vulkan_device(VkPhysicalDeviceFeatures enabled_features);
   ~vulkan_device();
 
  public:
   void initialize();
 
-  [[nodiscard]] VkQueue get_graphics_queue() { return m_graphics_queue; }
-  [[nodiscard]] VkQueue get_compute_queue() { return m_compute_queue; }
   [[nodiscard]] VkDevice get_vulkan_logical_device() const {
     return m_logical_device;
   }
@@ -39,6 +38,10 @@ class vulkan_device {
     return *m_command_pool;
   }
 
+ public:
+  [[nodiscard]] VkQueue get_graphics_queue() { return m_graphics_queue; }
+  [[nodiscard]] VkQueue get_compute_queue() { return m_compute_queue; }
+
  private:
   void create_extensions_list();
   void create_logical_device();
@@ -46,7 +49,7 @@ class vulkan_device {
   static void append_used_device_features(
       physical_device_info &physical_device_info,
       const std::vector<void *> &used_features,
-      VkDeviceCreateInfo &out_device_create_info) ;
+      VkDeviceCreateInfo &out_device_create_info);
 
   void destroy();
 

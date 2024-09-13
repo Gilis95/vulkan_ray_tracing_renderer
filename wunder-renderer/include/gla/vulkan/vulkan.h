@@ -9,12 +9,13 @@
 #include <string>
 #include <vector>
 
+#include "core/non_copyable.h"
 #include "glad/vulkan.h"
 
 namespace wunder {
 struct renderer_properties;
 struct vulkan_extensions;
-class vulkan {
+class vulkan : public non_copyable{
  public:
   ~vulkan();
 

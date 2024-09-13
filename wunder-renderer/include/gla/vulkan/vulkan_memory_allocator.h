@@ -6,11 +6,13 @@
 
 #include <string>
 
+#include "core/non_copyable.h"
+
 namespace wunder {
-class vulkan_memory_allocator {
+class vulkan_memory_allocator : public non_copyable{
  public:
   vulkan_memory_allocator() = default;
-  vulkan_memory_allocator(std::string tag);
+  explicit vulkan_memory_allocator(std::string tag);
   ~vulkan_memory_allocator();
 
  public:

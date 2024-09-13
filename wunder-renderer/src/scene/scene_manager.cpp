@@ -4,10 +4,12 @@
 #include "assets/scene_asset.h"
 #include "core/project.h"
 #include "event/asset_events.h"
-#include "event/event_handler.hpp"
 #include "event/event_controller.h"
+#include "event/event_handler.hpp"
 #include "event/scene_events.h"
-#include "gla/vulkan/vulkan_scene.h"
+#include "gla/vulkan/ray-trace/vulkan_top_level_acceleration_structure.h"
+#include "gla/vulkan/scene/vulkan_mesh_scene_node.h"
+#include "gla/vulkan/scene/vulkan_scene.h"
 
 namespace wunder {
 scene_id scene_manager::s_scene_counter = 0;
@@ -23,10 +25,12 @@ bool scene_manager::activate_scene(scene_id id) {
   auto found_scene_asset_it = m_loaded_scenes.find(id);
   AssertReturnIf(found_scene_asset_it == m_loaded_scenes.end(), false);
 
-  auto api_scene = vulkan_scene();
-  api_scene.load_scene(found_scene_asset_it->second);
+  std::pair<scene_id, vulkan_scene> l;
 
-  m_active_scenes.emplace_back(std::make_pair(id, std::move(api_scene)));
+  vulkan_scene api_scene;
+  auto& [scene_id, scene] = m_active_scenes.emplace_back();
+  scene.load_scene(found_scene_asset_it->second);
+  scene_id = id;
 
   return true;
 }

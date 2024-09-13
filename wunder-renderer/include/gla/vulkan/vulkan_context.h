@@ -1,12 +1,8 @@
-//
-// Created by christian on 8/9/24.
-//
-
 #ifndef WUNDER_VULKAN_CONTEXT_H
 #define WUNDER_VULKAN_CONTEXT_H
 
+#include "core/non_copyable.h"
 #include "core/wunder_memory.h"
-
 
 namespace wunder {
 class vulkan;
@@ -19,14 +15,17 @@ class vulkan_memory_allocator;
 struct renderer_properties;
 struct renderer_capabilities;
 
-class vulkan_context final {
+class vulkan_context final : public non_copyable {
  private:
   friend vulkan_layer_abstraction_factory;
+
  public:
   vulkan_context();
   ~vulkan_context();
+
  private:
   void init(const renderer_properties& properties);
+
  public:
   [[nodiscard]] const renderer_capabilities& get_capabilities() const;
 
@@ -40,6 +39,7 @@ class vulkan_context final {
   void select_physical_device();
   void select_logical_device();
   void create_allocator();
+
  private:
   unique_ptr<vulkan> m_vulkan;
   unique_ptr<vulkan_physical_device> m_physical_device;
@@ -48,5 +48,5 @@ class vulkan_context final {
 
   unique_ptr<renderer_capabilities> m_renderer_capabilities;
 };
-}
+}  // namespace wunder
 #endif  // WUNDER_VULKAN_CONTEXT_H

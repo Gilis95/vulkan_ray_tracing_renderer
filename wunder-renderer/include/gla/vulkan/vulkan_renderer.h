@@ -7,6 +7,7 @@
 #include <string>
 #include <vector>
 
+#include "core/non_copyable.h"
 #include "core/vector_map.h"
 #include "core/wunder_memory.h"
 #include "gla/renderer_api.h"
@@ -24,7 +25,7 @@ struct shader_to_compile {
   bool m_optional = true;
 };
 
-class vulkan_renderer : public renderer_api {
+class vulkan_renderer : public renderer_api, public non_copyable {
  public:
   ~vulkan_renderer() override;
 

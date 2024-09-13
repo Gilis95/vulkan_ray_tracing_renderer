@@ -1,7 +1,7 @@
 #include "core/project.h"
 
 #include "assets/asset_manager.h"
-#include "gla/vulkan/vulkan_scene.h"
+#include "include/gla/vulkan/scene/vulkan_scene.h"
 #include "scene/scene_manager.h"
 
 namespace wunder {

@@ -1,7 +1,3 @@
-//
-// Created by christian on 8/9/24.
-//
-
 #ifndef WUNDER_VULKAN_DESCRIPTOR_SET_MANAGER_H
 #define WUNDER_VULKAN_DESCRIPTOR_SET_MANAGER_H
 #include <cstdint>
@@ -10,6 +6,7 @@
 #include <variant>
 #include <vector>
 
+#include "core/non_copyable.h"
 #include "core/wunder_memory.h"
 #include "gla/vulkan/vulkan_types.h"
 #include "glad/vulkan.h"
@@ -19,7 +16,7 @@ namespace wunder {
 class vulkan_shader;
 class vulkan_pipeline;
 
-class vulkan_descriptor_set_manager {
+class vulkan_descriptor_set_manager : public non_copyable{
  public:
   void initialize(const vulkan_shader& vulkan_shader);
 

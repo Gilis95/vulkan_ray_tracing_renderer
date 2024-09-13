@@ -3,10 +3,12 @@
 
 #include <glad/vulkan.h>
 
+#include "core/non_copyable.h"
+
 namespace wunder {
 class vulkan_device;
 
-class vulkan_command_pool {
+class vulkan_command_pool : public non_copyable{
  public:
   explicit vulkan_command_pool();
   virtual ~vulkan_command_pool();
@@ -23,7 +25,7 @@ class vulkan_command_pool {
   void flush_graphics_command_buffer();
   void flush_compute_command_buffer();
 
- public:
+ private:
   [[nodiscard]] VkCommandPool get_graphics_command_pool() const {
     return m_graphics_command_pool;
   }

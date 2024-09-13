@@ -10,7 +10,7 @@
 #include <cstdint>
 #include <vector>
 
-#include "gla/vulkan/vulkan_types.h"
+#include "gla/vulkan/vulkan_buffer.h"
 
 namespace wunder {
 class vulkan_pipeline;
