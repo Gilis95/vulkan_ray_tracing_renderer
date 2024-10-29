@@ -11,7 +11,7 @@
 
 namespace wunder {
 struct base_asset_referencing_component {
-  asset_handle m_handle = -1;
+  asset_handle m_handle = asset_handle::invalid();
 };
 
 struct mesh_component : public base_asset_referencing_component {

@@ -45,7 +45,8 @@ std::optional<mesh_asset> gltf_mesh_serializer::process_mesh(
   mesh_asset mesh_asset;
   auto found_material_it = material_map.find(gltf_primitive.material);
   mesh_asset.m_material_handle =
-      found_material_it == material_map.end() ? 0 : found_material_it->second;
+      found_material_it == material_map.end() ? asset_handle::invalid()
+                                     : found_material_it->second;
 
   AssertReturnUnless(
       try_parse_indices(gltf_scene_root, gltf_primitive, mesh_asset),

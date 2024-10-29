@@ -1,13 +1,14 @@
 #ifndef WUNDER_ASSET_STORAGE_H
 #define WUNDER_ASSET_STORAGE_H
 
+#include <functional>
 #include <optional>
 #include <unordered_map>
 #include <vector>
-#include <functional>
 
 #include "assets/asset_types.h"
 #include "assets/components/asset.h"
+#include "core/vector_map.h"
 #include "core/wunder_macros.h"
 
 namespace wunder {
@@ -16,20 +17,18 @@ class asset_storage {
   [[nodiscard]] asset_handle add_asset(asset&& asset);
 
   template <typename asset_type>
-  std::optional<std::reference_wrapper<const asset_type>> get_asset(
-      asset_handle handle) const;
+  optional_const_ref<asset_type> get_asset(asset_handle handle) const;
 
   template <typename asset_type>
-  std::vector<std::reference_wrapper<const std::pair<asset_handle, asset_type>>>
-  find_assets_of() const;
+  vector_map<asset_handle, const_ref<asset_type>> find_assets_of() const;
 
  public:
   std::unordered_map<asset_handle, asset> m_assets;
 };
 
 template <typename asset_type>
-std::optional<std::reference_wrapper<const asset_type>>
-asset_storage::get_asset(asset_handle handle) const {
+optional_ref<const asset_type> asset_storage::get_asset(
+    asset_handle handle) const {
   auto found_asset_it = m_assets.find(handle);
   ReturnIf(found_asset_it == m_assets.end(), std::nullopt);
 
@@ -41,16 +40,15 @@ asset_storage::get_asset(asset_handle handle) const {
 }
 
 template <typename asset_type>
-std::vector<std::reference_wrapper<const std::pair<asset_handle, asset_type>>>
+vector_map<asset_handle, const_ref<asset_type>>
 asset_storage::find_assets_of() const {
-  std::vector<std::reference_wrapper<const std::pair<asset_handle, asset_type>>>
-      result;
-  for (const auto& asset_pair : m_assets) {
+  vector_map<asset_handle, const_ref<asset_type>> result;
+  for (const auto& [asset_id, asset] : m_assets) {
     const asset_type* const asset_of_type =
-        std::get_if<asset_type>(&asset_pair.second);
+        std::get_if<asset_type>(&asset);
     ContinueUnless(asset_of_type);
 
-    result.push_back(asset_pair);
+    result.push_back(asset_id, asset);
   }
   return result;
 }

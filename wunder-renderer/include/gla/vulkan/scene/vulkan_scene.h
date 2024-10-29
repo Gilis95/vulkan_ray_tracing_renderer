@@ -28,6 +28,7 @@ class vulkan_scene : public non_copyable {
  private:
   std::vector<vulkan_mesh_scene_node> m_mesh_nodes;
   unique_ptr<vulkan_top_level_acceleration_structure> m_acceleration_structure;
+
 };
 }  // namespace wunder
 

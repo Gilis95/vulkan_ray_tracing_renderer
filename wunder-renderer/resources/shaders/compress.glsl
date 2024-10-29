@@ -31,9 +31,12 @@
 #ifdef __cplusplus
 #define INLINE inline
 
+#include <glm/geometric.hpp>
+
 using vec3 = glm::vec3;
 using vec4 = glm::vec4;
 using std::isinf;
+using glm::normalize;
 
 INLINE float uintBitsToFloat(uint32_t const& v)
 {
@@ -144,13 +147,13 @@ INLINE uint compress_unit_vec(vec3 nv)
 
 
 ///
-float short_to_floatm11(const int v)  // linearly maps a short 32767-32768 to a float -1-+1 //!! opt.?
+INLINE float short_to_floatm11(const int v)  // linearly maps a short 32767-32768 to a float -1-+1 //!! opt.?
 {
   return (v >= 0) ? (uintBitsToFloat(0x3F800000u | (uint(v) << 8)) - 1.0f) :
                     (uintBitsToFloat((0x80000000u | 0x3F800000u) | (uint(-v) << 8)) + 1.0f);
 }
 
-vec3 decompress_unit_vec(uint packed)
+INLINE vec3 decompress_unit_vec(uint packed)
 {
   if(packed != ~0u)  // sanity check, not needed as isvalid_unit_vec is called earlier
   {

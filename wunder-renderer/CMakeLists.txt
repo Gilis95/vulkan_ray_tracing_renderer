@@ -1,13 +1,13 @@
 project(wunder-renderer VERSION 1.0.0 LANGUAGES CXX)
 
 add_definitions(-DWANDER_ENABLE_LOG -D_CRT_SECURE_NO_WARNINGS -DWANDER_ENGINE_DEBUG -DTRACY_ENABLE -DGLFW_INCLUDE_NONE)
-
-if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
-    add_definitions(-DWUNDER_LINUX=1)
+message(hui="${CMAKE_SYSTEM_NAME}")
+if (${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
+    add_definitions(-DWANDER_LINUX=1)
 endif ()
 
-if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
-    add_definitions(-DWUNDER_WINDOWS=1)
+if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows")
+    add_definitions(-DWANDER_WINDOWS=1)
 endif ()
 
 #Debug

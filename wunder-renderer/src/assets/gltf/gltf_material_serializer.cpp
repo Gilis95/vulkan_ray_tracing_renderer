@@ -12,7 +12,8 @@ static asset_handle find_texture_or_default(
     const std::unordered_map<std::uint32_t, asset_handle>& textures_map,
     uint32_t idx) {
   auto texture_handle_it = textures_map.find(idx);
-  AssertReturnIf(texture_handle_it == textures_map.end(), 0);
+  AssertReturnIf(texture_handle_it == textures_map.end(),
+                 asset_handle::invalid());
 
   return texture_handle_it->second;
 }
@@ -48,6 +49,9 @@ material_asset gltf_material_importer::process_material(
   auto volume_tickness_texture_handle =
       find_texture_or_default(textures_map, volume.m_thickness_texture.index);
 
+  auto metallic_texture_handle = find_texture_or_default(
+      textures_map, tpbr.metallicRoughnessTexture.index);
+
   material_asset mat{};
 
   mat.m_alpha_cutoff = static_cast<float>(gltf_material.alphaCutoff);
@@ -71,7 +75,7 @@ material_asset gltf_material_importer::process_material(
                 tpbr.baseColorFactor[2], tpbr.baseColorFactor[3]);
   mat.m_pbr_base_color_texture = base_colour_texture_handle;
   mat.m_pbr_metallic_factor = static_cast<float>(tpbr.metallicFactor);
-  mat.m_pbr_metallic_roughness_texture = tpbr.metallicRoughnessTexture.index;
+  mat.m_pbr_metallic_roughness_texture = metallic_texture_handle;
   mat.m_pbr_roughness_factor = static_cast<float>(tpbr.roughnessFactor);
 
   auto anistropy = tinygltf::utils::get_anisotropy(gltf_material);
@@ -101,7 +105,6 @@ material_asset gltf_material_importer::process_material(
 
   mat.m_emissive_factor =
       glm::make_vec3<double>(gltf_material.emissiveFactor.data());
-  mat.m_emissive_texture = gltf_material.emissiveTexture.index;
   return mat;
 }
 

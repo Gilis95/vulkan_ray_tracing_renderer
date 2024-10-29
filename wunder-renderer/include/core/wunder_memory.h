@@ -31,6 +31,19 @@ constexpr shared_ptr<T> make_shared(Args &&...args) {
 #endif
   return std::make_shared<T>(std::forward<Args>(args)...);
 }
+
+template <typename T>
+using ref = std::reference_wrapper<T>;
+
+template <typename T>
+using const_ref = std::reference_wrapper<const T>;
+
+template <typename T>
+using optional_const_ref = std::optional<std::reference_wrapper<const T>>;
+
+template <typename T>
+using optional_ref = std::optional<std::reference_wrapper<T>>;
+
 }  // namespace wunder
 
 #endif

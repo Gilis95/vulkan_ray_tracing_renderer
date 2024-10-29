@@ -4,6 +4,7 @@
 #include "core/wunder_logger.h"
 
 #ifdef WANDER_LINUX
+#include <signal.h>
 #define DEBUGBREAK() raise(SIGTRAP);
 #elif WANDER_WINDOWS
 #define DEBUGBREAK() __debug_breka

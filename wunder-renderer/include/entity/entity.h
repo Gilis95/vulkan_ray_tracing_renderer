@@ -38,17 +38,16 @@ class entity {
   void add_component(component_type&& component);
 
   template <typename component_type>
-  bool has_component();
+  [[nodiscard]] bool has_component() const;
 
   template <typename... component_types>
-  bool has_components();
+  [[nodiscard]] bool has_components() const;
 
   template <typename component_type>
-  std::optional<std::reference_wrapper<component_type>> get_component();
+  optional_ref<component_type> mutable_component();
 
   template <typename component_type>
-  std::optional<std::reference_wrapper<const component_type>> get_component()
-      const;
+  optional_const_ref<component_type> get_component() const;
 
  private:
   std::vector<std::variant<types...>> m_components;
@@ -70,21 +69,20 @@ void entity<types...>::add_component(component_type&& component) {
 
 template <typename... types>
 template <typename component_type>
-bool entity<types...>::has_component() {
+bool entity<types...>::has_component() const {
   return std::holds_alternative<component_type>(m_components);
 }
 
 template <typename... types>
 template <typename... component_types>
-bool entity<types...>::has_components() {
+bool entity<types...>::has_components() const {
   return is_subset_of<std::tuple<component_types...>, std::tuple<types...>>;
 }
 
 template <typename... types>
 template <typename component_type>
-std::optional<std::reference_wrapper<component_type>>
-entity<types...>::get_component() {
-  for(auto& component : m_components) {
+optional_ref<component_type> entity<types...>::mutable_component() {
+  for (auto& component : m_components) {
     auto result = std::get_if<component_type>(&component);
     ReturnIf(result, *result);
   }
@@ -94,9 +92,8 @@ entity<types...>::get_component() {
 
 template <typename... types>
 template <typename component_type>
-std::optional<std::reference_wrapper<const component_type>>
-entity<types...>::get_component() const {
-  for(auto& component : m_components) {
+optional_const_ref<component_type> entity<types...>::get_component() const {
+  for (auto& component : m_components) {
     auto result = std::get_if<component_type>(&component);
     ReturnIf(result, *result);
   }
