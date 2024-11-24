@@ -5,7 +5,6 @@
 #include <unordered_set>
 
 #include "assets/asset_manager.h"
-#include "assets/scene_asset.h"
 #include "core/project.h"
 #include "core/vector_map.h"
 #include "core/wunder_macros.h"
@@ -17,20 +16,18 @@
 #include "gla/vulkan/vulkan_device_buffer.h"
 #include "gla/vulkan/vulkan_index_buffer.h"
 #include "gla/vulkan/vulkan_vertex_buffer.h"
-#include "resources/shaders/compress.glsl"
-#include "resources/shaders/host_device.h"
 
 namespace wunder {
 
-vector_map<asset_handle, std::reference_wrapper<const mesh_asset>>
+vector_map<asset_handle, const_ref<mesh_asset>>
 vulkan_meshes_helper::extract_mesh_assets(
-    std::vector<std::reference_wrapper<scene_node>> meshe_scene_nodes) {
+    std::vector<ref<scene_node>> meshe_scene_nodes) {
   auto& asset_manager = project::instance().get_asset_manager();
 
   std::unordered_set<asset_handle> mesh_ids =
       vulkan_meshes_helper::extract_mesh_ids(meshe_scene_nodes);
 
-  vector_map<asset_handle, std::reference_wrapper<const mesh_asset>> result =
+  vector_map<asset_handle, const_ref<mesh_asset>> result =
       asset_manager.find_assets<mesh_asset>(mesh_ids.begin(), mesh_ids.end());
 
   return result;

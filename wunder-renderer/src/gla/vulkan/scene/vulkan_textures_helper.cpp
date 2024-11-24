@@ -1,9 +1,10 @@
 #include "gla/vulkan/scene/vulkan_textures_helper.h"
 
-#include "assets/asset_types.h"
 #include "assets/asset_manager.h"
+#include "assets/asset_types.h"
 #include "assets/components/material_asset.h"
 #include "assets/components/texture_asset.h"
+#include "gla/vulkan/vulkan_texture.h"
 #include "core/project.h"
 
 namespace wunder {
@@ -30,6 +31,18 @@ vulkan_textures_helper::extract_texture_assets(
   vector_map<asset_handle, std::reference_wrapper<const texture_asset>> result =
       asset_manager.find_assets<texture_asset>(texture_ids.begin(),
                                                texture_ids.end());
+
+  return result;
+}
+
+std::vector<unique_ptr<vulkan_texture>> vulkan_textures_helper::create_texture_buffers(
+    const vector_map<asset_handle, const_ref<texture_asset>>& texture_assets) {
+  std::vector<unique_ptr<vulkan_texture>> result;
+
+  for(auto& [_, asset] : texture_assets){
+    auto& texture = result.emplace_back();
+    texture.reset(new vulkan_texture(asset.get()));
+  }
 
   return result;
 }

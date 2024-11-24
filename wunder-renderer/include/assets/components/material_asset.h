@@ -1,6 +1,7 @@
 #ifndef WUNDER_MATERIAL_ASSET_H
 #define WUNDER_MATERIAL_ASSET_H
 
+#include "assets/asset_types.h"
 #include "glm/detail/type_mat4x4.hpp"
 #include "glm/fwd.hpp"
 #include "glm/vec3.hpp"

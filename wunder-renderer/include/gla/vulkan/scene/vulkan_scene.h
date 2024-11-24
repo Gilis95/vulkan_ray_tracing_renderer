@@ -14,6 +14,7 @@ namespace wunder {
 class vulkan_mesh_scene_node;
 class scene_asset;
 class vulkan_top_level_acceleration_structure;
+class vulkan_texture;
 
 class vulkan_scene : public non_copyable {
  public:
@@ -27,6 +28,7 @@ class vulkan_scene : public non_copyable {
   void load_scene(scene_asset& asset);
  private:
   std::vector<vulkan_mesh_scene_node> m_mesh_nodes;
+  std::vector<unique_ptr<vulkan_texture>> m_bound_textures;
   unique_ptr<vulkan_top_level_acceleration_structure> m_acceleration_structure;
 
 };

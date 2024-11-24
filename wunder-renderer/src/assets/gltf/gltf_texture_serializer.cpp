@@ -40,21 +40,20 @@ std::optional<texture_asset> gltf_texture_serializer::process_texture(
                      std::nullopt);
 
   auto& gltf_source_image = gltf_scene_root.images[gltf_source_image_idx];
-  texture_asset texture{.m_texture_data = std::move(gltf_source_image.image)};
+  texture_asset texture{.m_texture_data = std::move(gltf_source_image.image),
+                        .m_width = gltf_source_image.width,
+                        .m_height = gltf_source_image.height,
+                        .m_sampler = std::nullopt};
 
   if (gltf_texture.sampler > -1) {
     const auto& gltf_sampler = gltf_scene_root.samplers[gltf_texture.sampler];
-
-    texture.m_mag_filter =
-        s_gltf_filter_type_to_internal[gltf_sampler.magFilter];
-    texture.m_min_filter =
-        s_gltf_filter_type_to_internal[gltf_sampler.minFilter];
-    texture.m_mipmap_mode =
-        s_gltf_mipmap_type_to_internal[gltf_sampler.minFilter];
-    texture.m_address_mode_u =
-        s_gltf_address_mode_to_internal[gltf_sampler.wrapS];
-    texture.m_address_mode_v =
-        s_gltf_address_mode_to_internal[gltf_sampler.wrapT];
+    texture.m_sampler = texture_sampler{
+        .m_mag_filter = s_gltf_filter_type_to_internal[gltf_sampler.magFilter],
+        .m_min_filter = s_gltf_filter_type_to_internal[gltf_sampler.minFilter],
+        .m_mipmap_mode = s_gltf_mipmap_type_to_internal[gltf_sampler.minFilter],
+        .m_address_mode_u = s_gltf_address_mode_to_internal[gltf_sampler.wrapS],
+        .m_address_mode_v =
+            s_gltf_address_mode_to_internal[gltf_sampler.wrapT]};
   }
 
   return texture;

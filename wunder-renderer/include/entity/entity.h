@@ -70,13 +70,17 @@ void entity<types...>::add_component(component_type&& component) {
 template <typename... types>
 template <typename component_type>
 bool entity<types...>::has_component() const {
-  return std::holds_alternative<component_type>(m_components);
+  for(auto& component : m_components){
+     ReturnIf(std::holds_alternative<component_type>(component), true)
+  }
+
+  return false;
 }
 
 template <typename... types>
 template <typename... component_types>
 bool entity<types...>::has_components() const {
-  return is_subset_of<std::tuple<component_types...>, std::tuple<types...>>;
+  return ((has_component<component_types>()) && ...);
 }
 
 template <typename... types>

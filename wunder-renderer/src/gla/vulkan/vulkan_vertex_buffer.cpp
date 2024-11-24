@@ -4,7 +4,6 @@
 
 #include "assets/components/mesh_asset.h"
 
-
 #include "resources/shaders/compress.glsl"
 #include "resources/shaders/host_device.h"
 
