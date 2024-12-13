@@ -4,6 +4,9 @@
 
 #include <optional>
 
+#include "core/project.h"
+#include "event/scene_events.h"
+#include "event/event_handler.hpp"
 #include "gla/renderer_capabilities .h"
 #include "gla/vulkan/vulkan_context.h"
 #include "gla/vulkan/vulkan_descriptor_set_manager.h"
@@ -12,21 +15,25 @@
 #include "gla/vulkan/vulkan_pipeline.h"
 #include "gla/vulkan/vulkan_shader.h"
 #include "gla/vulkan/vulkan_shader_binding_table.h"
+#include "scene/scene_manager.h"
 
-namespace wunder {
+namespace wunder::vulkan {
+renderer::renderer()
+ :event_handler<scene_activated>()
+{}
 
-vulkan_renderer::~vulkan_renderer() {
-  if(m_pipeline.get()) {
+renderer::~renderer() {
+  if (m_pipeline.get()) {
     AssertLogUnless(m_pipeline.release());
   }
-  if(m_shader_binding_table.get()) {
+  if (m_shader_binding_table.get()) {
     AssertLogUnless(m_shader_binding_table.release());
   }
 }
 
-void vulkan_renderer::init_internal(const renderer_properties &properties) {
-  m_pipeline = std::make_unique<vulkan_pipeline>();
-  m_shader_binding_table = std::make_unique<vulkan_shader_binding_table>();
+void renderer::init_internal(const renderer_properties &properties) {
+  m_pipeline = std::make_unique<pipeline>();
+  m_shader_binding_table = std::make_unique<shader_binding_table>();
 
   for (auto &[shader_type, shaders_compile_data] :
        get_shaders_for_compilation()) {
@@ -34,7 +41,7 @@ void vulkan_renderer::init_internal(const renderer_properties &properties) {
 
     for (auto &shader_compile_data : shaders_compile_data) {
       auto maybe_shader =
-          vulkan_shader::create(shader_compile_data.m_shader_path, shader_type);
+          shader::create(shader_compile_data.m_shader_path, shader_type);
       if (maybe_shader.has_value()) {
         auto &shader =
             shaders_of_type.emplace_back(std::move(maybe_shader.value()));
@@ -59,7 +66,7 @@ void vulkan_renderer::init_internal(const renderer_properties &properties) {
 }
 
 vector_map<VkShaderStageFlagBits, std::vector<shader_to_compile>>
-vulkan_renderer::get_shaders_for_compilation() {
+renderer::get_shaders_for_compilation() {
   vector_map<VkShaderStageFlagBits, std::vector<shader_to_compile>>
       shaders_to_compile;
   shaders_to_compile[VkShaderStageFlagBits::VK_SHADER_STAGE_RAYGEN_BIT_KHR] =
@@ -68,7 +75,7 @@ vulkan_renderer::get_shaders_for_compilation() {
               .m_shader_path =
                   "wunder-renderer/resources/shaders/pathtrace.rgen",
               .m_on_successful_compile =
-                  std::bind(&vulkan_renderer::create_descriptor_manager, this,
+                  std::bind(&renderer::create_descriptor_manager, this,
                             std::placeholders::_1),
               .m_optional = false}});
   shaders_to_compile[VkShaderStageFlagBits::VK_SHADER_STAGE_ANY_HIT_BIT_KHR] =
@@ -101,16 +108,16 @@ vulkan_renderer::get_shaders_for_compilation() {
   return shaders_to_compile;
 }
 
-void vulkan_renderer::create_descriptor_manager(const vulkan_shader &shader) {
-  m_descriptor_set_manager = std::make_unique<vulkan_descriptor_set_manager>();
+void renderer::create_descriptor_manager(const shader &shader) {
+  m_descriptor_set_manager = std::make_unique<descriptor_set_manager>();
   m_descriptor_set_manager->initialize(shader);
 
   m_pipeline->create_pipeline_layout(shader);
 }
 
-void vulkan_renderer::update(int dt) /*override*/
+void renderer::update(int dt) /*override*/
 {
-  auto graphic_command_buffer = vulkan_layer_abstraction_factory::instance()
+  auto graphic_command_buffer = layer_abstraction_factory::instance()
                                     .get_vulkan_context()
                                     .get_device()
                                     .get_graphics_queue();
@@ -133,13 +140,23 @@ void vulkan_renderer::update(int dt) /*override*/
   //  &regions[2], &regions[3], size.width, size.height, 1);
 }
 
-const renderer_capabilities &vulkan_renderer::get_capabilities()
+void renderer::on_event(const scene_activated &scene_activated_event) {
+  auto api_scene = project::instance().get_scene_manager().get_api_scene(
+      scene_activated_event.m_id);
+}
+
+const renderer_capabilities &renderer::get_capabilities()
     const /*override*/
 {
   static renderer_capabilities s_empty;
-  return vulkan_layer_abstraction_factory::instance()
+  return layer_abstraction_factory::instance()
       .get_vulkan_context()
       .get_capabilities();
 }
+
+descriptor_set_manager &renderer::get_descriptor_set_manager(){
+  return *m_descriptor_set_manager;
+}
+
 
 }  // namespace wunder

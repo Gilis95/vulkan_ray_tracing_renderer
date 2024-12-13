@@ -7,7 +7,7 @@
 #include "core/wunder_macros.h"
 #include "gla/vulkan/vulkan_types.h"
 
-namespace wunder {
+namespace wunder::vulkan {
 void add_supported_extensions(
     const vulkan_extension_source& source,
     const std::vector<vulkan_extension_data>& requested_extensions,

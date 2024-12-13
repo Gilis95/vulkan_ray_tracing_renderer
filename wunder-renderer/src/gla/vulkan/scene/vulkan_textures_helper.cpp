@@ -4,14 +4,13 @@
 #include "assets/asset_types.h"
 #include "assets/components/material_asset.h"
 #include "assets/components/texture_asset.h"
-#include "gla/vulkan/vulkan_texture.h"
 #include "core/project.h"
+#include "gla/vulkan/vulkan_texture.h"
 
-namespace wunder {
+namespace wunder::vulkan {
 
-vector_map<asset_handle, const_ref<texture_asset>>
-vulkan_textures_helper::extract_texture_assets(
-    vector_map<asset_handle, const_ref<material_asset>>& material_assets) {
+assets<texture_asset> textures_helper::extract_texture_assets(
+    const assets<material_asset>& material_assets) {
   auto& asset_manager = project::instance().get_asset_manager();
 
   std::unordered_set<asset_handle> texture_ids;
@@ -35,13 +34,13 @@ vulkan_textures_helper::extract_texture_assets(
   return result;
 }
 
-std::vector<unique_ptr<vulkan_texture>> vulkan_textures_helper::create_texture_buffers(
-    const vector_map<asset_handle, const_ref<texture_asset>>& texture_assets) {
-  std::vector<unique_ptr<vulkan_texture>> result;
+std::vector<unique_ptr<wunder::vulkan::texture>> textures_helper::create_texture_buffers(
+    const assets<texture_asset>& texture_assets) {
+  std::vector<unique_ptr<wunder::vulkan::texture>> result;
 
-  for(auto& [_, asset] : texture_assets){
+  for (auto& [_, asset] : texture_assets) {
     auto& texture = result.emplace_back();
-    texture.reset(new vulkan_texture(asset.get()));
+    texture.reset(new wunder::vulkan::texture(asset.get()));
   }
 
   return result;

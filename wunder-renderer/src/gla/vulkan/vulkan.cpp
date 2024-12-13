@@ -12,13 +12,11 @@ namespace {
 const char *s_validation_layer_name = "VK_LAYER_KHRONOS_validation";
 }  // namespace
 
-namespace wunder {
+namespace wunder::vulkan {
 
-vulkan::~vulkan() {
-  vkDestroyInstance(m_vk_instance, VK_NULL_HANDLE);
-}
+instance::~instance() { vkDestroyInstance(m_vk_instance, VK_NULL_HANDLE); }
 
-void vulkan::init(const renderer_properties &properties) {
+void instance::init(const renderer_properties &properties) {
   m_api_major_version = 1;
   m_api_minor_version = 3;
 
@@ -76,7 +74,7 @@ void vulkan::init(const renderer_properties &properties) {
   try_set_validation_message_callback();
 }
 
-VkResult vulkan::extract_supported_extensions(
+VkResult instance::extract_supported_extensions(
     std::vector<VkExtensionProperties> &supported_extensions) {
   uint32_t count;
 
@@ -87,7 +85,7 @@ VkResult vulkan::extract_supported_extensions(
                                                 supported_extensions.data());
 }
 
-void vulkan::log_supported_extensions(
+void instance::log_supported_extensions(
     const std::vector<VkExtensionProperties> &supported_extensions) {
   WUNDER_TRACE_TAG("Renderer", "Vulkan Instance Extensions. Count {0}:",
                    supported_extensions.size());
@@ -98,7 +96,7 @@ void vulkan::log_supported_extensions(
   WUNDER_TRACE_TAG("Renderer", "------------------------------------");
 }
 
-void vulkan::try_add_debug_extension(
+void instance::try_add_debug_extension(
     vulkan_extensions &extensions,
     const std::vector<VkExtensionProperties> &supported_extensions,
     const renderer_properties &properties) {
@@ -122,7 +120,7 @@ void vulkan::try_add_debug_extension(
   extensions.m_extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
 }
 
-VkResult vulkan::extract_supported_layers(
+VkResult instance::extract_supported_layers(
     std::vector<VkLayerProperties> &out_instance_layer_properties) {
   uint32_t instance_layer_count;
 
@@ -133,7 +131,7 @@ VkResult vulkan::extract_supported_layers(
       &instance_layer_count, out_instance_layer_properties.data());
 }
 
-void vulkan::log_supported_layers(
+void instance::log_supported_layers(
     const std::vector<VkLayerProperties> &supported_layers) {
   WUNDER_TRACE_TAG("Renderer", "Vulkan Instance Layers. Count {0}:",
                    supported_layers.size());
@@ -144,7 +142,7 @@ void vulkan::log_supported_layers(
   WUNDER_TRACE_TAG("Renderer", "------------------------------------");
 }
 
-void vulkan::try_add_validation_layer(
+void instance::try_add_validation_layer(
     VkInstanceCreateInfo &instance_create_info,
     const std::vector<VkLayerProperties> &supported_layers,
     const renderer_properties &properties) {
@@ -167,14 +165,14 @@ void vulkan::try_add_validation_layer(
   instance_create_info.enabledLayerCount = 1;
 }
 
-void vulkan::try_set_validation_message_callback() {
+void instance::try_set_validation_message_callback() {
   // Create a Debug Utils Messenger that will trigger our callback for any
   // warning or error.
   auto m_createDebugUtilsMessengerEXT =
       (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(
           m_vk_instance, "vkCreateDebugUtilsMessengerEXT");
 
-  AssertReturnIf(m_createDebugUtilsMessengerEXT == nullptr)
+  ReturnIf(m_createDebugUtilsMessengerEXT == nullptr)
 
       VkDebugUtilsMessengerCreateInfoEXT dbg_messenger_create_info{
           VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT};
@@ -193,4 +191,4 @@ void vulkan::try_set_validation_message_callback() {
       m_vk_instance, &dbg_messenger_create_info, nullptr, &m_dbg_messenger));
 }
 
-}  // namespace wunder
+}  // namespace wunder::vulkan

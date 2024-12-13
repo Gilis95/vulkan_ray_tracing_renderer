@@ -1,37 +1,43 @@
 #ifndef WUNDER_VULKAN_LAYER_ABSTRACTION_FACTORY_H
 #define WUNDER_VULKAN_LAYER_ABSTRACTION_FACTORY_H
 
+#include "core/vector_map.h"
 #include "core/wunder_memory.h"
+#include "gla/renderer_properties.h"
 
-namespace wunder {
-struct renderer_properties;
+namespace wunder::vulkan {
+class renderer;
+class context;
 
-class vulkan_renderer;
-class renderer_api;
-class vulkan_context;
-
-class vulkan_layer_abstraction_factory {
+class layer_abstraction_factory {
  private:
-  vulkan_layer_abstraction_factory();
+  layer_abstraction_factory();
+
  public:
-  ~vulkan_layer_abstraction_factory();
+  ~layer_abstraction_factory();
   void shutdown();
 
  public:
-  static vulkan_layer_abstraction_factory &instance();
+  static layer_abstraction_factory &instance();
+
  public:
   void initialize(const renderer_properties &properties);
 
-  [[nodiscard]] vulkan_renderer &get_renderer_api();
-  [[nodiscard]] vulkan_context &get_vulkan_context();
+  [[nodiscard]] optional_ref<renderer> get_renderer_api(
+      renderer_type type);
+  [[nodiscard]] vector_map<renderer_type, unique_ptr<renderer>> &
+  get_renderers();
+
+  [[nodiscard]] context &get_vulkan_context();
+
  private:
   void create_renderer(const renderer_properties &properties);
   void create_vulkan_context(const renderer_properties &properties);
+
  private:
-  unique_ptr<vulkan_renderer> m_renderer;
-  unique_ptr<vulkan_context> m_context;
+  vector_map<renderer_type, unique_ptr<renderer>> m_renderers;
+  unique_ptr<context> m_context;
 };
 
-}  // namespace wunder
-
+}  // namespace wunder::vulkan
 #endif  // WUNDER_VULKAN_LAYER_ABSTRACTION_FACTORY_H

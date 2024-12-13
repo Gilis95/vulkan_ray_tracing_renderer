@@ -11,14 +11,14 @@
 #include "core/vector_map.h"
 #include "core/wunder_memory.h"
 
-namespace wunder {
-class vulkan_shader;
+namespace wunder::vulkan {
+class shader;
 
-class vulkan_pipeline : public non_copyable{
+class pipeline : public non_copyable{
  public:
-  void create_pipeline_layout(const vulkan_shader& descriptor_declaring_shader);
+  void create_pipeline_layout(const shader& descriptor_declaring_shader);
   void create_pipeline(const vector_map<VkShaderStageFlagBits,
-                                        std::vector<unique_ptr<vulkan_shader>>>&
+                                        std::vector<unique_ptr<shader>>>&
                            shaders_of_types);
 
  public:
@@ -42,7 +42,7 @@ class vulkan_pipeline : public non_copyable{
   [[nodiscard]] std::vector<VkPipelineShaderStageCreateInfo>
   get_shader_stage_create_info(
       const vector_map<VkShaderStageFlagBits,
-                       std::vector<unique_ptr<vulkan_shader>>>&
+                       std::vector<unique_ptr<shader>>>&
           shaders_of_types);
   [[nodiscard]] std::vector<VkRayTracingShaderGroupCreateInfoKHR>
   get_shader_group_create_info(

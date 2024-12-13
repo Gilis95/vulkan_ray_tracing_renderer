@@ -10,17 +10,22 @@ namespace tinygltf {
 class Model;
 }
 
+namespace wunder::vulkan{
+class scene;
+}
+
 namespace wunder {
 struct asset_loaded;
 
-class scene_asset;
-class vulkan_scene;
+class scene_asset;;
 enum class asset_serialization_result_codes;
 
 class scene_manager : public event_handler<asset_loaded> {
  public:
   scene_manager();
   ~scene_manager() override;
+ public:
+  optional_ref<vulkan::scene> get_api_scene(scene_id id);
 
   bool activate_scene(scene_id id);
   bool deactivate_scene(scene_id id);
@@ -30,7 +35,7 @@ class scene_manager : public event_handler<asset_loaded> {
 
  private:
   vector_map<scene_id, scene_asset> m_loaded_scenes;
-  vector_map<scene_id, vulkan_scene> m_active_scenes;
+  vector_map<scene_id, vulkan::scene> m_active_scenes;
 
   static scene_id s_scene_counter;
 };

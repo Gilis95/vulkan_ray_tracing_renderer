@@ -4,13 +4,17 @@
 #include <cstdint>
 #include <vector>
 
-namespace wunder {
-struct window_properties;
+namespace wunder::vulkan{
 
 struct vulkan_extensions {
  public:
   std::vector<char *> m_extensions;
 };
+
+}
+
+namespace wunder {
+struct window_properties;
 
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -27,7 +31,7 @@ class window {
   virtual void shutdown() = 0;
 
   [[nodiscard]] virtual void fill_vulkan_extensions(
-      vulkan_extensions & out_extensions) const = 0;
+      wunder::vulkan::vulkan_extensions & out_extensions) const = 0;
 };
 }  // namespace wunder
 

@@ -8,16 +8,19 @@
 namespace wunder {
 struct texture_asset;
 struct material_asset;
-class vulkan_texture;
 
-class vulkan_textures_helper {
+namespace vulkan {
+
+class texture;
+
+class textures_helper {
  public:
-  static vector_map<asset_handle, const_ref<texture_asset>>
-  extract_texture_assets(
-      vector_map<asset_handle, const_ref<material_asset>>& material_assets);
+  static assets<texture_asset> extract_texture_assets(
+      const assets<material_asset>& material_assets);
 
-  static std::vector<unique_ptr<vulkan_texture>> create_texture_buffers(
-      const vector_map<asset_handle, const_ref<texture_asset>>& texture_assets);
+  static std::vector<unique_ptr<texture>> create_texture_buffers(
+      const assets<texture_asset>& texture_assets);
 };
+}  // namespace vulkan
 }  // namespace wunder
 #endif  // WUNDER_VULKAN_TEXTURES_HELP_H

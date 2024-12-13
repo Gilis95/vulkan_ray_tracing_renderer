@@ -21,9 +21,16 @@ class vector_map : public std::vector<std::pair<key_t, value_t>> {
  public:
   [[nodiscard]] base_type::iterator find(const key_t& key) {
     return std::find_if(base_type::begin(), base_type::end(),
-                     [&key](const std::pair<key_t, value_t>& element) {
-                       return element.first == key;
-                     });
+                        [&key](const std::pair<key_t, value_t>& element) {
+                          return element.first == key;
+                        });
+  }
+
+  [[nodiscard]] base_type::const_iterator find(const key_t& key) const {
+    return std::find_if(base_type::begin(), base_type::end(),
+                        [&key](const std::pair<key_t, value_t>& element) {
+                          return element.first == key;
+                        });
   }
 
   [[nodiscard]] value_t& operator[](const key_t& key) {

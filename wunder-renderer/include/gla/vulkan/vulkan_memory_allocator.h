@@ -8,12 +8,12 @@
 
 #include "core/non_copyable.h"
 
-namespace wunder {
-class vulkan_memory_allocator : public non_copyable{
+namespace wunder::vulkan {
+class memory_allocator : public non_copyable{
  public:
-  vulkan_memory_allocator() = default;
-  explicit vulkan_memory_allocator(std::string tag);
-  ~vulkan_memory_allocator();
+  memory_allocator() = default;
+  explicit memory_allocator(std::string tag);
+  ~memory_allocator();
 
  public:
   void initialize();
@@ -34,7 +34,7 @@ class vulkan_memory_allocator : public non_copyable{
   template <typename T>
   T* map_memory(VmaAllocation allocation) {
     T* mappedMemory;
-    vmaMapMemory(vulkan_memory_allocator::get_vma_allocator(), allocation,
+    vmaMapMemory(memory_allocator::get_vma_allocator(), allocation,
                  (void**)&mappedMemory);
     return mappedMemory;
   }

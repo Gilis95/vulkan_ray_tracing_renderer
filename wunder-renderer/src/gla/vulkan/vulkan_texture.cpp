@@ -29,11 +29,10 @@ std::unordered_map<wunder::address_mode_type, VkSamplerAddressMode> s_address_mo
     {wunder::address_mode_type::REPEAT, VK_SAMPLER_ADDRESS_MODE_REPEAT}};
 }  // namespace
 
-namespace wunder {
-
-vulkan_texture::vulkan_texture(const texture_asset& asset) {
+namespace wunder::vulkan {
+texture::texture(const texture_asset& asset) {
   auto& vulkan_context =
-      vulkan_layer_abstraction_factory::instance().get_vulkan_context();
+      layer_abstraction_factory::instance().get_vulkan_context();
   auto& device = vulkan_context.get_device();
   auto vulkan_logical_device = device.get_vulkan_logical_device();;
 
@@ -48,9 +47,9 @@ vulkan_texture::vulkan_texture(const texture_asset& asset) {
   bind_texture_data(asset);
 }
 
-vulkan_texture::~vulkan_texture() = default;
+texture::~texture() = default;
 
-void vulkan_texture::try_create_sampler(const texture_asset& asset,
+void texture::try_create_sampler(const texture_asset& asset,
                                         VkDevice vulkan_logical_device,
                                         const std::string& name) {
   ReturnUnless(asset.m_sampler.has_value());
@@ -85,10 +84,10 @@ void vulkan_texture::try_create_sampler(const texture_asset& asset,
                               m_image_info.m_sampler);
 }
 
-void vulkan_texture::create_image_view( const std::string& name,
+void texture::create_image_view( const std::string& name,
     const VkFormat& image_format) {  // Create a default image view
   auto& vulkan_context =
-      vulkan_layer_abstraction_factory::instance().get_vulkan_context();
+      layer_abstraction_factory::instance().get_vulkan_context();
   auto& device = vulkan_context.get_device();
   auto vulkan_logical_device = device.get_vulkan_logical_device();
 
@@ -116,9 +115,9 @@ void vulkan_texture::create_image_view( const std::string& name,
                               m_image_info.m_image_view);
 }
 
-VkFormat vulkan_texture::allocate_image(const std::string& name) {
+VkFormat texture::allocate_image(const std::string& name) {
   auto& vulkan_context =
-      vulkan_layer_abstraction_factory::instance().get_vulkan_context();
+      layer_abstraction_factory::instance().get_vulkan_context();
   auto& device = vulkan_context.get_device();
   auto vulkan_logical_device = device.get_vulkan_logical_device();
   auto& allocator = vulkan_context.get_resource_allocator();
@@ -150,12 +149,13 @@ VkFormat vulkan_texture::allocate_image(const std::string& name) {
   return image_format;
 }
 
-void vulkan_texture::bind_texture_data(const texture_asset& asset) {
+void texture::bind_texture_data(const texture_asset& asset) {
+  //TODO:: handle non-existing texture
   const auto& texture_data = asset.m_texture_data;
   ReturnIf(texture_data.empty());
 
   auto& vulkan_context =
-      vulkan_layer_abstraction_factory::instance().get_vulkan_context();
+      layer_abstraction_factory::instance().get_vulkan_context();
   auto& device = vulkan_context.get_device();
   auto vulkan_logical_device = device.get_vulkan_logical_device();
   auto& command_pool = device.get_command_pool();

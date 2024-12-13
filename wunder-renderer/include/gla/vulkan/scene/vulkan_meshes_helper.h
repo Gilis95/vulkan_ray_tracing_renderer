@@ -11,42 +11,47 @@
 namespace wunder {
 class material_asset;
 class mesh_asset;
-class vulkan_top_level_acceleration_structure;
-class vulkan_bottom_level_acceleration_structure_build_info;
-class vulkan_buffer;
+namespace vulkan {
+
+class top_level_acceleration_structure;
+class bottom_level_acceleration_structure_build_info;
+class buffer;
 
 struct vulkan_mesh_scene_node;
 struct vulkan_mesh;
 
-class vulkan_meshes_helper {
+class meshes_helper {
  public:
   static vector_map<asset_handle, std::reference_wrapper<const mesh_asset>>
   extract_mesh_assets(
-      std::vector<std::reference_wrapper<scene_node>> meshe_scene_nodes) ;
+      std::vector<std::reference_wrapper<scene_node>> meshe_scene_nodes);
 
   [[nodiscard]] static asset_ids extract_mesh_ids(
       std::vector<ref<scene_node>>& mesh_entities);
 
   static void create_mesh_scene_nodes(
       assets<mesh_asset>& mesh_entities,
+      const assets<material_asset>& materials,
       const std::vector<ref<scene_node>>& mesh_scene_nodes,
       std::vector<vulkan_mesh_scene_node>& out_mesh_nodes);
 
   static void prepare_blas_build_info(
       const assets<mesh_asset>& mesh_entities,
+      const assets<material_asset>& materials,
       vector_map<asset_handle, shared_ptr<vulkan_mesh>>& out_mesh_instances,
-      std::vector<vulkan_bottom_level_acceleration_structure_build_info>&
+      std::vector<bottom_level_acceleration_structure_build_info>&
           out_build_infos);
   static void build_blas(
-      const std::vector<vulkan_bottom_level_acceleration_structure_build_info>&
+      const std::vector<bottom_level_acceleration_structure_build_info>&
           build_infos,
       vector_map<asset_handle, shared_ptr<vulkan_mesh>>& mesh_instances);
 
   static void create_top_level_acceleration_structure(
       const std::vector<vulkan_mesh_scene_node>& mesh_nodes,
-      vulkan_top_level_acceleration_structure& out_acceleration_structure);
+      top_level_acceleration_structure& out_acceleration_structure);
 
  private:
 };
+}  // namespace vulkan
 }  // namespace wunder
 #endif  // WUNDER_VULKAN_MESHES_HELPER_H

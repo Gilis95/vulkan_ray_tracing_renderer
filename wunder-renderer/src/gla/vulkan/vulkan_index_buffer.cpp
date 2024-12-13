@@ -3,9 +3,9 @@
 #include "gla/vulkan/vulkan_device_buffer.h"
 #include "assets/components/mesh_asset.h"
 
-namespace wunder {
-vulkan_buffer vulkan_index_buffer::create(const mesh_asset& asset) {
-  return vulkan_device_buffer{
+namespace wunder::vulkan {
+buffer index_buffer::create(const mesh_asset& asset) {
+  return device_buffer{
       asset.m_indecies.data(), asset.m_indecies.size() * sizeof(std::uint32_t),
       VK_BUFFER_USAGE_STORAGE_BUFFER_BIT |
           VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT |

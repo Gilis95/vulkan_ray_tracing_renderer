@@ -11,7 +11,7 @@
 #include "core/wunder_memory.h"
 #include "gla/vulkan/vulkan_types.h"
 
-namespace wunder {
+namespace wunder::vulkan {
 enum class shader_operation_output_code {
   OK,
   Warning = 1000,
@@ -21,13 +21,13 @@ enum class shader_operation_output_code {
   NoSetAllocated
 };
 
-class vulkan_shader : public non_copyable {
+class shader : public non_copyable {
  public:
-  explicit vulkan_shader(std::string&& shader_name,
+  explicit shader(std::string&& shader_name,
                          VkShaderStageFlagBits vulkan_shader_type);
 
  public:
-  static std::expected<unique_ptr<vulkan_shader>, shader_operation_output_code>
+  static std::expected<unique_ptr<shader>, shader_operation_output_code>
   create(const std::filesystem::path& spirv, const VkShaderStageFlagBits stage);
 
   static std::expected<std::vector<std::uint32_t>, shader_operation_output_code>
@@ -67,5 +67,5 @@ class vulkan_shader : public non_copyable {
   std::vector<VkDescriptorSetLayout> m_descriptor_set_layout;
   VkShaderModule m_shader_module = VK_NULL_HANDLE;
 };
-}  // namespace wunder
+}  // namespace wunder::vulkan
 #endif  // WUNDER_VULKAN_SHADER_H

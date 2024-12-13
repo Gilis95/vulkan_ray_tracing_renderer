@@ -6,7 +6,7 @@
 
 #include <cstring>
 
-namespace wunder {
+namespace wunder::vulkan {
 features_11O_old::features_11O_old() {
   m_multiview.pNext = &m_t_16_bit_storage;
   m_t_16_bit_storage.pNext = &m_sampler_ycbcr_conversion;

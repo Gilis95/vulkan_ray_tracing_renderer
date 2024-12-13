@@ -12,11 +12,11 @@
 #include "gla/vulkan/vulkan_layer_abstraction_factory.h"
 #include "resources/shaders/host_device.h"
 
-namespace wunder {
-vulkan_bottom_level_acceleration_structure_build_info::
-    vulkan_bottom_level_acceleration_structure_build_info(
-        const mesh_asset& mesh, const vulkan_buffer& vertex_buffer,
-        const vulkan_buffer& index_buffer) {
+namespace wunder::vulkan {
+bottom_level_acceleration_structure_build_info::
+    bottom_level_acceleration_structure_build_info(
+        const mesh_asset& mesh, const buffer& vertex_buffer,
+        const buffer& index_buffer) {
   clear_geometry_data();
   create_geometry_data(mesh, vertex_buffer, index_buffer);
 
@@ -38,12 +38,12 @@ vulkan_bottom_level_acceleration_structure_build_info::
  * We're covering only triangle meshes for the moment.
  * TODO:: implement procedural geometries, such as spheres
  */
-void vulkan_bottom_level_acceleration_structure_build_info::
+void bottom_level_acceleration_structure_build_info::
     create_geometry_data(const mesh_asset& mesh,
-                         const vulkan_buffer& vertex_buffer,
-                         const vulkan_buffer& index_buffer) {  // Building part
-  vulkan_context& vulkan_context =
-      vulkan_layer_abstraction_factory::instance().get_vulkan_context();
+                         const buffer& vertex_buffer,
+                         const buffer& index_buffer) {  // Building part
+  context& vulkan_context =
+      layer_abstraction_factory::instance().get_vulkan_context();
   auto& device = vulkan_context.get_device();
 
   VkBufferDeviceAddressInfo info{VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO};
@@ -75,4 +75,4 @@ void vulkan_bottom_level_acceleration_structure_build_info::
   m_as_geometry.geometry.triangles = triangles;
 }
 
-}  // namespace wunder
+}  // namespace wunder::vulkan

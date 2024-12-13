@@ -6,12 +6,14 @@
 #define WUNDER_VULKAN_VERTEX_BUFFER_H
 
 #include "gla/vulkan/vulkan_device_buffer.h"
-
 namespace wunder {
 struct mesh_asset;
-class vulkan_vertex_buffer {
+}
+
+namespace wunder::vulkan {
+class vertex_buffer {
  public:
-  static vulkan_buffer create(const mesh_asset& asset);
+  static buffer create(const mesh_asset& asset);
 };
-}  // namespace wunder
+}  // namespace wunder::vulkan
 #endif  // WUNDER_VULKAN_VERTEX_BUFFER_H

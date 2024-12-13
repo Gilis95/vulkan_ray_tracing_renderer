@@ -8,6 +8,10 @@
 #include "vulkan_memory_allocator.h"
 
 namespace wunder {
+struct texture_asset;
+}
+
+namespace wunder::vulkan {
 struct vulkan_image_info {
   VkImage m_image = VK_NULL_HANDLE;
   VkImageView m_image_view = VK_NULL_HANDLE;
@@ -15,12 +19,15 @@ struct vulkan_image_info {
   VmaAllocation m_memory_alloc = VK_NULL_HANDLE;
 };
 
-struct texture_asset;
+class renderer;
 
-class vulkan_texture {
+class texture {
  public:
-  vulkan_texture(const texture_asset& asset);
-  ~vulkan_texture();
+  texture(const texture_asset& asset);
+  ~texture();
+
+ public:
+  void bind(renderer& renderer);
 
  private:
   VkFormat allocate_image(const std::string& name);
@@ -35,5 +42,5 @@ class vulkan_texture {
   vulkan_image_info m_image_info;
   VkDeviceSize m_gpu_allocation_size = 0;
 };
-}  // namespace wunder
+}  // namespace wunder::vulkan
 #endif  // WUNDER_VULKAN_TEXTURE_H

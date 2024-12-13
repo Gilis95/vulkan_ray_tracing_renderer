@@ -11,22 +11,22 @@
 #include "gla/vulkan/vulkan_types.h"
 #include "glad/vulkan.h"
 
-namespace wunder {
+namespace wunder::vulkan {
 
-class vulkan_shader;
-class vulkan_pipeline;
+class shader;
+class pipeline;
 
-class vulkan_descriptor_set_manager : public non_copyable{
+class descriptor_set_manager : public non_copyable {
  public:
-  void initialize(const vulkan_shader& vulkan_shader);
+  void initialize(const shader& vulkan_shader);
 
  public:
-
   void update_resource(const vulkan_resource_identifier& resource_identifier,
-                       vulkan_shader_resource_instance);
+                       shader_resource::instance::element);
 
   void bake();
-  void bind(const vulkan_pipeline& pipeline) const;
+  void bind(const pipeline& pipeline) const;
+
  private:
   std::multimap<vulkan_descriptor_set_identifier, vulkan_descriptor_bindings>
       m_input_resources;
@@ -35,5 +35,5 @@ class vulkan_descriptor_set_manager : public non_copyable{
 
   VkDescriptorPool m_descriptor_pool;
 };
-}  // namespace wunder
+}  // namespace wunder::vulkan
 #endif  // WUNDER_VULKAN_DESCRIPTOR_SET_MANAGER_H

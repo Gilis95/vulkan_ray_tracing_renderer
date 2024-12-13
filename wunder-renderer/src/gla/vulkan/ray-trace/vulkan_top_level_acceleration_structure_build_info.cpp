@@ -19,10 +19,10 @@ inline VkTransformMatrixKHR to_transform_matrix_khr(glm::mat4 matrix) {
 }
 }  // namespace
 
-namespace wunder {
+namespace wunder::vulkan {
 
-vulkan_top_level_acceleration_structure_build_info::
-    vulkan_top_level_acceleration_structure_build_info(
+top_level_acceleration_structure_build_info::
+    top_level_acceleration_structure_build_info(
         const std::vector<vulkan_mesh_scene_node>& mesh_nodes) {
   auto acceleration_structures_instances =
       create_acceleration_structure_instances(mesh_nodes);
@@ -39,7 +39,7 @@ vulkan_top_level_acceleration_structure_build_info::
 }
 
 std::vector<VkAccelerationStructureInstanceKHR>
-vulkan_top_level_acceleration_structure_build_info::
+top_level_acceleration_structure_build_info::
     create_acceleration_structure_instances(
         const std::vector<vulkan_mesh_scene_node>& mesh_nodes) {
   std::vector<VkAccelerationStructureInstanceKHR> result;
@@ -52,7 +52,7 @@ vulkan_top_level_acceleration_structure_build_info::
 
   return result;
 }
-bool vulkan_top_level_acceleration_structure_build_info::
+bool top_level_acceleration_structure_build_info::
     create_acceleration_structure_instance(
         const vulkan_mesh_scene_node& mesh_node,
         VkAccelerationStructureInstanceKHR&
@@ -72,8 +72,8 @@ bool vulkan_top_level_acceleration_structure_build_info::
   out_acceleration_structure_instance.transform =
       to_transform_matrix_khr(mesh_node.m_model_matrix);
   out_acceleration_structure_instance.instanceCustomIndex =
-      mesh_node.m_mesh
-          ->idx;  // gl_InstanceCustomIndexEXT: to find which primitive
+      mesh_node.m_mesh->m_material_idx;  // gl_InstanceCustomIndexEXT: to find
+                                         // which primitive
   out_acceleration_structure_instance.accelerationStructureReference =
       mesh_node.m_mesh->m_blas.get_address();
   out_acceleration_structure_instance.flags = flags;
@@ -83,7 +83,7 @@ bool vulkan_top_level_acceleration_structure_build_info::
   return true;
 }
 
-void vulkan_top_level_acceleration_structure_build_info::
+void top_level_acceleration_structure_build_info::
     create_acceleration_structures_buffer(
         std::vector<VkAccelerationStructureInstanceKHR>&
             acceleration_structures_instances) {
@@ -94,10 +94,10 @@ void vulkan_top_level_acceleration_structure_build_info::
   VkBufferUsageFlagBits flags = VkBufferUsageFlagBits(
       VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT |
       VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR);
-  m_acceleration_structures_buffers = vulkan_device_buffer(data, size, flags);
+  m_acceleration_structures_buffers = device_buffer(data, size, flags);
 }
 
-void vulkan_top_level_acceleration_structure_build_info::create_geometry_data(
+void top_level_acceleration_structure_build_info::create_geometry_data(
     std::uint32_t acceleration_structure_instances_count) {
   VkAccelerationStructureGeometryInstancesDataKHR geometryInstances{
       VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_INSTANCES_DATA_KHR};
@@ -109,4 +109,4 @@ void vulkan_top_level_acceleration_structure_build_info::create_geometry_data(
   m_as_geometry.geometryType = VK_GEOMETRY_TYPE_INSTANCES_KHR;
   m_as_geometry.geometry.instances = geometryInstances;
 }
-}  // namespace wunder
+}  // namespace wunder::vulkan

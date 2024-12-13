@@ -7,13 +7,14 @@
 #include "gla/vulkan/ray-trace/vulkan_acceleration_structure_build_info.h"
 #include "gla/vulkan/vulkan_buffer.h"
 
-namespace wunder {
-class vulkan_bottom_level_acceleration_structure;
+namespace wunder::vulkan {
+
+class bottom_level_acceleration_structure;
 struct vulkan_mesh_scene_node;
-class vulkan_top_level_acceleration_structure_build_info
-    : public vulkan_acceleration_structure_build_info {
+class top_level_acceleration_structure_build_info
+    : public acceleration_structure_build_info {
  public:
-  vulkan_top_level_acceleration_structure_build_info(
+  top_level_acceleration_structure_build_info(
       const std::vector<vulkan_mesh_scene_node>& mesh_nodes);
 
  public:
@@ -38,7 +39,7 @@ class vulkan_top_level_acceleration_structure_build_info
       std::uint32_t acceleration_structure_instances_count);
 
  private:
-  vulkan_buffer m_acceleration_structures_buffers;
+  buffer m_acceleration_structures_buffers;
 };
-}  // namespace wunder
+}  // namespace wunder::vulkan
 #endif  // WUNDER_VULKAN_TOP_LEVEL_ACCELERATION_STRUCTURE_BUILD_INFO_H

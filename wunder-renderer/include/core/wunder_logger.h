@@ -64,14 +64,14 @@ template <typename... Args>
 void log::warn_tag(std::string_view tag,
                    const std::format_string<Args...> format, Args&&... args) {
   std::string formatted = std::format(format, std::forward<Args>(args)...);
-  info_tag(tag, formatted);
+  warn_tag(tag, formatted);
 }
 
 template <typename... Args>
 void log::info_tag(std::string_view tag,
                    const std::format_string<Args...> format, Args&&... args) {
   std::string formatted = std::format(format, std::forward<Args>(args)...);
-  warn_tag(tag, formatted);
+  info_tag(tag, formatted);
 }
 
 template <typename... Args>

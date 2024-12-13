@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 
-namespace wunder {
+namespace wunder::vulkan {
 struct vulkan_extension_data;
 class vulkan_extension_source {
  public:
@@ -28,5 +28,5 @@ void extract_used_features_from_extensions(
     const std::vector<vulkan_extension_data> &used_extensions,
     std::vector<void *> &out_used_features);
 
-}  // namespace wunder
+}  // namespace wunder::vulkan
 #endif  // WUNDER_VULKAN_EXTENSION_SOURCE_H

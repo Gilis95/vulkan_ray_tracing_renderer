@@ -5,18 +5,18 @@
 #include <cstdint>
 
 #include "core/non_copyable.h"
-namespace wunder {
-class vulkan_acceleration_structure_build_info : public non_copyable {
+namespace wunder::vulkan {
+class acceleration_structure_build_info : public non_copyable {
  public:
-  vulkan_acceleration_structure_build_info();
+  acceleration_structure_build_info();
 
-  vulkan_acceleration_structure_build_info(
-      vulkan_acceleration_structure_build_info&& other) noexcept;
-  vulkan_acceleration_structure_build_info& operator=(
-      vulkan_acceleration_structure_build_info&& other) noexcept;
+  acceleration_structure_build_info(
+      acceleration_structure_build_info&& other) noexcept;
+  acceleration_structure_build_info& operator=(
+      acceleration_structure_build_info&& other) noexcept;
 
  public:
-  virtual ~vulkan_acceleration_structure_build_info();
+  virtual ~acceleration_structure_build_info();
 
  public:
   [[nodiscard]] const VkAccelerationStructureBuildGeometryInfoKHR&

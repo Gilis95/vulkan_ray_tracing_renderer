@@ -17,15 +17,15 @@
 #include "gla/vulkan/vulkan_index_buffer.h"
 #include "gla/vulkan/vulkan_vertex_buffer.h"
 
-namespace wunder {
+namespace wunder::vulkan {
 
 vector_map<asset_handle, const_ref<mesh_asset>>
-vulkan_meshes_helper::extract_mesh_assets(
+meshes_helper::extract_mesh_assets(
     std::vector<ref<scene_node>> meshe_scene_nodes) {
   auto& asset_manager = project::instance().get_asset_manager();
 
   std::unordered_set<asset_handle> mesh_ids =
-      vulkan_meshes_helper::extract_mesh_ids(meshe_scene_nodes);
+      meshes_helper::extract_mesh_ids(meshe_scene_nodes);
 
   vector_map<asset_handle, const_ref<mesh_asset>> result =
       asset_manager.find_assets<mesh_asset>(mesh_ids.begin(), mesh_ids.end());
@@ -33,7 +33,7 @@ vulkan_meshes_helper::extract_mesh_assets(
   return result;
 }
 
-asset_ids vulkan_meshes_helper::extract_mesh_ids(
+asset_ids meshes_helper::extract_mesh_ids(
     std::vector<ref<scene_node>>& mesh_entities) {
   std::unordered_set<asset_handle> mesh_ids;
   for (auto& mesh_entity : mesh_entities) {
@@ -47,16 +47,17 @@ asset_ids vulkan_meshes_helper::extract_mesh_ids(
   return mesh_ids;
 }
 
-void vulkan_meshes_helper::create_mesh_scene_nodes(
+void meshes_helper::create_mesh_scene_nodes(
     assets<mesh_asset>& mesh_entities,
+    const assets<material_asset>& materials,
     const std::vector<ref<scene_node>>& mesh_scene_nodes,
     std::vector<vulkan_mesh_scene_node>& out_mesh_nodes) {
-  std::vector<vulkan_bottom_level_acceleration_structure_build_info>
+  std::vector<bottom_level_acceleration_structure_build_info>
       build_infos;
 
   // we first go through unique meshes and create them an instance
   vector_map<asset_handle, shared_ptr<vulkan_mesh>> mesh_instances;
-  prepare_blas_build_info(mesh_entities, mesh_instances, build_infos);
+  prepare_blas_build_info(mesh_entities, materials, mesh_instances, build_infos);
   build_blas(build_infos, mesh_instances);
 
   // then we use the instances to create a scene nodes, placed in specific
@@ -80,24 +81,30 @@ void vulkan_meshes_helper::create_mesh_scene_nodes(
   }
 }
 
-void vulkan_meshes_helper::prepare_blas_build_info(
+void meshes_helper::prepare_blas_build_info(
     const assets<mesh_asset>& mesh_entities,
+    const assets<material_asset>& materials,
     vector_map<asset_handle, shared_ptr<vulkan_mesh>>& out_mesh_instances,
-    std::vector<vulkan_bottom_level_acceleration_structure_build_info>&
+    std::vector<bottom_level_acceleration_structure_build_info>&
         out_build_infos) {
   std::uint32_t i = 0;
   for (const auto& [mesh_id, mesh_asset] : mesh_entities) {
     auto& [id, _vulkan_mesh] = out_mesh_instances.emplace_back();
 
+    auto material_it = materials.find(mesh_asset.get().m_material_handle);
+    long material_idx = material_it == materials.end() ? 0 :
+                                                       std::distance(materials.begin(), material_it);
+
     _vulkan_mesh = make_shared<vulkan_mesh>();
     _vulkan_mesh->m_vertex_buffer =
-        std::move(vulkan_vertex_buffer::create(mesh_asset));
+        std::move(vertex_buffer::create(mesh_asset));
     _vulkan_mesh->m_index_buffer =
-        std::move(vulkan_index_buffer::create(mesh_asset));
+        std::move(index_buffer::create(mesh_asset));
     _vulkan_mesh->idx = i;
-    id=mesh_id;
+    _vulkan_mesh->m_material_idx = material_idx;
+    id = mesh_id;
 
-    vulkan_bottom_level_acceleration_structure_build_info build_info(
+    bottom_level_acceleration_structure_build_info build_info(
         mesh_asset, _vulkan_mesh->m_vertex_buffer,
         _vulkan_mesh->m_index_buffer);
     out_build_infos.emplace_back(std::move(build_info));
@@ -105,20 +112,20 @@ void vulkan_meshes_helper::prepare_blas_build_info(
   }
 }
 
-void vulkan_meshes_helper::build_blas(
-    const std::vector<vulkan_bottom_level_acceleration_structure_build_info>&
+void meshes_helper::build_blas(
+    const std::vector<bottom_level_acceleration_structure_build_info>&
         build_infos,
     vector_map<asset_handle, shared_ptr<vulkan_mesh>>& mesh_instances) {
   std::uint32_t scratch_buffer_size = 0;
   scratch_buffer_size = std::accumulate(
       build_infos.begin(), build_infos.end(), scratch_buffer_size,
       [](std::uint32_t current_accumulation,
-         const vulkan_bottom_level_acceleration_structure_build_info& right) {
+         const bottom_level_acceleration_structure_build_info& right) {
         return current_accumulation +
                right.get_vulkan_as_build_sizes_info().accelerationStructureSize;
       });
 
-  vulkan_buffer scratch_buffer = vulkan_device_buffer(
+  buffer scratch_buffer = device_buffer(
       scratch_buffer_size, VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT |
                                VK_BUFFER_USAGE_STORAGE_BUFFER_BIT);
 
@@ -137,12 +144,12 @@ void vulkan_meshes_helper::build_blas(
   }
 }
 
-void vulkan_meshes_helper::create_top_level_acceleration_structure(
+void meshes_helper::create_top_level_acceleration_structure(
     const std::vector<vulkan_mesh_scene_node>& mesh_nodes,
-    vulkan_top_level_acceleration_structure& out_acceleration_structure) {
-  vulkan_top_level_acceleration_structure_build_info tlas_build_info(
+    top_level_acceleration_structure& out_acceleration_structure) {
+  top_level_acceleration_structure_build_info tlas_build_info(
       mesh_nodes);
-  vulkan_buffer scratch_buffer = vulkan_device_buffer(
+  buffer scratch_buffer = device_buffer(
       tlas_build_info.get_vulkan_as_build_sizes_info().buildScratchSize,
       VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT |
           VK_BUFFER_USAGE_STORAGE_BUFFER_BIT);

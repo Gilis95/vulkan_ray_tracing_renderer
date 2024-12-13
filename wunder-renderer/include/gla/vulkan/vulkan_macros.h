@@ -12,29 +12,29 @@
 #include "gla/vulkan/vulkan_context.h"
 #include "gla/vulkan/vulkan_layer_abstraction_factory.h"
 
-#define VK_CHECK_RESULT(f)                                \
-  {                                                       \
-    VkResult res = (f);                                   \
-    wunder::vulkan_check_result(res, __FILE__, __LINE__); \
+#define VK_CHECK_RESULT(f)                                        \
+  {                                                               \
+    VkResult res = (f);                                           \
+    wunder::vulkan::vulkan_check_result(res, __FILE__, __LINE__); \
   }
 
-#define VK_CHECK_RESULT_RETURN(f)                         \
-  {                                                       \
-    VkResult res = (f);                                   \
-    wunder::vulkan_check_result(res, __FILE__, __LINE__); \
-    ReturnIf(res != VK_SUCCESS, res);                     \
+#define VK_CHECK_RESULT_RETURN(f)                                 \
+  {                                                               \
+    VkResult res = (f);                                           \
+    wunder::vulkan::vulkan_check_result(res, __FILE__, __LINE__); \
+    ReturnIf(res != VK_SUCCESS, res);                             \
   }
 
-#define VK_CHECK_RESULT_CRASH(f)                          \
-  {                                                       \
-    VkResult res = (f);                                   \
-    wunder::vulkan_check_result(res, __FILE__, __LINE__); \
-    CrashIf(res != VK_SUCCESS, res);                      \
+#define VK_CHECK_RESULT_CRASH(f)                                  \
+  {                                                               \
+    VkResult res = (f);                                           \
+    wunder::vulkan::vulkan_check_result(res, __FILE__, __LINE__); \
+    CrashIf(res != VK_SUCCESS, res);                              \
   }
 
-namespace wunder {
+namespace wunder::vulkan {
 
-inline const char* VKResultToString(VkResult result) {
+inline const char* vk_result_to_string(VkResult result) {
   switch (result) {
     case VK_SUCCESS:
       return "VK_SUCCESS";
@@ -118,7 +118,7 @@ inline const char* VKResultToString(VkResult result) {
 }
 
 inline void dump_gpu_info() {
-  auto& caps = vulkan_layer_abstraction_factory::instance()
+  auto& caps = layer_abstraction_factory::instance()
                    .get_vulkan_context()
                    .get_capabilities();
   WUNDER_TRACE_TAG("Renderer", "GPU Info:");
@@ -130,7 +130,7 @@ inline void dump_gpu_info() {
 inline void vulkan_check_result(VkResult result, const char* file, int line) {
   if (result != VK_SUCCESS) {
     WUNDER_ERROR_TAG("Renderer", "VkResult is '{0}' in {1}:{2}",
-                     VKResultToString(result), file, line);
+                     vk_result_to_string(result), file, line);
     if (result == VK_ERROR_DEVICE_LOST) {
       using namespace std::chrono_literals;
       std::this_thread::sleep_for(3s);
@@ -159,6 +159,8 @@ inline static void set_debug_utils_object_name(VkDevice device,
                                                const VkObjectType objectType,
                                                const std::string& name,
                                                const void* handle) {
+  ReturnUnless(vkSetDebugUtilsObjectNameEXT);
+
   VkDebugUtilsObjectNameInfoEXT nameInfo;
   nameInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT;
   nameInfo.objectType = objectType;
@@ -176,6 +178,6 @@ inline static void set_debug_utils_object_name(VkDevice device,
                               handle);
 }
 
-}  // namespace wunder
+}  // namespace wunder::vulkan
 
 #endif  // WUNDER_VULKAN_MACROS_H

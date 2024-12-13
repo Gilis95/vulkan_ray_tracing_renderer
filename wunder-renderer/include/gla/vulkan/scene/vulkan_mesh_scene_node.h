@@ -8,12 +8,20 @@
 #include "core/wunder_memory.h"
 #include "glm/detail/type_mat4x4.hpp"
 
-namespace wunder{
+namespace wunder {
+namespace vulkan {
+
 struct vulkan_mesh;
+class renderer;
 
 struct vulkan_mesh_scene_node {
+ public:
   shared_ptr<vulkan_mesh> m_mesh;
   glm::mat4 m_model_matrix;
+
+ public:
+  void bind(renderer& renderer);
 };
-}
+}  // namespace vulkan
+}  // namespace wunder
 #endif  // WUNDER_VULKAN_MESH_NODE_H

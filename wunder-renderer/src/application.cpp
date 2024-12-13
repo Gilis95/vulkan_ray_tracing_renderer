@@ -24,7 +24,7 @@ application::application(application_properties &&properties)
 /////////////////////////////////////////////////////////////////////////////////////////
 application::~application() {
   project::instance().shutdown();
-  vulkan_layer_abstraction_factory::instance().shutdown();
+  vulkan::layer_abstraction_factory::instance().shutdown();
   window_factory::instance().shutdown();
 }
 
@@ -42,7 +42,7 @@ void application::initialize() {
 
   AssertReturnUnless(
       window_factory::instance().initialize(m_properties->m_window_properties));
-  vulkan_layer_abstraction_factory::instance().initialize(
+  vulkan::layer_abstraction_factory::instance().initialize(
       m_properties->m_renderer_properties);
   project::instance().initialize();
 
@@ -56,12 +56,14 @@ void application::close() { m_is_running = false; }
 void application::run() {
   m_is_running = true;
   auto &window = window_factory::instance().get_window();
-  auto &gla = vulkan_layer_abstraction_factory::instance();
-  auto &renderer = gla.get_renderer_api();
+  auto &gla = vulkan::layer_abstraction_factory::instance();
+  auto &renderers = gla.get_renderers();
 
   while (m_is_running) {
     window.update(0);
-    renderer.update(0);
+    for (auto &[_, renderer] : renderers) {
+      renderer->update(0);
+    }
     FrameMark;
   }
 }

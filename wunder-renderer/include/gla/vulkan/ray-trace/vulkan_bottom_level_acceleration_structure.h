@@ -9,19 +9,18 @@
 
 namespace wunder {
 struct mesh_asset;
+namespace vulkan {
+class bottom_level_acceleration_structure_build_info;
 
-class vulkan_bottom_level_acceleration_structure_build_info;
-
-class vulkan_bottom_level_acceleration_structure
-    : public vulkan_acceleration_structure {
+class bottom_level_acceleration_structure : public acceleration_structure {
  public:
-  vulkan_bottom_level_acceleration_structure();
+  bottom_level_acceleration_structure();
 
  public:
-  void build(vulkan_buffer& scratch_buffer, VkDeviceAddress scratch_offset,
-             const vulkan_bottom_level_acceleration_structure_build_info& build_info);
-
-
+  void build(
+      buffer& scratch_buffer, VkDeviceAddress scratch_offset,
+      const bottom_level_acceleration_structure_build_info& build_info);
 };
+}  // namespace vulkan
 }  // namespace wunder
 #endif  // WUNDER_VULKAN_BOTTOM_LEVEL_ACCELERATION_STRUCTURE_H

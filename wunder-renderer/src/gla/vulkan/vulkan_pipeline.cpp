@@ -12,12 +12,13 @@
 #include "gla/vulkan/vulkan_shader.h"
 #include "resources/shaders/host_device.h"
 
-namespace wunder {
-class vulkan_shader;
+namespace wunder::vulkan {
+class shader;
 
-void vulkan_pipeline::create_pipeline_layout(
-    const vulkan_shader& descriptor_declaring_shader) {
-  auto& device = vulkan_layer_abstraction_factory::instance()
+void pipeline::create_pipeline_layout(
+    const shader& descriptor_declaring_shader) {
+  auto& device =
+      layer_abstraction_factory::instance()
                      .get_vulkan_context()
                      .get_device();
 
@@ -45,11 +46,12 @@ void vulkan_pipeline::create_pipeline_layout(
                          &m_vulkan_pipeline_layout);
 }
 
-void vulkan_pipeline::create_pipeline(
+void pipeline::create_pipeline(
     const vector_map<VkShaderStageFlagBits,
-                     std::vector<unique_ptr<vulkan_shader>>>&
+                     std::vector<unique_ptr<shader>>>&
         shaders_of_types) {
-  auto& device = vulkan_layer_abstraction_factory::instance()
+  auto& device =
+      layer_abstraction_factory::instance()
                      .get_vulkan_context()
                      .get_device();
 
@@ -118,9 +120,9 @@ void vulkan_pipeline::create_pipeline(
 }
 
 std::vector<VkPipelineShaderStageCreateInfo>
-vulkan_pipeline::get_shader_stage_create_info(
+pipeline::get_shader_stage_create_info(
     const vector_map<VkShaderStageFlagBits,
-                     std::vector<unique_ptr<vulkan_shader>>>&
+                     std::vector<unique_ptr<shader>>>&
         shaders_of_types) {
   std::vector<VkPipelineShaderStageCreateInfo> stages;
 
@@ -134,7 +136,7 @@ vulkan_pipeline::get_shader_stage_create_info(
 }
 
 std::vector<VkRayTracingShaderGroupCreateInfoKHR>
-vulkan_pipeline::get_shader_group_create_info(
+pipeline::get_shader_group_create_info(
     std::vector<VkPipelineShaderStageCreateInfo>& stages) const {
   std::vector<VkRayTracingShaderGroupCreateInfoKHR> groups;
   auto add_group = [&groups](VkRayTracingShaderGroupTypeKHR type,

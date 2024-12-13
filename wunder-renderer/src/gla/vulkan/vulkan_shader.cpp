@@ -80,13 +80,14 @@ inline std::string vulkan_shader_stage_to_string(
 
 template <typename T>
 concept vulkan_shader_resource_concept =
-    std::is_base_of<wunder::vulkan_shader_resource_declaration_base, T>::value;
+    std::is_base_of<wunder::vulkan::shader_resource::declaration::base,
+                    T>::value;
 
 template <vulkan_shader_resource_concept resource_type>
 void spirv_resources_to_descriptors_declarations(
     const spirv_cross::Compiler& compiler,
     const spirv_cross::SmallVector<spirv_cross::Resource>& resources,
-    wunder::vulkan_shader_reflection_data& out_reflection_data) {
+    wunder::vulkan::vulkan_shader_reflection_data& out_reflection_data) {
   for (const auto& resource : resources) {
     uint32_t descriptor_set =
         compiler.get_decoration(resource.id, spv::DecorationDescriptorSet);
@@ -101,7 +102,8 @@ void spirv_resources_to_descriptors_declarations(
 class descriptor_set_layout_creator {
  public:
   VkDescriptorSetLayoutBinding operator()(
-      const wunder::vulkan_uniform_buffer_resource_declaration& resource) {
+      const wunder::vulkan::shader_resource::declaration::uniform_buffer&
+          resource) {
     VkDescriptorSetLayoutBinding layout_binding;
     layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
     layout_binding.descriptorCount = 1;
@@ -112,7 +114,8 @@ class descriptor_set_layout_creator {
   }
 
   VkDescriptorSetLayoutBinding operator()(
-      const wunder::vulkan_storage_buffers_resource_declaration& resource) {
+      const wunder::vulkan::shader_resource::declaration::storage_buffers&
+          resource) {
     VkDescriptorSetLayoutBinding layout_binding;
     layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
     layout_binding.descriptorCount = 1;
@@ -123,7 +126,8 @@ class descriptor_set_layout_creator {
   }
 
   VkDescriptorSetLayoutBinding operator()(
-      const wunder::vulkan_sampled_images_resource_declaration& resource) {
+      const wunder::vulkan::shader_resource::declaration::sampled_images&
+          resource) {
     VkDescriptorSetLayoutBinding layout_binding;
     layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
     layout_binding.descriptorCount = 1;
@@ -134,7 +138,8 @@ class descriptor_set_layout_creator {
   }
 
   VkDescriptorSetLayoutBinding operator()(
-      const wunder::vulkan_separate_images_resource_declaration& resource) {
+      const wunder::vulkan::shader_resource::declaration::separate_images&
+          resource) {
     VkDescriptorSetLayoutBinding layout_binding;
     layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
     layout_binding.descriptorCount = 1;
@@ -145,7 +150,8 @@ class descriptor_set_layout_creator {
   }
 
   VkDescriptorSetLayoutBinding operator()(
-      const wunder::vulkan_separate_samplers_resource_declaration& resource) {
+      const wunder::vulkan::shader_resource::declaration::separate_samplers&
+          resource) {
     VkDescriptorSetLayoutBinding layout_binding;
     layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
     layout_binding.descriptorCount = 1;
@@ -156,7 +162,8 @@ class descriptor_set_layout_creator {
   }
 
   VkDescriptorSetLayoutBinding operator()(
-      const wunder::vulkan_storage_images_resource_declaration& resource) {
+      const wunder::vulkan::shader_resource::declaration::storage_images&
+          resource) {
     VkDescriptorSetLayoutBinding layout_binding;
     layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
     layout_binding.descriptorCount = 1;
@@ -167,8 +174,8 @@ class descriptor_set_layout_creator {
   }
 
   VkDescriptorSetLayoutBinding operator()(
-      const wunder::vulkan_acceleration_structures_resource_declaration&
-          resource) {
+      const wunder::vulkan::shader_resource::declaration::
+          acceleration_structures& resource) {
     VkDescriptorSetLayoutBinding layout_binding;
     layout_binding.descriptorType =
         VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR;
@@ -181,14 +188,13 @@ class descriptor_set_layout_creator {
 };
 }  // namespace
 
-namespace wunder {
-vulkan_shader::vulkan_shader(std::string&& shader_name,
+namespace wunder::vulkan {
+shader::shader(std::string&& shader_name,
                              VkShaderStageFlagBits vulkan_shader_type)
     : m_shader_name(std::move(shader_name)),
       m_vulkan_shader_type(vulkan_shader_type) {}
 
-std::expected<unique_ptr<vulkan_shader>, shader_operation_output_code>
-vulkan_shader::create(const std::filesystem::path& spirv_path,
+std::expected<unique_ptr<shader>, shader_operation_output_code> shader::create(const std::filesystem::path& spirv_path,
                       const VkShaderStageFlagBits stage) {
   auto spirv_real_path = wunder_filesystem::instance().resolve_path(spirv_path);
   AssertReturnUnless(
@@ -203,13 +209,13 @@ vulkan_shader::create(const std::filesystem::path& spirv_path,
   ReturnIf(!expected.has_value(), std::unexpected(expected.error()));
 
   auto shader_ptr =
-      std::make_unique<vulkan_shader>(std::move(shader_name), stage);
+      std::make_unique<shader>(std::move(shader_name), stage);
   shader_ptr->initialize(expected.value());
   return shader_ptr;
 }
 
 std::expected<std::vector<std::uint32_t>, shader_operation_output_code>
-vulkan_shader::compile_shader(std::ifstream& spirv_istream,
+shader::compile_shader(std::ifstream& spirv_istream,
                               const std::filesystem::path& shader_parent_dir,
                               const std::string& shader_name,
                               const VkShaderStageFlagBits stage) {
@@ -247,9 +253,10 @@ vulkan_shader::compile_shader(std::ifstream& spirv_istream,
   return binary;
 }
 
-void vulkan_shader::initialize(const std::vector<std::uint32_t>& debug_spirv) {
+void shader::initialize(const std::vector<std::uint32_t>& debug_spirv) {
   AssertReturnIf(debug_spirv.empty());
-  auto& device = vulkan_layer_abstraction_factory::instance()
+  auto& device =
+      layer_abstraction_factory::instance()
                      .get_vulkan_context()
                      .get_device();
 
@@ -272,8 +279,9 @@ void vulkan_shader::initialize(const std::vector<std::uint32_t>& debug_spirv) {
   initialize_descriptor_set_layout();
 }
 
-VkPipelineShaderStageCreateInfo vulkan_shader::get_shader_stage_info() const {
-  VkPipelineShaderStageCreateInfo result{VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO};
+VkPipelineShaderStageCreateInfo shader::get_shader_stage_info() const {
+  VkPipelineShaderStageCreateInfo result{
+      VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO};
   result.stage = m_vulkan_shader_type;
   result.flags = 0;
   result.module = m_shader_module;
@@ -282,31 +290,31 @@ VkPipelineShaderStageCreateInfo vulkan_shader::get_shader_stage_info() const {
   return result;
 }
 
-void vulkan_shader::initialize_reflection_data(
+void shader::initialize_reflection_data(
     const std::vector<std::uint32_t>& debug_spirv) {
   spirv_cross::Compiler compiler(debug_spirv);
   auto resources = compiler.get_shader_resources();
 
   spirv_resources_to_descriptors_declarations<
-      vulkan_uniform_buffer_resource_declaration>(
+      wunder::vulkan::shader_resource::declaration::uniform_buffer>(
       compiler, resources.uniform_buffers, m_reflection_data);
   spirv_resources_to_descriptors_declarations<
-      vulkan_storage_buffers_resource_declaration>(
+      wunder::vulkan::shader_resource::declaration::storage_buffers>(
       compiler, resources.storage_buffers, m_reflection_data);
   spirv_resources_to_descriptors_declarations<
-      vulkan_sampled_images_resource_declaration>(
+      wunder::vulkan::shader_resource::declaration::sampled_images>(
       compiler, resources.sampled_images, m_reflection_data);
   spirv_resources_to_descriptors_declarations<
-      vulkan_separate_images_resource_declaration>(
+      wunder::vulkan::shader_resource::declaration::separate_images>(
       compiler, resources.separate_images, m_reflection_data);
   spirv_resources_to_descriptors_declarations<
-      vulkan_separate_samplers_resource_declaration>(
+      wunder::vulkan::shader_resource::declaration::separate_samplers>(
       compiler, resources.separate_samplers, m_reflection_data);
   spirv_resources_to_descriptors_declarations<
-      vulkan_storage_images_resource_declaration>(
+      wunder::vulkan::shader_resource::declaration::storage_images>(
       compiler, resources.storage_images, m_reflection_data);
   spirv_resources_to_descriptors_declarations<
-      vulkan_acceleration_structures_resource_declaration>(
+      wunder::vulkan::shader_resource::declaration::acceleration_structures>(
       compiler, resources.acceleration_structures, m_reflection_data);
 
   ReturnIf(m_reflection_data.m_shader_resources_declaration.empty());
@@ -315,24 +323,32 @@ void vulkan_shader::initialize_reflection_data(
       m_reflection_data.m_shader_resources_declaration.begin(),
       m_reflection_data.m_shader_resources_declaration.end(),
       [](const std::pair<vulkan_resource_identifier,
-                         vulkan_shader_resource_declaration>&
+                         wunder::vulkan::shader_resource::declaration::element>&
              left_element,
          const std::pair<vulkan_resource_identifier,
-                         vulkan_shader_resource_declaration>&
+                         wunder::vulkan::shader_resource::declaration::element>&
              right_element) {
-        const vulkan_shader_resource_declaration_base& left_resource_declaration = std::visit(
-            downcast_vulkan_shader_resource, left_element.second);
-        const vulkan_shader_resource_declaration_base& right_resource_declaration = std::visit(
-            downcast_vulkan_shader_resource, right_element.second);
+        const wunder::vulkan::shader_resource::declaration::base&
+            left_resource_declaration = std::visit(
+                wunder::vulkan::shader_resource::declaration::downcast,
+                left_element.second);
+        const wunder::vulkan::shader_resource::declaration::base&
+            right_resource_declaration = std::visit(
+                wunder::vulkan::shader_resource::declaration::downcast,
+                right_element.second);
 
-        return left_resource_declaration.m_set < right_resource_declaration.m_set;
+        return left_resource_declaration.m_set <
+               right_resource_declaration.m_set;
       });
 
-  m_reflection_data.m_descriptor_sets_count = std::visit(
-      downcast_vulkan_shader_resource, resource_with_max_set->second).m_set + 1;
+  m_reflection_data.m_descriptor_sets_count =
+      std::visit(wunder::vulkan::shader_resource::declaration::downcast,
+                 resource_with_max_set->second)
+          .m_set +
+      1;
 }
 
-void vulkan_shader::initialize_descriptor_set_layout() {
+void shader::initialize_descriptor_set_layout() {
   vector_map<vulkan_descriptor_set_identifier,
              std::vector<VkDescriptorSetLayoutBinding>>
       per_set_layout_bindings;
@@ -340,15 +356,17 @@ void vulkan_shader::initialize_descriptor_set_layout() {
   auto layout_creator = descriptor_set_layout_creator();
   for (auto& [_, resource_declaration_variant] :
        m_reflection_data.m_shader_resources_declaration) {
-    const vulkan_shader_resource_declaration_base& resource_declaration = std::visit(
-        downcast_vulkan_shader_resource, resource_declaration_variant);
+    const wunder::vulkan::shader_resource::declaration::base& resource_declaration =
+        std::visit(wunder::vulkan::shader_resource::declaration::downcast,
+                   resource_declaration_variant);
 
     auto& layout_bindings = per_set_layout_bindings[resource_declaration.m_set];
-    layout_bindings.emplace_back(std::visit(layout_creator,
-                                            resource_declaration_variant));
+    layout_bindings.emplace_back(
+        std::visit(layout_creator, resource_declaration_variant));
   }
 
-  auto& device = vulkan_layer_abstraction_factory::instance()
+  auto& device =
+      layer_abstraction_factory::instance()
                      .get_vulkan_context()
                      .get_device();
   VkDevice vulkan_logical_device = device.get_vulkan_logical_device();
@@ -370,11 +388,11 @@ void vulkan_shader::initialize_descriptor_set_layout() {
 }
 
 std::expected<VkDescriptorSetLayout, shader_operation_output_code>
-vulkan_shader::get_vulkan_descriptor_set_layout(
+shader::get_vulkan_descriptor_set_layout(
     vulkan_descriptor_set_identifier set) const {
   AssertReturnIf(m_descriptor_set_layout.size() <= set,
                  std::unexpected(shader_operation_output_code::NoSetAllocated));
 
   return m_descriptor_set_layout[set];
 }
-}  // namespace wunder
+}  // namespace wunder::vulkan

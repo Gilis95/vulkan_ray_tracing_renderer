@@ -14,20 +14,26 @@
 
 namespace wunder {
 struct renderer_properties;
+
+namespace vulkan {
+
 struct vulkan_extensions;
-class vulkan : public non_copyable{
+
+class instance : public non_copyable {
  public:
-  ~vulkan();
+  ~instance();
 
  public:
   void init(const renderer_properties& properties);
 
-  [[nodiscard]] VkInstance instance() const { return m_vk_instance; }
+  [[nodiscard]] VkInstance get_instance() const { return m_vk_instance; }
 
  public:
   std::uint32_t get_api_major_version() const { return m_api_minor_version; }
   std::uint32_t get_api_minor_version() const { return m_api_minor_version; }
-  std::uint32_t get_vulkan_version() const { return VK_MAKE_VERSION(m_api_major_version, m_api_minor_version, 0); }
+  std::uint32_t get_vulkan_version() const {
+    return VK_MAKE_VERSION(m_api_major_version, m_api_minor_version, 0);
+  }
 
  private:
   static VkResult extract_supported_extensions(
@@ -59,5 +65,6 @@ class vulkan : public non_copyable{
   std::uint32_t m_api_major_version;
   std::uint32_t m_api_minor_version;
 };
+}  // namespace vulkan
 }  // namespace wunder
 #endif  // WUNDER_VULKAN_H

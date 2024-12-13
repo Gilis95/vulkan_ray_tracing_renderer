@@ -6,15 +6,15 @@
 #include "gla/vulkan/vulkan_physical_device_types.h"
 #include "gla/vulkan/vulkan_types.h"
 
-namespace wunder {
+namespace wunder::vulkan {
 ////////////////////////////////////////////////////////////////////////////////////
 // Vulkan Physical Device
 ////////////////////////////////////////////////////////////////////////////////////
 
-vulkan_physical_device::vulkan_physical_device() = default;
-vulkan_physical_device::~vulkan_physical_device() = default;
+physical_device::physical_device() = default;
+physical_device::~physical_device() = default;
 
-void vulkan_physical_device::initialize() {
+void physical_device::initialize() {
   AssertReturnUnless(select_gpu() == VkResult::VK_SUCCESS &&
                      "Failed to select physical device");
 
@@ -27,13 +27,14 @@ void vulkan_physical_device::initialize() {
   AssertReturnIf(m_depth_format == VkFormat::VK_FORMAT_UNDEFINED);
 }
 
-VkResult vulkan_physical_device::select_gpu() {
-  auto& vulkan = vulkan_layer_abstraction_factory::instance()
+VkResult physical_device::select_gpu() {
+  auto& vulkan =
+      layer_abstraction_factory::instance()
                     .get_vulkan_context()
                     .get_vulkan();
 
   uint32_t physical_device_count = 0;
-  VK_CHECK_RESULT(vkEnumeratePhysicalDevices(vulkan.instance(),
+  VK_CHECK_RESULT(vkEnumeratePhysicalDevices(vulkan.get_instance(),
                                              &physical_device_count, nullptr));
 
   AssertReturnUnless(0 < physical_device_count, VK_ERROR_UNKNOWN);
@@ -43,7 +44,7 @@ VkResult vulkan_physical_device::select_gpu() {
   std::vector<VkPhysicalDevice> physical_devices(
       physical_device_count);  // list of available gpu`s
   VK_CHECK_RESULT(vkEnumeratePhysicalDevices(
-      vulkan.instance(), &physical_device_count, &physical_devices[0]));
+      vulkan.get_instance(), &physical_device_count, &physical_devices[0]));
 
   for (auto physical_device : physical_devices) {
     VkPhysicalDeviceProperties properties;
@@ -62,7 +63,7 @@ VkResult vulkan_physical_device::select_gpu() {
   return VK_SUCCESS;
 }
 
-void vulkan_physical_device::load_supported_gpu_extensions() {
+void physical_device::load_supported_gpu_extensions() {
   uint32_t ext_count = 0;
   vkEnumerateDeviceExtensionProperties(m_physical_device, nullptr, &ext_count,
                                        nullptr);
@@ -82,7 +83,7 @@ void vulkan_physical_device::load_supported_gpu_extensions() {
   }
 }
 
-void vulkan_physical_device::select_queue_family() {
+void physical_device::select_queue_family() {
   // Queue families
   // Desired queues need to be requested upon logical device creation
   // Due to differing queue family configurations of Vulkan implementations this
@@ -147,7 +148,7 @@ void vulkan_physical_device::select_queue_family() {
   }
 }
 
-VkFormat vulkan_physical_device::find_depth_format() const {
+VkFormat physical_device::find_depth_format() const {
   // Since all depth formats may be optional, we need to find a suitable depth
   // format to use Start with the highest precision packed format
   std::vector<VkFormat> depth_formats = {
@@ -167,14 +168,13 @@ VkFormat vulkan_physical_device::find_depth_format() const {
   return VK_FORMAT_UNDEFINED;
 }
 
-bool vulkan_physical_device::is_extension_supported(
+bool physical_device::is_extension_supported(
     const std::string& extensionName) const {
   return m_supported_extensions.find(extensionName) !=
          m_supported_extensions.end();
 }
 
-vulkan_physical_device::queue_family_indices
-vulkan_physical_device::get_queue_family_indices(int flags) const {
+physical_device::queue_family_indices physical_device::get_queue_family_indices(int flags) const {
   queue_family_indices indices;
 
   // Dedicated queue for compute
@@ -230,7 +230,7 @@ vulkan_physical_device::get_queue_family_indices(int flags) const {
   return indices;
 }
 
-uint32_t vulkan_physical_device::get_memory_type_index(
+uint32_t physical_device::get_memory_type_index(
     uint32_t typeBits, VkMemoryPropertyFlags properties) const {
   // Iterate over all memory types available for the device used in this example
   for (uint32_t i = 0; i < m_device_info.m_memory_properties.memoryTypeCount;

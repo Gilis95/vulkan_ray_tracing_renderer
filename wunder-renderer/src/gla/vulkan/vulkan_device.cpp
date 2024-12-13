@@ -16,18 +16,18 @@ struct ExtensionHeader  // Helper struct to link extensions together
 };
 }  // namespace
 
-namespace wunder {
+namespace wunder::vulkan {
 
 ////////////////////////////////////////////////////////////////////////////////////
 // Vulkan Device
 ////////////////////////////////////////////////////////////////////////////////////
 
-vulkan_device::vulkan_device(VkPhysicalDeviceFeatures enabled_features) {}
+device::device(VkPhysicalDeviceFeatures enabled_features) {}
 
-vulkan_device::~vulkan_device() { destroy(); }
+device::~device() { destroy(); }
 
-void vulkan_device::initialize() {
-  auto& physical_device = vulkan_layer_abstraction_factory::instance()
+void device::initialize() {
+  auto& physical_device = layer_abstraction_factory::instance()
                              .get_vulkan_context()
                              .get_physical_device();
   create_extensions_list();
@@ -41,10 +41,10 @@ void vulkan_device::initialize() {
                    physical_device.m_queue_family_indices.Compute, 0,
                    &m_compute_queue);
 
-  m_command_pool = std::make_unique<vulkan_command_pool>();
+  m_command_pool = std::make_unique<command_pool>();
 }
 
-void vulkan_device::create_extensions_list() {
+void device::create_extensions_list() {
   m_requested_extensions.push_back(
       {.m_name = VK_KHR_SWAPCHAIN_EXTENSION_NAME, .m_optional = false});
   m_requested_extensions.push_back(
@@ -91,11 +91,11 @@ void vulkan_device::create_extensions_list() {
        .m_feature_struct = &ray_tracing_pipeline_features_khr});
 }
 
-void vulkan_device::create_logical_device() {
+void device::create_logical_device() {
   // If the device will be used for presenting to a display via a swapchain we
   // need to request the swapchain extension
-  vulkan_context& vulkan_context =
-      vulkan_layer_abstraction_factory::instance().get_vulkan_context();
+  context& vulkan_context =
+      layer_abstraction_factory::instance().get_vulkan_context();
   auto& physical_device = vulkan_context.get_physical_device();
   auto& physical_device_info = physical_device.mutable_device_info();
 
@@ -130,13 +130,13 @@ void vulkan_device::create_logical_device() {
                                  &m_logical_device));
 }
 
-void vulkan_device::append_used_device_features(
+void device::append_used_device_features(
     physical_device_info& physical_device_info,
     const std::vector<void*>& used_features,
     VkDeviceCreateInfo& out_device_create_info) {  // use the features2 chain to
                                                    // append extensions
-  vulkan_context& vulkan_context =
-      vulkan_layer_abstraction_factory::instance().get_vulkan_context();
+  context& vulkan_context =
+      layer_abstraction_factory::instance().get_vulkan_context();
   const auto& physical_device = vulkan_context.get_physical_device();
 
   if (!used_features.empty()) {
@@ -164,7 +164,7 @@ void vulkan_device::append_used_device_features(
                                &physical_device_info.m_features_10);
 }
 
-void vulkan_device::destroy() {
+void device::destroy() {
   VK_CHECK_RESULT(vkDeviceWaitIdle(m_logical_device));
   vkDestroyDevice(m_logical_device, nullptr);
 }

@@ -24,7 +24,7 @@ class glfw_window : public window {
   static void on_close(GLFWwindow* window);
  public:
   [[nodiscard]] void fill_vulkan_extensions(
-      vulkan_extensions& out_extensions) const override;
+      wunder::vulkan::vulkan_extensions& out_extensions) const override;
 
  private:
   GLFWwindow *m_window;

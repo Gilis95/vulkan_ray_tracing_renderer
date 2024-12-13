@@ -4,19 +4,21 @@
 
 namespace wunder {
 struct mesh_asset;
-class vulkan_buffer;
 
-class vulkan_bottom_level_acceleration_structure_build_info
-    : public vulkan_acceleration_structure_build_info {
+namespace vulkan {
+class buffer;
+
+class bottom_level_acceleration_structure_build_info
+    : public acceleration_structure_build_info {
  public:
-  vulkan_bottom_level_acceleration_structure_build_info(
-      const mesh_asset& mesh, const vulkan_buffer& vertex_buffer,
-      const vulkan_buffer& index_buffer);
+  bottom_level_acceleration_structure_build_info(
+      const mesh_asset& mesh, const buffer& vertex_buffer,
+      const buffer& index_buffer);
 
  private:
   void create_geometry_data(const mesh_asset& mesh,
-                            const vulkan_buffer& vertex_buffer,
-                            const vulkan_buffer& index_buffer);
+                            const buffer& vertex_buffer,
+                            const buffer& index_buffer);
 
  public:
   [[nodiscard]] VkAccelerationStructureTypeKHR get_acceleration_structure_type()
@@ -24,5 +26,6 @@ class vulkan_bottom_level_acceleration_structure_build_info
     return VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR;
   }
 };
+}  // namespace vulkan
 }  // namespace wunder
 #endif  // WUNDER_VULKAN_BOTTOM_LEVEL_ACCELERATION_STRUCTURE_BUILD_INFO_H

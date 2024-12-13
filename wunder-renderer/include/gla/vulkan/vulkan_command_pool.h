@@ -5,13 +5,13 @@
 
 #include "core/non_copyable.h"
 
-namespace wunder {
-class vulkan_device;
+namespace wunder::vulkan {
+class device;
 
-class vulkan_command_pool : public non_copyable{
+class command_pool : public non_copyable {
  public:
-  explicit vulkan_command_pool();
-  virtual ~vulkan_command_pool();
+  explicit command_pool();
+  virtual ~command_pool();
 
  public:
   [[nodiscard]] VkCommandBuffer get_current_graphics_command_buffer() {
@@ -33,6 +33,7 @@ class vulkan_command_pool : public non_copyable{
   [[nodiscard]] VkCommandPool get_compute_command_pool() const {
     return m_compute_command_pool;
   }
+
  private:
   VkCommandBuffer allocate_graphics_command_buffer(bool begin);
   VkCommandBuffer allocate_compute_command_buffer(bool begin);
@@ -49,5 +50,5 @@ class vulkan_command_pool : public non_copyable{
   VkCommandBuffer m_current_graphics_command_buffer = VK_NULL_HANDLE;
   VkCommandBuffer m_current_compute_command_buffer = VK_NULL_HANDLE;
 };
-}  // namespace wunder
+}  // namespace wunder::vulkan
 #endif  // WUNDER_WUNDER_RENDERER_INCLUDE_GLA_VULKAN_VULKAN_COMMAND_POOL_H_

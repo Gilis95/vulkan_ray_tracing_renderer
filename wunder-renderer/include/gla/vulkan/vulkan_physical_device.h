@@ -12,16 +12,16 @@
 #include "vulkan_extension_source.h"
 #include "vulkan_physical_device_types.h"
 
-namespace wunder {
+namespace wunder::vulkan {
 
 class vulkan;
-class vulkan_device;
+class device;
 struct physical_device_info;
 
-class vulkan_physical_device : public vulkan_extension_source,
+class physical_device : public vulkan_extension_source,
                                public non_copyable {
  private:
-  friend vulkan_device;
+  friend device;
 
  public:
   struct queue_family_indices {
@@ -32,8 +32,8 @@ class vulkan_physical_device : public vulkan_extension_source,
   queue_family_indices get_queue_family_indices(int queueFlags) const;
 
  public:
-  explicit vulkan_physical_device();
-  ~vulkan_physical_device() override;
+  explicit physical_device();
+  ~physical_device() override;
 
   void initialize();
 
@@ -93,6 +93,6 @@ class vulkan_physical_device : public vulkan_extension_source,
   std::vector<VkDeviceQueueCreateInfo> m_queue_create_infos;
 };
 
-}  // namespace wunder
+}  // namespace wunder::vulkan
 
 #endif  // WUNDER_WUNDER_RENDERER_INCLUDE_GLA_VULKAN_VULKAN_DEVICE_H_

@@ -15,11 +15,10 @@
 #include "gla/vulkan/vulkan_physical_device.h"
 #include "window/window_factory.h"
 
-namespace wunder {
+namespace wunder::vulkan {
+context::context() = default;
 
-vulkan_context::vulkan_context() = default;
-
-vulkan_context::~vulkan_context() {
+context::~context() {
   // release them in reverse order
   if (m_renderer_capabilities.get()) {
     AssertLogUnless(m_renderer_capabilities.release());
@@ -38,7 +37,7 @@ vulkan_context::~vulkan_context() {
   }
 }
 
-void vulkan_context::init(const wunder::renderer_properties &properties) {
+void context::init(const wunder::renderer_properties &properties) {
   AssertReturnUnless(gladLoaderLoadVulkan(NULL, NULL, NULL));
 
   create_vulkan_instance(properties);
@@ -47,20 +46,20 @@ void vulkan_context::init(const wunder::renderer_properties &properties) {
   select_logical_device();
 
   AssertReturnUnless(gladLoaderLoadVulkan(
-      m_vulkan->instance(), m_physical_device->get_vulkan_physical_device(),
+      m_vulkan->get_instance(), m_physical_device->get_vulkan_physical_device(),
       m_logical_device->get_vulkan_logical_device()));
 
   create_allocator();
 }
 
-void vulkan_context::create_vulkan_instance(
+void context::create_vulkan_instance(
     const renderer_properties &properties) {
-  m_vulkan = std::make_unique<vulkan>();
+  m_vulkan = std::make_unique<instance>();
   m_vulkan->init(properties);
 }
 
-void vulkan_context::select_physical_device() {
-  m_physical_device = std::make_unique<vulkan_physical_device>();
+void context::select_physical_device() {
+  m_physical_device = std::make_unique<physical_device>();
   m_physical_device->initialize();
 
   auto &properties = m_physical_device->get_properties();
@@ -71,7 +70,7 @@ void vulkan_context::select_physical_device() {
   m_renderer_capabilities->version = std::to_string(properties.driverVersion);
 }
 
-void vulkan_context::select_logical_device() {
+void context::select_logical_device() {
   VkPhysicalDeviceFeatures enabled_features;
   memset(&enabled_features, 0, sizeof(VkPhysicalDeviceFeatures));
   enabled_features.samplerAnisotropy = true;
@@ -81,29 +80,29 @@ void vulkan_context::select_logical_device() {
   enabled_features.pipelineStatisticsQuery = true;
   enabled_features.shaderStorageImageReadWithoutFormat = true;
 
-  m_logical_device = std::make_unique<vulkan_device>(enabled_features);
+  m_logical_device = std::make_unique<device>(enabled_features);
   m_logical_device->initialize();
 }
 
-void vulkan_context::create_allocator() {
-  m_resource_allocator = make_unique<vulkan_memory_allocator>();
+void context::create_allocator() {
+  m_resource_allocator = make_unique<memory_allocator>();
   m_resource_allocator->initialize();
 }
 
-const renderer_capabilities &vulkan_context::get_capabilities() const {
+const renderer_capabilities &context::get_capabilities() const {
   static renderer_capabilities s_empty;
   return m_renderer_capabilities ? *m_renderer_capabilities : s_empty;
 }
 
-vulkan &vulkan_context::get_vulkan() { return *m_vulkan; }
+instance &context::get_vulkan() { return *m_vulkan; }
 
-vulkan_physical_device &vulkan_context::get_physical_device() {
+physical_device &context::get_physical_device() {
   return *m_physical_device;
 }
 
-vulkan_device &vulkan_context::get_device() { return *m_logical_device; }
+device &context::get_device() { return *m_logical_device; }
 
-vulkan_memory_allocator &vulkan_context::get_resource_allocator() {
+memory_allocator &context::get_resource_allocator() {
   return *m_resource_allocator;
 }
 

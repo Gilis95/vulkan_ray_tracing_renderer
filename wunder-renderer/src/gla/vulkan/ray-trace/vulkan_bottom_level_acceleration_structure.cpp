@@ -10,22 +10,16 @@
 #include "gla/vulkan/vulkan_layer_abstraction_factory.h"
 #include "gla/vulkan/vulkan_types.h"
 
-namespace wunder {
+namespace wunder::vulkan {
+bottom_level_acceleration_structure::bottom_level_acceleration_structure() = default;
 
-vulkan_bottom_level_acceleration_structure::
-    vulkan_bottom_level_acceleration_structure() = default;
-
-void vulkan_bottom_level_acceleration_structure::build(
-    vulkan_buffer& scratch_buffer, VkDeviceAddress scratch_buffer_offset,
-    const vulkan_bottom_level_acceleration_structure_build_info& build_info) {
+void bottom_level_acceleration_structure::build(
+    buffer& scratch_buffer, VkDeviceAddress scratch_buffer_offset,
+    const bottom_level_acceleration_structure_build_info& build_info) {
   create_acceleration_structure(
       build_info.get_acceleration_structure_type(),
       build_info.get_vulkan_as_build_sizes_info().accelerationStructureSize);
   build_acceleration_structure(scratch_buffer, scratch_buffer_offset,
                                build_info);
 }
-
-
-
-
-}  // namespace wunder
+}  // namespace wunder::vulkan

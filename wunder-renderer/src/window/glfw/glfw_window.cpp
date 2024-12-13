@@ -60,7 +60,7 @@ void glfw_window::on_close(GLFWwindow* window) {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void glfw_window::fill_vulkan_extensions(
-    vulkan_extensions& out_extensions) const {
+    wunder::vulkan::vulkan_extensions& out_extensions) const {
   std::uint32_t count = 0;
   auto extensions = glfwGetRequiredInstanceExtensions(&count);
   ReturnUnless(count > 0);

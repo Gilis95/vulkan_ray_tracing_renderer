@@ -182,15 +182,8 @@ struct GltfShadeMaterial {
   GltfShadeMaterial& operator=(const wunder::material_asset& other) {
     pbrBaseColorFactor = other.m_pbr_base_color_factor;  // 16 byte
 
-    // TODO:: Map texture handle to IDX!!!
-    pbrBaseColorTexture = other.m_pbr_base_color_texture;  // 20 byte
     pbrMetallicFactor = other.m_pbr_metallic_factor;       // 24 byte
     pbrRoughnessFactor = other.m_pbr_roughness_factor;     // 28 byte
-    // TODO:: Map texture handle to IDX!!!
-    pbrMetallicRoughnessTexture =
-        other.m_pbr_metallic_roughness_texture;  // 32 byte
-    // 8
-    emissiveTexture = other.m_emissive_texture;  // 36 byte
 
     // 10
     emissiveFactor = other.m_emissive_factor;  // 52 byte
@@ -198,7 +191,6 @@ struct GltfShadeMaterial {
     // 14
     alphaCutoff = other.m_alpha_cutoff;                 // 60 byte
     doubleSided = other.m_double_sided;                 // 64 byte
-    normalTexture = other.m_normal_texture;             // 68 byte
     normalTextureScale = other.m_normal_texture_scale;  // 72 byte
     // 18
     uvTransform = other.m_uv_transform;  // 136 byte
@@ -206,7 +198,6 @@ struct GltfShadeMaterial {
     //    unlit = other.m_uv_transform;  // 140 byte
 
     transmissionFactor = other.m_transmission_factor;    // 144 byte
-    transmissionTexture = other.m_transmission_texture;  // 148 byte
 
     ior = other.m_ior;  // 152 byte
     // 26
@@ -215,15 +206,11 @@ struct GltfShadeMaterial {
     // 30
     attenuationColor = other.m_attenuation_color;        // 180 byte
     thicknessFactor = other.m_thickness_factor;          // 184 byte
-    thicknessTexture = other.m_thickness_texture;        // 188 byte
     attenuationDistance = other.m_attenuation_distance;  // 192 byte
     // --
     clearcoatFactor = other.m_clearcoat_factor;        // 196 byte
     clearcoatRoughness = other.m_clearcoat_roughness;  // 200 byte
     // 38
-    clearcoatTexture = other.m_clearcoat_texture;  // 204 byte
-    clearcoatRoughnessTexture =
-        other.m_clearcoat_roughness_texture;  // 208 byte
     sheen = other.m_sheen;                    // 212 byte
 
     return *this;

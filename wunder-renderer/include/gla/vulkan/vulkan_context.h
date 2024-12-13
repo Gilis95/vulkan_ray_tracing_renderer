@@ -5,23 +5,25 @@
 #include "core/wunder_memory.h"
 
 namespace wunder {
-class vulkan;
-class vulkan_physical_device;
-class vulkan_device;
-class vulkan_layer_abstraction_factory;
-struct vulkan_extensions;
-class vulkan_memory_allocator;
-
 struct renderer_properties;
 struct renderer_capabilities;
+}  // namespace wunder
 
-class vulkan_context final : public non_copyable {
+namespace wunder::vulkan {
+class instance;
+class physical_device;
+class device;
+class layer_abstraction_factory;
+struct vulkan_extensions;
+class memory_allocator;
+
+class context final : public non_copyable {
  private:
-  friend vulkan_layer_abstraction_factory;
+  friend layer_abstraction_factory;
 
  public:
-  vulkan_context();
-  ~vulkan_context();
+  context();
+  ~context();
 
  private:
   void init(const renderer_properties& properties);
@@ -29,10 +31,10 @@ class vulkan_context final : public non_copyable {
  public:
   [[nodiscard]] const renderer_capabilities& get_capabilities() const;
 
-  [[nodiscard]] vulkan& get_vulkan();
-  [[nodiscard]] vulkan_physical_device& get_physical_device();
-  [[nodiscard]] vulkan_device& get_device();
-  [[nodiscard]] vulkan_memory_allocator& get_resource_allocator();
+  [[nodiscard]] instance& get_vulkan();
+  [[nodiscard]] physical_device& get_physical_device();
+  [[nodiscard]] device& get_device();
+  [[nodiscard]] memory_allocator& get_resource_allocator();
 
  private:
   void create_vulkan_instance(const renderer_properties& properties);
@@ -41,12 +43,12 @@ class vulkan_context final : public non_copyable {
   void create_allocator();
 
  private:
-  unique_ptr<vulkan> m_vulkan;
-  unique_ptr<vulkan_physical_device> m_physical_device;
-  unique_ptr<vulkan_device> m_logical_device;
-  unique_ptr<vulkan_memory_allocator> m_resource_allocator;
+  unique_ptr<instance> m_vulkan;
+  unique_ptr<physical_device> m_physical_device;
+  unique_ptr<device> m_logical_device;
+  unique_ptr<memory_allocator> m_resource_allocator;
 
   unique_ptr<renderer_capabilities> m_renderer_capabilities;
 };
-}  // namespace wunder
+}  // namespace wunder::vulkan
 #endif  // WUNDER_VULKAN_CONTEXT_H

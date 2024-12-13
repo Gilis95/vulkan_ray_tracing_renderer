@@ -22,58 +22,49 @@
 #include "gla/vulkan/vulkan_texture.h"
 #include "resources/shaders/host_device.h"
 
-namespace wunder {
+namespace wunder::vulkan {
+scene::scene() = default;
+scene::~scene() = default;
 
-void create_material_buffer(
-    wunder::vector_map<asset_handle,
-                       std::reference_wrapper<const material_asset>>
-        material_assets);
+scene::scene(scene&&) = default;
+scene& scene::operator=(scene&&) noexcept = default;
 
-vulkan_scene::vulkan_scene() = default;
-vulkan_scene::~vulkan_scene() = default;
-
-vulkan_scene::vulkan_scene(vulkan_scene&&) = default;
-vulkan_scene& vulkan_scene::operator=(vulkan_scene&&) noexcept = default;
-
-void vulkan_scene::load_scene(scene_asset& asset) {
+void scene::load_scene(scene_asset& asset) {
   auto mesh_entities =
       asset.filter_nodes<mesh_component, transform_component>();
   AssertReturnIf(mesh_entities.empty(), );  // nothing to render
 
-  auto mesh_assets = vulkan_meshes_helper::extract_mesh_assets(mesh_entities);
-  auto material_assets =
-      vulkan_materials_helper::extract_material_assets(mesh_assets);
+  auto mesh_assets = meshes_helper::extract_mesh_assets(mesh_entities);
+  auto material_assets = materials_helper::extract_material_assets(mesh_assets);
   auto texture_assets =
-      vulkan_textures_helper::extract_texture_assets(material_assets);
+      textures_helper::extract_texture_assets(material_assets);
 
-  m_bound_textures =
-      vulkan_textures_helper::create_texture_buffers(texture_assets);
-//  create_material_buffer(material_assets);
+  m_bound_textures = textures_helper::create_texture_buffers(texture_assets);
+  m_material_buffer =
+      materials_helper::create_material_buffer(
+      material_assets, texture_assets);
 
-  vulkan_meshes_helper::create_mesh_scene_nodes(mesh_assets, mesh_entities,
-                                                m_mesh_nodes);
+  meshes_helper::create_mesh_scene_nodes(mesh_assets, material_assets,
+                                                mesh_entities, m_mesh_nodes);
   AssertReturnIf(m_mesh_nodes.empty());
 
   m_acceleration_structure =
-      std::make_unique<vulkan_top_level_acceleration_structure>();
-  vulkan_meshes_helper::create_top_level_acceleration_structure(
+      std::make_unique<top_level_acceleration_structure>();
+  meshes_helper::create_top_level_acceleration_structure(
       m_mesh_nodes, *m_acceleration_structure);
   //  auto& main_camera = camera_entities[0];  // TODO:: handle multiple cameras
 }
 
-void create_material_buffer(
-    const wunder::vector_map<asset_handle, const_ref<material_asset>>&
-        material_assets) {
-  std::vector<GltfShadeMaterial> shader_materials;
-  for (auto& [handle, material_ref] : material_assets) {
-    auto& shader_material = shader_materials.emplace_back();
-    shader_material = material_ref.get();
+void scene::bind(renderer& renderer) {
+  for (auto& texture : m_bound_textures) {
   }
 
-  vulkan_device_buffer{shader_materials.data(),
-                       shader_materials.size() * sizeof(GltfShadeMaterial),
-                       VK_BUFFER_USAGE_STORAGE_BUFFER_BIT |
-                           VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT};
+  m_material_buffer;
+
+  for (auto& mesh : m_mesh_nodes) {
+  }
+
+  m_acceleration_structure->bind(renderer);
 }
 
-}  // namespace wunder
+}  // namespace wunder::vulkan

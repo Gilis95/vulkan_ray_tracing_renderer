@@ -18,6 +18,15 @@ scene_manager::scene_manager() : event_handler<asset_loaded>() {}
 
 scene_manager::~scene_manager() /*override*/ = default;
 
+optional_ref<vulkan::scene> scene_manager::get_api_scene(scene_id id) {
+  static optional_ref<vulkan::scene> s_empty = std::nullopt;
+
+  auto found_active_scene_it = m_active_scenes.find(id);
+  return found_active_scene_it == m_active_scenes.end()
+             ? s_empty
+             : found_active_scene_it->second;
+}
+
 bool scene_manager::activate_scene(scene_id id) {
   auto found_active_scene_it = m_active_scenes.find(id);
   ReturnIf(found_active_scene_it != m_active_scenes.end(), false);
@@ -25,12 +34,14 @@ bool scene_manager::activate_scene(scene_id id) {
   auto found_scene_asset_it = m_loaded_scenes.find(id);
   AssertReturnIf(found_scene_asset_it == m_loaded_scenes.end(), false);
 
-  std::pair<scene_id, vulkan_scene> l;
+  std::pair<scene_id, vulkan::scene> l;
 
-  vulkan_scene api_scene;
+  vulkan::scene api_scene;
   auto& [scene_id, scene] = m_active_scenes.emplace_back();
   scene.load_scene(found_scene_asset_it->second);
   scene_id = id;
+
+  event_controller::on_event<scene_activated>({scene_id});
 
   return true;
 }

@@ -7,6 +7,7 @@
 
 namespace wunder {
 enum class driver { Inavlid = -1, Vulkan, Count };
+
 enum class renderer_type { Inavlid = -1, RAY_TRACE, Rasterize };
 
 enum class gpu_to_use { Invalid = -1, Integrated, Dedicated, Count };

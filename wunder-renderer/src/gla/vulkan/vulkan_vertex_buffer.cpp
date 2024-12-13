@@ -3,13 +3,11 @@
 #include <vector>
 
 #include "assets/components/mesh_asset.h"
-
 #include "resources/shaders/compress.glsl"
 #include "resources/shaders/host_device.h"
 
-namespace wunder{
-vulkan_buffer vulkan_vertex_buffer::create(const mesh_asset& asset)
-{
+namespace wunder::vulkan {
+buffer vertex_buffer::create(const mesh_asset& asset) {
   std::vector<VertexAttributes> vertecies{};
   for (auto& vertex : asset.m_verticies) {
     VertexAttributes device_vertex{};
@@ -36,11 +34,11 @@ vulkan_buffer vulkan_vertex_buffer::create(const mesh_asset& asset)
     vertecies.push_back(std::move(device_vertex));
   }
 
-  return vulkan_device_buffer{
+  return device_buffer{
       vertecies.data(), vertecies.size() * sizeof(VertexAttributes),
       VK_BUFFER_USAGE_STORAGE_BUFFER_BIT |
           VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT |
           VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR};
 }
 
-}
+}  // namespace wunder::vulkan

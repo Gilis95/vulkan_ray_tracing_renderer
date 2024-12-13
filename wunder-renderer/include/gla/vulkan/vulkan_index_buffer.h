@@ -2,13 +2,16 @@
 #ifndef WUNDER_VULKAN_INDEX_BUFFER_H
 #define WUNDER_VULKAN_INDEX_BUFFER_H
 
-namespace wunder {
-class vulkan_buffer;
+namespace wunder{
 struct mesh_asset;
-
-class vulkan_index_buffer {
- public:
-  static vulkan_buffer create(const mesh_asset& asset);
-};
 }
+
+namespace wunder::vulkan {
+class buffer;
+
+class index_buffer {
+ public:
+  static buffer create(const mesh_asset& asset);
+};
+}  // namespace wunder::vulkan
 #endif  // WUNDER_VULKAN_INDEX_BUFFER_H

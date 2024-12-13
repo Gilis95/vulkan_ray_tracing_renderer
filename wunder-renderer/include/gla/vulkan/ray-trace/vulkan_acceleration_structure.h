@@ -6,34 +6,40 @@
 #define WUNDER_VULKAN_ACCELERATION_STRUCTURE_H
 
 #include <glad/vulkan.h>
+
 #include "gla/vulkan/vulkan_buffer.h"
+#include "gla/vulkan/vulkan_types.h"
 
-namespace wunder {
-class vulkan_acceleration_structure_build_info;
+namespace wunder::vulkan {
+class acceleration_structure_build_info;
 
-class vulkan_acceleration_structure : public non_copyable{
+class acceleration_structure
+    : public non_copyable,
+      public vulkan::shader_resource::instance::acceleration_structures {
  public:
-  vulkan_acceleration_structure();
-  virtual ~vulkan_acceleration_structure();
+  acceleration_structure();
+  virtual ~acceleration_structure();
 
-  vulkan_acceleration_structure(vulkan_acceleration_structure&&) noexcept;
-  vulkan_acceleration_structure& operator=(vulkan_acceleration_structure&&) noexcept;
+  acceleration_structure(acceleration_structure&&) noexcept;
+  acceleration_structure& operator=(acceleration_structure&&) noexcept;
 
  public:
+  void bind(renderer& renderer) override;
   VkDeviceAddress get_address();
+
  protected:
   void create_acceleration_structure(
       VkAccelerationStructureTypeKHR acceleration_structure_type,
       VkDeviceSize acceleration_structure_size);
 
   void build_acceleration_structure(
-      const vulkan_buffer& scratch_buffer,
+      const buffer& scratch_buffer,
       VkDeviceAddress scratch_buffer_offset,
-      const vulkan_acceleration_structure_build_info& build_info) const;
- protected:
+      const acceleration_structure_build_info& build_info) const;
 
+ protected:
   VkAccelerationStructureKHR m_acceleration_structure = VK_NULL_HANDLE;
-  vulkan_buffer m_acceleration_structure_buffer;
+  buffer m_acceleration_structure_buffer;
 };
-}
+}  // namespace wunder
 #endif  // WUNDER_VULKAN_ACCELERATION_STRUCTURE_H

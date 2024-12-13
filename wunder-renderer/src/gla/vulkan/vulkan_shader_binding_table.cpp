@@ -13,7 +13,7 @@
 #include "gla/vulkan/vulkan_physical_device.h"
 #include "gla/vulkan/vulkan_pipeline.h"
 
-namespace wunder {
+namespace wunder::vulkan {
 namespace {
 template <typename integral>
 constexpr integral align_up(integral x, size_t a) noexcept {
@@ -21,9 +21,9 @@ constexpr integral align_up(integral x, size_t a) noexcept {
 }
 
 }  // namespace
-vulkan_shader_binding_table::vulkan_shader_binding_table() noexcept {
+shader_binding_table::shader_binding_table() noexcept {
   auto& vulkan_context =
-      vulkan_layer_abstraction_factory::instance().get_vulkan_context();
+      layer_abstraction_factory::instance().get_vulkan_context();
   auto& physical_device = vulkan_context.get_physical_device();
 
   VkPhysicalDeviceProperties2 device_properties{
@@ -33,17 +33,17 @@ vulkan_shader_binding_table::vulkan_shader_binding_table() noexcept {
                                  &device_properties);
 }
 
-vulkan_shader_binding_table::~vulkan_shader_binding_table() = default;
+shader_binding_table::~shader_binding_table() = default;
 
-void vulkan_shader_binding_table::initialize(const vulkan_pipeline& pipeline) {
+void shader_binding_table::initialize(const pipeline& pipeline) {
   initialize_shader_indices(pipeline);
   std::array<std::vector<uint8_t>, 4> shader_stages_handles =
       create_shader_stages_handles(pipeline);
   create_sbt_buffer(shader_stages_handles);
 }
 
-void vulkan_shader_binding_table::initialize_shader_indices(
-    const vulkan_pipeline& pipeline) {
+void shader_binding_table::initialize_shader_indices(
+    const pipeline& pipeline) {
   for (auto& i : m_shader_handles_indeces) i = {};
 
   const auto& info = pipeline.get_pipeline_create_info();
@@ -74,8 +74,8 @@ void vulkan_shader_binding_table::initialize_shader_indices(
 }
 
 std::array<std::vector<uint8_t>, 4>
-vulkan_shader_binding_table::create_shader_stages_handles(
-    const vulkan_pipeline& pipeline) {  // Fetch all the shader handles used in
+shader_binding_table::create_shader_stages_handles(
+    const pipeline& pipeline) {  // Fetch all the shader handles used in
                                         // the pipeline, so that they can be
 
   // Get the total number of groups and handle index position
@@ -83,7 +83,7 @@ vulkan_shader_binding_table::create_shader_stages_handles(
   std::uint32_t total_group_count = pipeline_create_info.groupCount;
 
   auto& vulkan_context =
-      vulkan_layer_abstraction_factory::instance().get_vulkan_context();
+      layer_abstraction_factory::instance().get_vulkan_context();
   auto& device = vulkan_context.get_device();
 
   // written in the SBT
@@ -150,10 +150,10 @@ vulkan_shader_binding_table::create_shader_stages_handles(
   return shader_stages_handles;
 }
 
-void vulkan_shader_binding_table::create_sbt_buffer(
+void shader_binding_table::create_sbt_buffer(
     const std::array<std::vector<uint8_t>, 4>& shader_stages_handles) {
   auto& vulkan_context =
-      vulkan_layer_abstraction_factory::instance().get_vulkan_context();
+      layer_abstraction_factory::instance().get_vulkan_context();
   auto& device = vulkan_context.get_device();
   auto& allocator = vulkan_context.get_resource_allocator();
 
@@ -161,7 +161,7 @@ void vulkan_shader_binding_table::create_sbt_buffer(
     auto& shader_stage_handles = shader_stages_handles[i];
     ContinueIf(shader_stage_handles.empty());
     m_shader_group_buffers[i] = std::move(
-        vulkan_device_buffer(shader_stage_handles.data(),
+        device_buffer(shader_stage_handles.data(),
                              shader_stage_handles.size() * sizeof(uint8_t),
                              VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT |
                                  VK_BUFFER_USAGE_SHADER_BINDING_TABLE_BIT_KHR));

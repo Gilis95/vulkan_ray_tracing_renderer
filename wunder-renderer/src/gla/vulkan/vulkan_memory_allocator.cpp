@@ -15,8 +15,7 @@
 #include "gla/vulkan/vulkan_layer_abstraction_factory.h"
 #include "gla/vulkan/vulkan_physical_device.h"
 
-namespace wunder {
-
+namespace wunder::vulkan {
 enum class AllocationType : uint8_t { None = 0, Buffer = 1, Image = 2 };
 
 struct AllocInfo {
@@ -25,16 +24,16 @@ struct AllocInfo {
 };
 static std::map<VmaAllocation, AllocInfo> s_AllocationMap;
 
-vulkan_memory_allocator::vulkan_memory_allocator(std::string tag)
+memory_allocator::memory_allocator(std::string tag)
     : m_Tag(std::move(tag)) {}
 
-vulkan_memory_allocator::~vulkan_memory_allocator() {
+memory_allocator::~memory_allocator() {
   vmaDestroyAllocator(m_resource_allocator);
 }
 
-void vulkan_memory_allocator::initialize() {
+void memory_allocator::initialize() {
   auto& vulkan_context =
-      vulkan_layer_abstraction_factory::instance().get_vulkan_context();
+      layer_abstraction_factory::instance().get_vulkan_context();
   auto& physical_device = vulkan_context.get_physical_device();
   auto& device = vulkan_context.get_device();
   auto& vulkan = vulkan_context.get_vulkan();
@@ -42,7 +41,7 @@ void vulkan_memory_allocator::initialize() {
   VmaAllocatorCreateInfo vma_allocator_create_info;
   memset(&vma_allocator_create_info, 0, sizeof(VmaAllocatorCreateInfo));
 
-  vma_allocator_create_info.instance = vulkan.instance();
+  vma_allocator_create_info.instance = vulkan.get_instance();
   vma_allocator_create_info.physicalDevice =
       physical_device.get_vulkan_physical_device();
   vma_allocator_create_info.device = device.get_vulkan_logical_device();
@@ -53,7 +52,7 @@ void vulkan_memory_allocator::initialize() {
   vmaCreateAllocator(&vma_allocator_create_info, &m_resource_allocator);
 }
 
-VmaAllocation vulkan_memory_allocator::allocate_buffer(
+VmaAllocation memory_allocator::allocate_buffer(
     VkBufferCreateInfo bufferCreateInfo, VmaMemoryUsage usage,
     VkBuffer& outBuffer) {
   AssertReturnIf(bufferCreateInfo.size <= 0, VK_NULL_HANDLE);
@@ -72,7 +71,7 @@ VmaAllocation vulkan_memory_allocator::allocate_buffer(
 
   VmaAllocationInfo allocInfo{};
   vmaGetAllocationInfo(m_resource_allocator, allocation, &allocInfo);
-  WUNDER_ERROR_TAG(
+  WUNDER_WARN_TAG(
       "Renderer",
       "vulkan_memory_allocator ({0}): allocating buffer; size = {1}", m_Tag,
       string::utils::bytes_to_string(allocInfo.size));
@@ -80,7 +79,7 @@ VmaAllocation vulkan_memory_allocator::allocate_buffer(
   return allocation;
 }
 
-VmaAllocation vulkan_memory_allocator::allocate_image(
+VmaAllocation memory_allocator::allocate_image(
     VkImageCreateInfo imageCreateInfo, VmaMemoryUsage usage, VkImage& outImage,
     VkDeviceSize* allocatedSize) {
   VmaAllocationCreateInfo allocCreateInfo = {};
@@ -107,29 +106,29 @@ VmaAllocation vulkan_memory_allocator::allocate_image(
   return allocation;
 }
 
-void vulkan_memory_allocator::free(VmaAllocation allocation) {
+void memory_allocator::free(VmaAllocation allocation) {
   vmaFreeMemory(m_resource_allocator, allocation);
 }
 
-void vulkan_memory_allocator::destroy_image(VkImage image,
+void memory_allocator::destroy_image(VkImage image,
                                             VmaAllocation allocation) {
   AssertReturnUnless(image);
   AssertReturnUnless(allocation);
   vmaDestroyImage(m_resource_allocator, image, allocation);
 }
 
-void vulkan_memory_allocator::destroy_buffer(VkBuffer buffer,
+void memory_allocator::destroy_buffer(VkBuffer buffer,
                                              VmaAllocation allocation) {
   AssertReturnUnless(buffer);
   AssertReturnUnless(allocation);
   vmaDestroyBuffer(m_resource_allocator, buffer, allocation);
 }
 
-void vulkan_memory_allocator::unmap_memory(VmaAllocation allocation) {
+void memory_allocator::unmap_memory(VmaAllocation allocation) {
   vmaUnmapMemory(m_resource_allocator, allocation);
 }
 
-void vulkan_memory_allocator::dump_stats() {
+void memory_allocator::dump_stats() {
 
   VmaTotalStatistics stats;
   vmaCalculateStatistics(m_resource_allocator,&stats);
@@ -149,7 +148,7 @@ void vulkan_memory_allocator::dump_stats() {
   WUNDER_WARN_TAG("Renderer", "-----------------------------------");
 }
 
-VmaAllocator& vulkan_memory_allocator::get_vma_allocator() {
+VmaAllocator& memory_allocator::get_vma_allocator() {
   return m_resource_allocator;
 }
 

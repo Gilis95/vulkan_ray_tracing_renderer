@@ -13,18 +13,18 @@
 #include "core/non_copyable.h"
 #include "core/wunder_memory.h"
 
-namespace wunder {
+namespace wunder::vulkan {
 
-class vulkan_physical_device;
-class vulkan_command_pool;
+class physical_device;
+class command_pool;
 struct vulkan_extension_data;
 struct physical_device_info;
 
 // Represents a logical device
-class vulkan_device : public non_copyable{
+class device : public non_copyable {
  public:
-  explicit vulkan_device(VkPhysicalDeviceFeatures enabled_features);
-  ~vulkan_device();
+  explicit device(VkPhysicalDeviceFeatures enabled_features);
+  ~device();
 
  public:
   void initialize();
@@ -33,8 +33,8 @@ class vulkan_device : public non_copyable{
     return m_logical_device;
   }
 
-  vulkan_command_pool &get_command_pool() { return *m_command_pool; }
-  [[nodiscard]] const vulkan_command_pool &get_command_pool() const {
+  command_pool &get_command_pool() { return *m_command_pool; }
+  [[nodiscard]] const command_pool &get_command_pool() const {
     return *m_command_pool;
   }
 
@@ -60,8 +60,8 @@ class vulkan_device : public non_copyable{
 
   std::vector<vulkan_extension_data> m_used_extensions;
   std::vector<vulkan_extension_data> m_requested_extensions;
-  unique_ptr<vulkan_command_pool> m_command_pool;
+  unique_ptr<command_pool> m_command_pool;
 };
 
-}  // namespace wunder
+}  // namespace wunder::vulkan
 #endif  // WUNDER_WUNDER_RENDERER_INCLUDE_GLA_VULKAN_VULKAN_LOGICAL_DEVICE_H_

@@ -12,25 +12,25 @@
 
 #include "gla/vulkan/vulkan_buffer.h"
 
-namespace wunder {
-class vulkan_pipeline;
+namespace wunder::vulkan {
+class pipeline;
 
-class vulkan_shader_binding_table {
+class shader_binding_table {
  private:
   enum shader_stage_type { raygen, miss, hit, callable };
 
  public:
-  vulkan_shader_binding_table() noexcept;
-  ~vulkan_shader_binding_table();
+  shader_binding_table() noexcept;
+  ~shader_binding_table();
 
  public:
-  void initialize(const vulkan_pipeline& pipeline);
+  void initialize(const pipeline& pipeline);
 
  private:
-  void initialize_shader_indices(const vulkan_pipeline& pipeline);
+  void initialize_shader_indices(const pipeline& pipeline);
 
   std::array<std::vector<uint8_t>, 4> create_shader_stages_handles(
-      const vulkan_pipeline& pipeline);
+      const pipeline& pipeline);
   void create_sbt_buffer(
       const std::array<std::vector<uint8_t>, 4>& shader_stages_handles);
 
@@ -47,7 +47,7 @@ class vulkan_shader_binding_table {
                                 // this will be included in stage stride size.
                                 // However this is not supported at the moment
 
-  std::array<vulkan_buffer, 4>
+  std::array<buffer, 4>
       m_shader_group_buffers{};  // buffer resembles handler to shader in group
                                  // + data given to sbt
 
@@ -55,5 +55,5 @@ class vulkan_shader_binding_table {
       VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_PROPERTIES_KHR};
 };
 
-}  // namespace wunder
+}  // namespace wunder::vulkan
 #endif  // WUNDER_VULKAN_SHADER_BINDING_TABLE_H

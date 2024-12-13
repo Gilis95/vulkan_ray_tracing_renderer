@@ -7,11 +7,10 @@
 #include "gla/vulkan/vulkan_macros.h"
 #include "gla/vulkan/vulkan_physical_device.h"
 
-namespace wunder {
-
-vulkan_command_pool::vulkan_command_pool() {
-  vulkan_context& vulkan_context =
-      vulkan_layer_abstraction_factory::instance().get_vulkan_context();
+namespace wunder::vulkan {
+command_pool::command_pool() {
+  context& vulkan_context =
+      layer_abstraction_factory::instance().get_vulkan_context();
   auto& physical_device = vulkan_context.get_physical_device();
   auto& logical_device = vulkan_context.get_device();
 
@@ -33,8 +32,9 @@ vulkan_command_pool::vulkan_command_pool() {
                      VkResult::VK_SUCCESS);
 }
 
-vulkan_command_pool::~vulkan_command_pool() {
-  auto& logical_device = vulkan_layer_abstraction_factory::instance()
+command_pool::~command_pool() {
+  auto& logical_device =
+      layer_abstraction_factory::instance()
                              .get_vulkan_context()
                              .get_device();
 
@@ -44,20 +44,21 @@ vulkan_command_pool::~vulkan_command_pool() {
   vkDestroyCommandPool(vulkanDevice, m_compute_command_pool, nullptr);
 }
 
-VkCommandBuffer vulkan_command_pool::allocate_graphics_command_buffer(
+VkCommandBuffer command_pool::allocate_graphics_command_buffer(
     bool begin) {
   return allocate_command_buffer(begin, m_graphics_command_pool,
                           m_current_graphics_command_buffer);
 }
-VkCommandBuffer vulkan_command_pool::allocate_compute_command_buffer(
+VkCommandBuffer command_pool::allocate_compute_command_buffer(
     bool begin) {
   return allocate_command_buffer(begin, m_compute_command_pool,
                           m_current_compute_command_buffer);
 }
 
-VkCommandBuffer vulkan_command_pool::allocate_command_buffer(
+VkCommandBuffer command_pool::allocate_command_buffer(
     bool begin, VkCommandPool& out_pool, VkCommandBuffer& out_buffer) {
-  auto& logical_device = vulkan_layer_abstraction_factory::instance()
+  auto& logical_device =
+      layer_abstraction_factory::instance()
                              .get_vulkan_context()
                              .get_device();
 
@@ -86,8 +87,9 @@ VkCommandBuffer vulkan_command_pool::allocate_command_buffer(
   return out_buffer;
 }
 
-void vulkan_command_pool::flush_graphics_command_buffer() {
-  auto& logical_device = vulkan_layer_abstraction_factory::instance()
+void command_pool::flush_graphics_command_buffer() {
+  auto& logical_device =
+      layer_abstraction_factory::instance()
                              .get_vulkan_context()
                              .get_device();
 
@@ -96,8 +98,9 @@ void vulkan_command_pool::flush_graphics_command_buffer() {
                        logical_device.get_graphics_queue());
 }
 
-void vulkan_command_pool::flush_compute_command_buffer() {
-  auto& logical_device = vulkan_layer_abstraction_factory::instance()
+void command_pool::flush_compute_command_buffer() {
+  auto& logical_device =
+      layer_abstraction_factory::instance()
                              .get_vulkan_context()
                              .get_device();
 
@@ -105,10 +108,11 @@ void vulkan_command_pool::flush_compute_command_buffer() {
                        logical_device.get_compute_queue());
 }
 
-void vulkan_command_pool::flush_command_buffer(VkCommandBuffer command_buffer,
+void command_pool::flush_command_buffer(VkCommandBuffer command_buffer,
                                                VkCommandPool source_pool,
                                                VkQueue queue) {
-  auto& logical_device = vulkan_layer_abstraction_factory::instance()
+  auto& logical_device =
+      layer_abstraction_factory::instance()
                              .get_vulkan_context()
                              .get_device();
 

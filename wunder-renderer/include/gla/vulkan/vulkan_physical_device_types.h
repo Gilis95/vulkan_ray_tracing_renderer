@@ -9,7 +9,7 @@
 
 #include <vector>
 
-namespace wunder {
+namespace wunder::vulkan {
 // This struct holds all core feature information for a physical device
 struct physical_device_info {
   VkPhysicalDeviceMemoryProperties m_memory_properties{};
@@ -72,9 +72,9 @@ struct properties_11O_old {
 };
 
 void init_physical_info(physical_device_info& info,
-                        VkPhysicalDevice physical_device, uint32_t version_major,
-                        uint32_t version_minor);
+                        VkPhysicalDevice physical_device,
+                        uint32_t version_major, uint32_t version_minor);
 
-}  // namespace wunder
+}  // namespace wunder::vulkan
 
 #endif  // WUNDER_VULKAN_PHYSICAL_DEVICE_TYPES_H
