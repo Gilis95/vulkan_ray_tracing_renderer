@@ -35,6 +35,7 @@ buffer vertex_buffer::create(const mesh_asset& asset) {
   }
 
   return device_buffer{
+      buffer::descriptor_build_data{.m_enabled = false},
       vertecies.data(), vertecies.size() * sizeof(VertexAttributes),
       VK_BUFFER_USAGE_STORAGE_BUFFER_BIT |
           VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT |

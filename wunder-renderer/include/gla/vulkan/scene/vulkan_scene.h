@@ -36,6 +36,7 @@ class scene : public non_copyable {
  private:
   std::vector<unique_ptr<texture>> m_bound_textures;
   unique_ptr<buffer> m_material_buffer;
+  unique_ptr<buffer> m_mesh_instance_data_buffer;
 
   std::vector<vulkan_mesh_scene_node> m_mesh_nodes;
   unique_ptr<top_level_acceleration_structure> m_acceleration_structure;

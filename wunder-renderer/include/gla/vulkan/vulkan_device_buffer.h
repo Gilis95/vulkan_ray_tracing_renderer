@@ -10,8 +10,8 @@ namespace wunder::vulkan {
 
 class device_buffer : public buffer {
  public:
-  device_buffer(size_t data_size, VkBufferUsageFlags usage_flags);
-  device_buffer(const void* data, size_t data_size,
+  device_buffer(buffer::descriptor_build_data descriptor_build_data, size_t data_size, VkBufferUsageFlags usage_flags);
+  device_buffer(buffer::descriptor_build_data descriptor_build_data,const void* data, size_t data_size,
                        VkBufferUsageFlags usage_flags);
 
   ~device_buffer() override;

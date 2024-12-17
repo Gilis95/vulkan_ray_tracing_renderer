@@ -7,6 +7,7 @@
 
 #include "core/wunder_memory.h"
 #include "glm/detail/type_mat4x4.hpp"
+#include "resources/shaders/host_device.h"
 
 namespace wunder {
 namespace vulkan {
@@ -19,8 +20,6 @@ struct vulkan_mesh_scene_node {
   shared_ptr<vulkan_mesh> m_mesh;
   glm::mat4 m_model_matrix;
 
- public:
-  void bind(renderer& renderer);
 };
 }  // namespace vulkan
 }  // namespace wunder

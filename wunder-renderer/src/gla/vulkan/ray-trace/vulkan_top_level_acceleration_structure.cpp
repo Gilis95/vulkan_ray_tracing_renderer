@@ -19,6 +19,6 @@ void top_level_acceleration_structure::build(
 
 void top_level_acceleration_structure::bind(renderer& renderer) {
   auto& descriptor_manager = renderer.get_descriptor_set_manager();
-  descriptor_manager.update_resource("topLevelAS", *this);
+  descriptor_manager.add_resource("topLevelAS", *this);
 }
 }  // namespace wunder::vulkan

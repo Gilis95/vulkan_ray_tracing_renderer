@@ -6,6 +6,7 @@
 
 #include "core/wunder_memory.h"
 #include "vulkan_memory_allocator.h"
+#include "gla/vulkan/vulkan_types.h"
 
 namespace wunder {
 struct texture_asset;
@@ -21,13 +22,15 @@ struct vulkan_image_info {
 
 class renderer;
 
-class texture {
+class texture :
+ public vulkan::shader_resource::instance::sampled_images {
+
  public:
   texture(const texture_asset& asset);
   ~texture();
 
  public:
-  void bind(renderer& renderer);
+  void bind(renderer& renderer) override;
 
  private:
   VkFormat allocate_image(const std::string& name);

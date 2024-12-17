@@ -72,8 +72,8 @@ bool top_level_acceleration_structure_build_info::
   out_acceleration_structure_instance.transform =
       to_transform_matrix_khr(mesh_node.m_model_matrix);
   out_acceleration_structure_instance.instanceCustomIndex =
-      mesh_node.m_mesh->m_material_idx;  // gl_InstanceCustomIndexEXT: to find
-                                         // which primitive
+      mesh_node.m_mesh->m_idx;  // gl_InstanceCustomIndexEXT: to find
+                                // which primitive
   out_acceleration_structure_instance.accelerationStructureReference =
       mesh_node.m_mesh->m_blas.get_address();
   out_acceleration_structure_instance.flags = flags;
@@ -94,7 +94,8 @@ void top_level_acceleration_structure_build_info::
   VkBufferUsageFlagBits flags = VkBufferUsageFlagBits(
       VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT |
       VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR);
-  m_acceleration_structures_buffers = device_buffer(data, size, flags);
+  m_acceleration_structures_buffers = std::make_unique<device_buffer>(
+      buffer::descriptor_build_data{.m_enabled = false}, data, size, flags);
 }
 
 void top_level_acceleration_structure_build_info::create_geometry_data(
@@ -102,7 +103,7 @@ void top_level_acceleration_structure_build_info::create_geometry_data(
   VkAccelerationStructureGeometryInstancesDataKHR geometryInstances{
       VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_INSTANCES_DATA_KHR};
   geometryInstances.data.deviceAddress =
-      m_acceleration_structures_buffers.get_address();
+      m_acceleration_structures_buffers->get_address();
 
   // Set up the geometry to use instance data.
   m_as_geometry.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_KHR;

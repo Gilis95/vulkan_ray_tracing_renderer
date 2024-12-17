@@ -11,6 +11,7 @@
 #include <string>
 #include <unordered_map>
 #include <variant>
+#include <vector>
 
 namespace wunder::vulkan {
 using vulkan_resource_identifier = std::string;
@@ -71,12 +72,16 @@ struct base {
 };
 
 struct uniform_buffer : public base {
-  VkDescriptorBufferInfo& GetDescriptorBufferInfo;
+  VkDescriptorBufferInfo m_descriptor;
 };
 
-struct storage_buffers : public base {};
+struct storage_buffers : public base {
+  VkDescriptorBufferInfo m_descriptor;
+};
 
-struct sampled_images : public base {};
+struct sampled_images : public base {
+  VkDescriptorImageInfo m_descriptor;
+};
 
 struct separate_images : public base {};
 
@@ -84,13 +89,10 @@ struct separate_samplers : public base {};
 
 struct storage_images : public base {};
 
-class acceleration_structures : public base {
- public:
-  void assign_acceleration_structure(VkAccelerationStructureKHR structure);
-
- public:
-  VkWriteDescriptorSetAccelerationStructureKHR
-      m_descriptor_set_acceleration_structure_khr;
+struct acceleration_structure : public base {
+  acceleration_structure();
+  acceleration_structure(acceleration_structure&& other) noexcept;
+  VkAccelerationStructureKHR m_descriptor;
 };
 
 using element = std::variant<std::reference_wrapper<uniform_buffer>,
@@ -99,15 +101,31 @@ using element = std::variant<std::reference_wrapper<uniform_buffer>,
                              std::reference_wrapper<separate_images>,
                              std::reference_wrapper<separate_samplers>,
                              std::reference_wrapper<storage_images>,
-                             std::reference_wrapper<acceleration_structures>>;
+                             std::reference_wrapper<acceleration_structure>>;
+
+using resource_list =
+    std::variant<std::vector<VkDescriptorImageInfo>,
+                 std::vector<VkDescriptorBufferInfo>, std::vector<VkBufferView>,
+                 std::vector<VkAccelerationStructureKHR>>;
 
 }  // namespace instance
 
-}  // namespace shader::resource
+}  // namespace shader_resource
 
-using vulkan_descriptor_bindings =
-    std::unordered_map<vulkan_descriptor_set_bind_identifier,
-                       shader_resource::instance::element>;
+struct vulkan_descriptor_bindings {
+ public:
+  using container_type =
+      std::unordered_map<vulkan_descriptor_set_bind_identifier,
+                         shader_resource::instance::resource_list>;
+
+ public:
+  void emplace_resource(vulkan_descriptor_set_bind_identifier acceleration_structure,
+                        const shader_resource::instance::element& resource);
+  void clear_resource(vulkan_descriptor_set_bind_identifier bind_identifier);
+
+ public:
+  container_type m_bindings;
+};
 
 struct vulkan_shader_reflection_data {
   std::unordered_map<vulkan_resource_identifier,

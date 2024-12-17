@@ -48,16 +48,15 @@ asset_ids meshes_helper::extract_mesh_ids(
 }
 
 void meshes_helper::create_mesh_scene_nodes(
-    assets<mesh_asset>& mesh_entities,
-    const assets<material_asset>& materials,
+    assets<mesh_asset>& mesh_entities, const assets<material_asset>& materials,
     const std::vector<ref<scene_node>>& mesh_scene_nodes,
     std::vector<vulkan_mesh_scene_node>& out_mesh_nodes) {
-  std::vector<bottom_level_acceleration_structure_build_info>
-      build_infos;
+  std::vector<bottom_level_acceleration_structure_build_info> build_infos;
 
   // we first go through unique meshes and create them an instance
   vector_map<asset_handle, shared_ptr<vulkan_mesh>> mesh_instances;
-  prepare_blas_build_info(mesh_entities, materials, mesh_instances, build_infos);
+  prepare_blas_build_info(mesh_entities, materials, mesh_instances,
+                          build_infos);
   build_blas(build_infos, mesh_instances);
 
   // then we use the instances to create a scene nodes, placed in specific
@@ -75,9 +74,13 @@ void meshes_helper::create_mesh_scene_nodes(
         mesh_instances.find(maybe_mesh_component->get().m_handle);
     AssertContinueIf(mesh_instance_it == mesh_instances.end());
 
+    auto& mesh_instance = mesh_instance_it->second;
+    AssertContinueUnless(mesh_instance);
+
     out_mesh_nodes.emplace_back(vulkan_mesh_scene_node{
-        .m_mesh = mesh_instance_it->second,
-        .m_model_matrix = maybe_transform_component->get().m_world_matrix});
+        .m_mesh = mesh_instance,
+        .m_model_matrix = maybe_transform_component->get().m_world_matrix,
+        });
   }
 }
 
@@ -92,15 +95,15 @@ void meshes_helper::prepare_blas_build_info(
     auto& [id, _vulkan_mesh] = out_mesh_instances.emplace_back();
 
     auto material_it = materials.find(mesh_asset.get().m_material_handle);
-    long material_idx = material_it == materials.end() ? 0 :
-                                                       std::distance(materials.begin(), material_it);
+    long material_idx = material_it == materials.end()
+                            ? 0
+                            : std::distance(materials.begin(), material_it);
 
     _vulkan_mesh = make_shared<vulkan_mesh>();
     _vulkan_mesh->m_vertex_buffer =
         std::move(vertex_buffer::create(mesh_asset));
-    _vulkan_mesh->m_index_buffer =
-        std::move(index_buffer::create(mesh_asset));
-    _vulkan_mesh->idx = i;
+    _vulkan_mesh->m_index_buffer = std::move(index_buffer::create(mesh_asset));
+    _vulkan_mesh->m_idx = i;
     _vulkan_mesh->m_material_idx = material_idx;
     id = mesh_id;
 
@@ -126,16 +129,17 @@ void meshes_helper::build_blas(
       });
 
   buffer scratch_buffer = device_buffer(
-      scratch_buffer_size, VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT |
-                               VK_BUFFER_USAGE_STORAGE_BUFFER_BIT);
+      buffer::descriptor_build_data{.m_enabled = false}, scratch_buffer_size,
+      VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT |
+          VK_BUFFER_USAGE_STORAGE_BUFFER_BIT);
 
   std::uint32_t scratch_buffer_offset = 0;
   for (auto& [id, mesh_instance_ptr] : mesh_instances) {
     AssertContinueUnless(mesh_instance_ptr);
     vulkan_mesh& mesh_instance = *mesh_instance_ptr;
 
-    AssertContinueUnless(build_infos.size() > mesh_instance.idx);
-    auto& build_info = build_infos[mesh_instance.idx];
+    AssertContinueUnless(build_infos.size() > mesh_instance.m_idx);
+    auto& build_info = build_infos[mesh_instance.m_idx];
 
     mesh_instance.m_blas.build(scratch_buffer, scratch_buffer_offset,
                                build_info);
@@ -147,9 +151,9 @@ void meshes_helper::build_blas(
 void meshes_helper::create_top_level_acceleration_structure(
     const std::vector<vulkan_mesh_scene_node>& mesh_nodes,
     top_level_acceleration_structure& out_acceleration_structure) {
-  top_level_acceleration_structure_build_info tlas_build_info(
-      mesh_nodes);
+  top_level_acceleration_structure_build_info tlas_build_info(mesh_nodes);
   buffer scratch_buffer = device_buffer(
+      buffer::descriptor_build_data{.m_enabled = false},
       tlas_build_info.get_vulkan_as_build_sizes_info().buildScratchSize,
       VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT |
           VK_BUFFER_USAGE_STORAGE_BUFFER_BIT);
@@ -157,4 +161,31 @@ void meshes_helper::create_top_level_acceleration_structure(
   out_acceleration_structure.build(scratch_buffer, tlas_build_info);
 }
 
-}  // namespace wunder
+unique_ptr<buffer> meshes_helper::create_mesh_instances_buffer(
+    const std::vector<vulkan_mesh_scene_node>& mesh_nodes) {
+  std::vector<InstanceData> instances;
+
+  for (const auto& mesh_node : mesh_nodes) {
+    AssertContinueUnless(mesh_node.m_mesh);
+    vulkan_mesh& mesh = *mesh_node.m_mesh;
+
+    instances.emplace_back(InstanceData{
+        .vertexAddress = mesh.m_idx,
+        .indexAddress = mesh.m_idx,
+        .materialIndex = static_cast<int>(
+            mesh.m_material_idx)  // most probably will never overflow
+    });
+  }
+
+  unique_ptr<buffer> result;
+  ReturnIf(instances.empty(), result);
+
+  return std::make_unique<device_buffer>(
+      buffer::descriptor_build_data{.m_enabled = true,
+                                    .m_descriptor_name = "geoInfo"},
+      instances.data(), instances.size() * sizeof(InstanceData),
+      VK_BUFFER_USAGE_STORAGE_BUFFER_BIT |
+          VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT);
+}
+
+}  // namespace wunder::vulkan

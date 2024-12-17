@@ -15,6 +15,7 @@
 #include "gla/vulkan/vulkan_pipeline.h"
 #include "gla/vulkan/vulkan_shader.h"
 #include "gla/vulkan/vulkan_shader_binding_table.h"
+#include "gla/vulkan/scene/vulkan_scene.h"
 #include "scene/scene_manager.h"
 
 namespace wunder::vulkan {
@@ -143,6 +144,11 @@ void renderer::update(int dt) /*override*/
 void renderer::on_event(const scene_activated &scene_activated_event) {
   auto api_scene = project::instance().get_scene_manager().get_api_scene(
       scene_activated_event.m_id);
+
+  AssertReturnUnless(api_scene.has_value());
+  api_scene->get().bind(*this);
+
+  m_descriptor_set_manager->bake();
 }
 
 const renderer_capabilities &renderer::get_capabilities()

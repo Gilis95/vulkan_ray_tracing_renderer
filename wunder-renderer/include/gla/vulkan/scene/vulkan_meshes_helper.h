@@ -50,6 +50,9 @@ class meshes_helper {
       const std::vector<vulkan_mesh_scene_node>& mesh_nodes,
       top_level_acceleration_structure& out_acceleration_structure);
 
+  [[nodiscard]] static unique_ptr<buffer> create_mesh_instances_buffer(
+      const std::vector<vulkan_mesh_scene_node>& mesh_nodes);
+
  private:
 };
 }  // namespace vulkan

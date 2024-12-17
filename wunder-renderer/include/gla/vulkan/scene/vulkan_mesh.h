@@ -8,7 +8,7 @@
 
 namespace wunder::vulkan {
 struct vulkan_mesh {
-  std::uint32_t idx;
+  std::uint32_t m_idx;
   buffer m_vertex_buffer;
   buffer m_index_buffer;
   bottom_level_acceleration_structure m_blas;

@@ -21,12 +21,16 @@ class descriptor_set_manager : public non_copyable {
   void initialize(const shader& vulkan_shader);
 
  public:
-  void update_resource(const vulkan_resource_identifier& resource_identifier,
-                       shader_resource::instance::element);
+  void clear_resource(const vulkan_resource_identifier& resource_identifier);
+  void add_resource(const vulkan_resource_identifier& resource_identifier,
+                    shader_resource::instance::element resource);
 
   void bake();
   void bind(const pipeline& pipeline) const;
 
+  optional_const_ref<shader_resource::declaration::base>
+  find_resource_declaration(
+      const vulkan_resource_identifier& resource_identifier) const;
  private:
   std::multimap<vulkan_descriptor_set_identifier, vulkan_descriptor_bindings>
       m_input_resources;

@@ -4,10 +4,12 @@
 #include "core/vector_map.h"
 #include "gla/vulkan/vulkan_command_pool.h"
 #include "gla/vulkan/vulkan_context.h"
+#include "gla/vulkan/vulkan_descriptor_set_manager.h"
 #include "gla/vulkan/vulkan_device.h"
 #include "gla/vulkan/vulkan_layer_abstraction_factory.h"
 #include "gla/vulkan/vulkan_macros.h"
 #include "gla/vulkan/vulkan_memory_allocator.h"
+#include "gla/vulkan/vulkan_renderer.h"
 
 namespace {
 
@@ -30,6 +32,7 @@ std::unordered_map<wunder::address_mode_type, VkSamplerAddressMode> s_address_mo
 }  // namespace
 
 namespace wunder::vulkan {
+
 texture::texture(const texture_asset& asset) {
   auto& vulkan_context =
       layer_abstraction_factory::instance().get_vulkan_context();
@@ -40,14 +43,21 @@ texture::texture(const texture_asset& asset) {
 
   VkFormat image_format =
       allocate_image( name);
+
   create_image_view(name, image_format);
-
   try_create_sampler(asset, vulkan_logical_device, name);
-
   bind_texture_data(asset);
+
+  m_descriptor.imageLayout =  VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 }
 
 texture::~texture() = default;
+
+void texture::bind(renderer& renderer)
+{
+  auto& descriptor_manager = renderer.get_descriptor_set_manager();
+  descriptor_manager.add_resource("texturesMap", *this);
+}
 
 void texture::try_create_sampler(const texture_asset& asset,
                                         VkDevice vulkan_logical_device,
@@ -79,6 +89,8 @@ void texture::try_create_sampler(const texture_asset& asset,
   VK_CHECK_RESULT(vkCreateSampler(vulkan_logical_device, &sampler_create_info,
                                   nullptr, &(m_image_info.m_sampler)));
 
+  m_descriptor.sampler = m_image_info.m_sampler;
+
   set_debug_utils_object_name(vulkan_logical_device, VK_OBJECT_TYPE_SAMPLER,
                               std::format("{} default sampler", name),
                               m_image_info.m_sampler);
@@ -109,6 +121,8 @@ void texture::create_image_view( const std::string& name,
   VK_CHECK_RESULT(vkCreateImageView(vulkan_logical_device,
                                     &image_view_create_info, nullptr,
                                     &(m_image_info.m_image_view)));
+
+  m_descriptor.imageView = m_image_info.m_image_view;
 
   set_debug_utils_object_name(vulkan_logical_device, VK_OBJECT_TYPE_IMAGE_VIEW,
                               std::format("{} default image view", name),

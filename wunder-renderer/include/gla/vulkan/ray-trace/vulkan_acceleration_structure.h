@@ -15,7 +15,7 @@ class acceleration_structure_build_info;
 
 class acceleration_structure
     : public non_copyable,
-      public vulkan::shader_resource::instance::acceleration_structures {
+      public vulkan::shader_resource::instance::acceleration_structure {
  public:
   acceleration_structure();
   virtual ~acceleration_structure();
@@ -38,7 +38,6 @@ class acceleration_structure
       const acceleration_structure_build_info& build_info) const;
 
  protected:
-  VkAccelerationStructureKHR m_acceleration_structure = VK_NULL_HANDLE;
   buffer m_acceleration_structure_buffer;
 };
 }  // namespace wunder

@@ -1,4 +1,4 @@
-#include "include/gla/vulkan/scene/vulkan_scene.h"
+#include "gla/vulkan/scene/vulkan_scene.h"
 
 #include <functional>
 
@@ -41,12 +41,13 @@ void scene::load_scene(scene_asset& asset) {
 
   m_bound_textures = textures_helper::create_texture_buffers(texture_assets);
   m_material_buffer =
-      materials_helper::create_material_buffer(
-      material_assets, texture_assets);
+      materials_helper::create_material_buffer(material_assets, texture_assets);
 
   meshes_helper::create_mesh_scene_nodes(mesh_assets, material_assets,
-                                                mesh_entities, m_mesh_nodes);
+                                         mesh_entities, m_mesh_nodes);
   AssertReturnIf(m_mesh_nodes.empty());
+  m_mesh_instance_data_buffer =
+      meshes_helper::create_mesh_instances_buffer(m_mesh_nodes);
 
   m_acceleration_structure =
       std::make_unique<top_level_acceleration_structure>();
@@ -57,13 +58,11 @@ void scene::load_scene(scene_asset& asset) {
 
 void scene::bind(renderer& renderer) {
   for (auto& texture : m_bound_textures) {
+    texture->bind(renderer);
   }
 
-  m_material_buffer;
-
-  for (auto& mesh : m_mesh_nodes) {
-  }
-
+  m_material_buffer->bind(renderer);
+  m_mesh_instance_data_buffer->bind(renderer);
   m_acceleration_structure->bind(renderer);
 }
 

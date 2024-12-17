@@ -9,13 +9,17 @@
 #include "gla/vulkan/vulkan_memory_allocator.h"
 
 namespace wunder::vulkan {
-device_buffer::device_buffer(size_t data_size,
-                                           VkBufferUsageFlags usage_flags) {
+device_buffer::device_buffer(
+    buffer::descriptor_build_data descriptor_build_data, size_t data_size,
+    VkBufferUsageFlags usage_flags)
+    : buffer(std::move(descriptor_build_data)) {
   allocate_device_buffer(data_size, usage_flags);
 }
 
-device_buffer::device_buffer(const void* data, size_t data_size,
-                                           VkBufferUsageFlags usage_flags) {
+device_buffer::device_buffer(
+    buffer::descriptor_build_data descriptor_build_data, const void* data,
+    size_t data_size, VkBufferUsageFlags usage_flags)
+    : buffer(std::move(descriptor_build_data)) {
   context& vulkan_context =
       layer_abstraction_factory::instance().get_vulkan_context();
   auto& allocator = vulkan_context.get_resource_allocator();
@@ -46,11 +50,16 @@ device_buffer::device_buffer(const void* data, size_t data_size,
     vulkan_command_pool.flush_compute_command_buffer();
   }
 
+  m_descriptor.buffer = m_vk_buffer;
+  m_descriptor.offset = 0;
+  m_descriptor.range = VK_WHOLE_SIZE;
+
   // cleanup staging data
   allocator.destroy_buffer(staging_buffer, staging_buffer_allocation);
 }
 
-std::pair<VkBuffer, VmaAllocation> device_buffer::allocate_cpu_staging_buffer(size_t data_size) {
+std::pair<VkBuffer, VmaAllocation> device_buffer::allocate_cpu_staging_buffer(
+    size_t data_size) {
   context& vulkan_context =
       layer_abstraction_factory::instance().get_vulkan_context();
   auto& allocator = vulkan_context.get_resource_allocator();
@@ -69,8 +78,8 @@ std::pair<VkBuffer, VmaAllocation> device_buffer::allocate_cpu_staging_buffer(si
   return {staging_buffer, staging_buffer_allocation};
 }
 
-void device_buffer::allocate_device_buffer(
-    size_t data_size, VkBufferUsageFlags usage_flags) {
+void device_buffer::allocate_device_buffer(size_t data_size,
+                                           VkBufferUsageFlags usage_flags) {
   context& vulkan_context =
       layer_abstraction_factory::instance().get_vulkan_context();
   auto& allocator = vulkan_context.get_resource_allocator();
@@ -87,4 +96,4 @@ void device_buffer::allocate_device_buffer(
 
 device_buffer::~device_buffer() = default;
 
-}  // namespace wunder
+}  // namespace wunder::vulkan

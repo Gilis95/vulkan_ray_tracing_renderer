@@ -22,108 +22,116 @@ enum class descriptor_pool_creator_result {
 
 class write_descriptor_creator {
  public:
-  std::expected<VkWriteDescriptorSet, descriptor_pool_creator_result>
-  operator()(
-      const wunder::vulkan::shader_resource::instance::uniform_buffer&) {
-    VkWriteDescriptorSet writeDescriptor;
+  VkWriteDescriptorSet operator()(
+      const std::vector<VkDescriptorImageInfo>& resource) {
+    VkWriteDescriptorSet result;
+    result.descriptorCount = resource.size();
+    result.pImageInfo = resource.data();
 
-    return writeDescriptor;
+    return result;
   }
 
-  std::expected<VkWriteDescriptorSet, descriptor_pool_creator_result>
-  operator()(
-      const wunder::vulkan::shader_resource::instance::storage_buffers&) {
-    VkWriteDescriptorSet writeDescriptor;
+  VkWriteDescriptorSet operator()(
+      const std::vector<VkDescriptorBufferInfo>& resource) {
+    VkWriteDescriptorSet result;
+    result.descriptorCount = resource.size();
+    result.pBufferInfo = resource.data();
 
-    return writeDescriptor;
+    return result;
   }
 
-  std::expected<VkWriteDescriptorSet, descriptor_pool_creator_result>
-  operator()(
-      const wunder::vulkan::shader_resource::instance::sampled_images&) {
-    VkWriteDescriptorSet writeDescriptor;
+  VkWriteDescriptorSet operator()(std::vector<VkBufferView>& resource) {
+    VkWriteDescriptorSet result;
+    result.descriptorCount = resource.size();
+    result.pTexelBufferView = resource.data();
 
-    return writeDescriptor;
+    return result;
   }
 
-  std::expected<VkWriteDescriptorSet, descriptor_pool_creator_result>
-  operator()(
-      const wunder::vulkan::shader_resource::instance::separate_images&) {
-    VkWriteDescriptorSet writeDescriptor;
+  VkWriteDescriptorSet operator()(
+      std::vector<VkAccelerationStructureKHR>& resources) {
+    VkWriteDescriptorSet result;
+    ReturnIf(resources.empty(), result);
 
-    return writeDescriptor;
-  }
+    // TODO:: this is a workaround. However currently it has no impacts
+    //  problematic sections are multi-thread access and having multiple
+    //  descriptors of this type, placed in separate bindings
+    static VkWriteDescriptorSetAccelerationStructureKHR
+        descriptor_set_acceleration_structure;
 
-  std::expected<VkWriteDescriptorSet, descriptor_pool_creator_result>
-  operator()(
-      const wunder::vulkan::shader_resource::instance::separate_samplers&) {
-    VkWriteDescriptorSet writeDescriptor;
+    descriptor_set_acceleration_structure.accelerationStructureCount =
+        resources.size();
+    descriptor_set_acceleration_structure.pAccelerationStructures =
+        resources.data();
 
-    return writeDescriptor;
-  }
-
-  std::expected<VkWriteDescriptorSet, descriptor_pool_creator_result>
-  operator()(
-      const wunder::vulkan::shader_resource::instance::storage_images&) {
-    VkWriteDescriptorSet writeDescriptor;
-
-    return writeDescriptor;
-  }
-
-  std::expected<VkWriteDescriptorSet, descriptor_pool_creator_result>
-  operator()(
-      const wunder::vulkan::shader_resource::instance::acceleration_structures&
-          resource) {
-    VkWriteDescriptorSet writeDescriptor;
-    writeDescriptor.pNext =
-        &resource.m_descriptor_set_acceleration_structure_khr;
-
-    return writeDescriptor;
+    result.pNext = &descriptor_set_acceleration_structure;
+    return result;
   }
 };
 }  // namespace
 
 namespace wunder::vulkan {
-void descriptor_set_manager::update_resource(
-    const vulkan_resource_identifier& resource_identifier,
-    shader_resource::instance::element resource) {
-  auto& shader_resources_declaration =
-      m_shader_reflection_data.m_shader_resources_declaration;
-  auto found_resource_met_it =
-      shader_resources_declaration.find(resource_identifier);
-  AssertReturnIf(found_resource_met_it == shader_resources_declaration.end(), );
+void descriptor_set_manager::clear_resource(
+    const vulkan_resource_identifier& resource_identifier) {
+  optional_const_ref<shader_resource::declaration::base>
+      maybe_resource_declaration =
+          find_resource_declaration(resource_identifier);
+  AssertReturnUnless(maybe_resource_declaration.has_value());
 
-  const shader_resource::declaration::base& resource_declaration =
-      std::visit(shader_resource::declaration::downcast,
-                 found_resource_met_it->second);
+  const auto& resource_declaration = maybe_resource_declaration->get();
 
   auto descriptor_bindings_it =
       m_input_resources.find(resource_declaration.m_set);
+  ReturnIf(descriptor_bindings_it == m_input_resources.end());
+
+  vulkan_descriptor_bindings& descriptor_bindings =
+      descriptor_bindings_it->second;
+
+  descriptor_bindings.clear_resource(resource_declaration.m_binding);
+}
+
+// TODO:: This mechanism doesn't provide a way of updating descriptors, other
+// than updating everything in the binding
+void descriptor_set_manager::add_resource(
+    const vulkan_resource_identifier& resource_identifier,
+    shader_resource::instance::element resource) {
+  optional_const_ref<shader_resource::declaration::base> resource_declaration =
+      find_resource_declaration(resource_identifier);
+  AssertReturnUnless(resource_declaration.has_value());
+
+  auto descriptor_bindings_it =
+      m_input_resources.find(resource_declaration->get().m_set);
   AssertReturnIf(descriptor_bindings_it == m_input_resources.end());
   vulkan_descriptor_bindings& descriptor_bindings =
       descriptor_bindings_it->second;
+
   // TODO:: validate that the declared and provided types are maching!!!
-  descriptor_bindings.emplace(resource_declaration.m_binding,
-                              std::move(resource));
+  descriptor_bindings.emplace_resource(resource_declaration->get().m_binding,
+                                       resource);
 }
 
 void descriptor_set_manager::bake() {
   std::vector<VkWriteDescriptorSet> write_descriptors;
   auto& device =
-      layer_abstraction_factory::instance()
-                     .get_vulkan_context()
-                     .get_device();
+      layer_abstraction_factory::instance().get_vulkan_context().get_device();
   VkDevice vulkan_logical_device = device.get_vulkan_logical_device();
+  write_descriptor_creator descriptor_creator;
 
   for (auto& [descriptor_set_identifier, descriptor_bindings] :
        m_input_resources) {
+    AssertContinueUnless(descriptor_set_identifier < m_descriptor_sets.size());
     write_descriptors.clear();
+
     for (auto& [descriptor_set_bind_identifier, vulkan_resource] :
-         descriptor_bindings) {
-      auto result = std::visit(write_descriptor_creator(), vulkan_resource);
-      AssertContinueIf(result.error() != descriptor_pool_creator_result::OK ||
-                       !result.has_value());
-      write_descriptors.emplace_back(result.value());
+         descriptor_bindings.m_bindings) {
+      VkWriteDescriptorSet result =
+          std::visit(descriptor_creator, vulkan_resource);
+      result.dstSet = m_descriptor_sets[descriptor_set_identifier];
+      result.dstBinding = descriptor_set_bind_identifier;
+      // TODO:: No support for descriptors append at the moment
+      result.dstArrayElement = 0;
+
+      write_descriptors.emplace_back(result);
     }
 
     if (!write_descriptors.empty()) {
@@ -136,12 +144,9 @@ void descriptor_set_manager::bake() {
   }
 }
 
-void descriptor_set_manager::bind(
-    const pipeline& pipeline) const {
+void descriptor_set_manager::bind(const pipeline& pipeline) const {
   auto& device =
-      layer_abstraction_factory::instance()
-                     .get_vulkan_context()
-                     .get_device();
+      layer_abstraction_factory::instance().get_vulkan_context().get_device();
 
   auto& command_pool = device.get_command_pool();
 
@@ -152,8 +157,7 @@ void descriptor_set_manager::bind(
                           m_descriptor_sets.data(), 0, nullptr);
 }
 
-void descriptor_set_manager::initialize(
-    const shader& vulkan_shader) {
+void descriptor_set_manager::initialize(const shader& vulkan_shader) {
   // If valid, we can create descriptor sets
 
   // Create Descriptor Pool
@@ -211,7 +215,24 @@ void descriptor_set_manager::initialize(
     VK_CHECK_RESULT(vkAllocateDescriptorSets(device, &descriptor_set_alloc_info,
                                              &descriptor_set));
     m_descriptor_sets.emplace_back(descriptor_set);
+    m_input_resources.emplace(i, vulkan_descriptor_bindings{});
   }
 }
+optional_const_ref<shader_resource::declaration::base>
+descriptor_set_manager::find_resource_declaration(
+    const vulkan_resource_identifier& resource_identifier) const {
+  auto& shader_resources_declaration =
+      m_shader_reflection_data.m_shader_resources_declaration;
 
+  auto found_resource_declaration_it =
+      shader_resources_declaration.find(resource_identifier);
+  ReturnIf(found_resource_declaration_it == shader_resources_declaration.end(),
+           std::nullopt);
+
+  const shader_resource::declaration::base& resource_declaration =
+      std::visit(shader_resource::declaration::downcast,
+                 found_resource_declaration_it->second);
+
+  return resource_declaration;
+}
 }  // namespace wunder::vulkan

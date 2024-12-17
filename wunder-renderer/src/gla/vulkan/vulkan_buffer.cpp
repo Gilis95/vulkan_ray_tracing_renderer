@@ -1,15 +1,24 @@
 #include "gla/vulkan/vulkan_buffer.h"
 
+#include <utility>
+
 #include "core/wunder_macros.h"
 #include "gla/vulkan/vulkan_context.h"
+#include "gla/vulkan/vulkan_descriptor_set_manager.h"
 #include "gla/vulkan/vulkan_device.h"
 #include "gla/vulkan/vulkan_layer_abstraction_factory.h"
 #include "gla/vulkan/vulkan_memory_allocator.h"
+#include "gla/vulkan/vulkan_renderer.h"
 
 namespace wunder::vulkan {
 
+buffer::buffer(descriptor_build_data descriptor_build_data)
+    : m_descriptor_build_data(std::move(descriptor_build_data)) {}
+
 buffer::buffer(buffer&& other) noexcept
-    : m_vk_buffer(other.m_vk_buffer), m_allocation(other.m_allocation) {
+    : m_descriptor_build_data(std::move(other.m_descriptor_build_data)),
+      m_vk_buffer(other.m_vk_buffer),
+      m_allocation(other.m_allocation) {
   other.m_vk_buffer = VK_NULL_HANDLE;
   other.m_allocation = VK_NULL_HANDLE;
 }
@@ -29,6 +38,15 @@ buffer::~buffer() {
   allocator.destroy_buffer(m_vk_buffer, m_allocation);
 }
 
+void buffer::bind(renderer& renderer) /*override*/
+{
+  ReturnUnless(m_descriptor_build_data.m_enabled);
+
+  auto& descriptor_manager = renderer.get_descriptor_set_manager();
+  descriptor_manager.add_resource(m_descriptor_build_data.m_descriptor_name,
+                                  *this);
+}
+
 [[nodiscard]] VkDeviceAddress buffer::get_address() const {
   context& vulkan_context =
       layer_abstraction_factory::instance().get_vulkan_context();
@@ -41,4 +59,4 @@ buffer::~buffer() {
   return vkGetBufferDeviceAddress(device.get_vulkan_logical_device(), &info);
 }
 
-}  // namespace wunder
+}  // namespace wunder::vulkan

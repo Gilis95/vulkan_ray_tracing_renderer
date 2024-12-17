@@ -87,6 +87,7 @@ unique_ptr<buffer> materials_helper::create_material_buffer(
   }
 
   return std::make_unique<device_buffer>(
+      buffer::descriptor_build_data{.m_enabled=true, .m_descriptor_name = "materials"},
       shader_materials.data(),
       shader_materials.size() * sizeof(GltfShadeMaterial),
       VK_BUFFER_USAGE_STORAGE_BUFFER_BIT |

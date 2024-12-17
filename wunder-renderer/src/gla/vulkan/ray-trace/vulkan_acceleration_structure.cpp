@@ -12,33 +12,34 @@
 #include "gla/vulkan/vulkan_device_buffer.h"
 #include "gla/vulkan/vulkan_layer_abstraction_factory.h"
 #include "gla/vulkan/vulkan_renderer.h"
+#include "gla/vulkan/vulkan_types.h"
 
 namespace wunder::vulkan {
 acceleration_structure::acceleration_structure() = default;
 
 acceleration_structure::acceleration_structure(
     acceleration_structure&& other) noexcept
-    : m_acceleration_structure(other.m_acceleration_structure),
+    : ::wunder::vulkan::shader_resource::instance::acceleration_structure(std::move(other)),
       m_acceleration_structure_buffer(
           std::move(other.m_acceleration_structure_buffer)) {
-  other.m_acceleration_structure = VK_NULL_HANDLE;
+  other.m_descriptor = VK_NULL_HANDLE;
 }
 acceleration_structure& acceleration_structure::operator=(
     acceleration_structure&& other) noexcept {
-  std::swap(m_acceleration_structure, other.m_acceleration_structure);
+  std::swap(m_descriptor, other.m_descriptor);
   std::swap(m_acceleration_structure_buffer,
             other.m_acceleration_structure_buffer);
 }
 
 acceleration_structure::~acceleration_structure() {
-  ReturnIf(m_acceleration_structure == VK_NULL_HANDLE);
+  ReturnIf(m_descriptor == VK_NULL_HANDLE);
 
   context& vulkan_context =
       layer_abstraction_factory::instance().get_vulkan_context();
   auto& device = vulkan_context.get_device();
 
   vkDestroyAccelerationStructureKHR(device.get_vulkan_logical_device(),
-                                    m_acceleration_structure, VK_NULL_HANDLE);
+                                    m_descriptor, VK_NULL_HANDLE);
 }
 
 void acceleration_structure::create_acceleration_structure(
@@ -65,9 +66,7 @@ void acceleration_structure::create_acceleration_structure(
   // Create the acceleration structure
   vkCreateAccelerationStructureKHR(device.get_vulkan_logical_device(),
                                    &acceleration_structure_create_info, nullptr,
-                                   &m_acceleration_structure);
-
-  assign_acceleration_structure(m_acceleration_structure);
+                                   &m_descriptor);
 }
 
 void acceleration_structure::build_acceleration_structure(
@@ -83,7 +82,7 @@ void acceleration_structure::build_acceleration_structure(
   VkAccelerationStructureBuildRangeInfoKHR* tmp = as_build_offset_info.data();
 
   auto vulkan_build_info = build_info.get_build_info();
-  vulkan_build_info.dstAccelerationStructure = this->m_acceleration_structure;
+  vulkan_build_info.dstAccelerationStructure = this->m_descriptor;
   vulkan_build_info.scratchData.deviceAddress =
       scratch_buffer.get_address() + scratch_buffer_offset;
 
@@ -113,7 +112,7 @@ VkDeviceAddress acceleration_structure::get_address() {
 
   VkAccelerationStructureDeviceAddressInfoKHR info{
       VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_DEVICE_ADDRESS_INFO_KHR};
-  info.accelerationStructure = m_acceleration_structure;
+  info.accelerationStructure = m_descriptor;
   return vkGetAccelerationStructureDeviceAddressKHR(
       device.get_vulkan_logical_device(), &info);
 }

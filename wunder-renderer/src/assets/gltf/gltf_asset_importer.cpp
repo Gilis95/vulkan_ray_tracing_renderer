@@ -240,6 +240,7 @@ asset_serialization_result_codes import_scenes(
           scene.add_node(std::move(node));
         }
       }
+
       if (gltf_scene_node.camera > -1) {
         auto primitives_it = cameras_map.find(gltf_scene_node.camera);
         AssertContinueIf(primitives_it == cameras_map.end());
@@ -252,7 +253,9 @@ asset_serialization_result_codes import_scenes(
         node.add_component(camera_component);
 
         scene.add_node(std::move(node));
-      } else if (gltf_scene_node.extensions.find(
+      }
+
+      if (gltf_scene_node.extensions.find(
                      KHR_LIGHTS_PUNCTUAL_EXTENSION_NAME) !=
                  gltf_scene_node.extensions.end()) {
         const auto& ext =
