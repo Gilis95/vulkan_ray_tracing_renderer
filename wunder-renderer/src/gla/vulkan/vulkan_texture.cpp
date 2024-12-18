@@ -1,6 +1,5 @@
 #include "gla/vulkan/vulkan_texture.h"
 
-#include "assets/components/texture_asset.h"
 #include "core/vector_map.h"
 #include "gla/vulkan/vulkan_command_pool.h"
 #include "gla/vulkan/vulkan_context.h"
@@ -10,6 +9,7 @@
 #include "gla/vulkan/vulkan_macros.h"
 #include "gla/vulkan/vulkan_memory_allocator.h"
 #include "gla/vulkan/vulkan_renderer.h"
+#include "include/assets/texture_asset.h"
 
 namespace {
 

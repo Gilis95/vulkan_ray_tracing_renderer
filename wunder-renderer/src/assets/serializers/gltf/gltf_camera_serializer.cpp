@@ -1,11 +1,10 @@
-#include "assets/gltf/gltf_camera_serializer.h"
-
-#include <tiny_gltf.h>
+#include "assets/serializers/gltf/gltf_camera_serializer.h"
 
 #include <algorithm>
 #include <cctype>
 
-#include "assets/components/camera_asset.h"
+#include "include/assets/camera_asset.h"
+#include "tiny_gltf.h"
 #include "tinygltf/tinygltf_utils.h"
 
 bool ichar_equals(char a, char b) {

@@ -1,7 +1,7 @@
 #include "gla/vulkan/vulkan_index_buffer.h"
 
 #include "gla/vulkan/vulkan_device_buffer.h"
-#include "assets/components/mesh_asset.h"
+#include "include/assets/mesh_asset.h"
 
 namespace wunder::vulkan {
 buffer index_buffer::create(const mesh_asset& asset) {

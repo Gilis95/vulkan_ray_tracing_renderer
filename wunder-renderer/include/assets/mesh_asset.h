@@ -2,13 +2,13 @@
 #define WUNDER_MESH_ASSET_H
 
 #include <cstdint>
-#include <glm/vec2.hpp>
-#include <glm/vec3.hpp>
-#include <glm/vec4.hpp>
 #include <vector>
 
-#include "core/aabb.h"
 #include "assets/asset_types.h"
+#include "core/aabb.h"
+#include "glm/vec2.hpp"
+#include "glm/vec3.hpp"
+#include "glm/vec4.hpp"
 
 namespace wunder {
 struct vertex

@@ -2,7 +2,7 @@
 #define WUNDER_VULKAN_MATERIALS_HELPER_H
 
 #include "assets/asset_types.h"
-#include "assets/components/material_asset.h"
+#include "include/assets/material_asset.h"
 
 namespace wunder {
 struct mesh_asset;

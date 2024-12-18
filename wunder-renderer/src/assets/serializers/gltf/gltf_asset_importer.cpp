@@ -1,23 +1,22 @@
-#include "include/assets/gltf/gltf_asset_importer.h"
+#include "assets/serializers/gltf/gltf_asset_importer.h"
 
-#include <tiny_gltf.h>
-
-#include <glm/mat4x4.hpp>
 #include <queue>
 
 #include "assets/asset_storage.h"
 #include "assets/asset_types.h"
-#include "assets/components/light_asset.h"
-#include "assets/components/material_asset.h"
-#include "assets/components/texture_asset.h"
-#include "assets/gltf/gltf_camera_serializer.h"
-#include "assets/gltf/gltf_light_serializer.h"
-#include "assets/gltf/gltf_material_serializer.h"
-#include "assets/gltf/gltf_mesh_serializer.h"
-#include "assets/gltf/gltf_texture_serializer.h"
+#include "assets/serializers/gltf/gltf_camera_serializer.h"
+#include "assets/serializers/gltf/gltf_light_serializer.h"
+#include "assets/serializers/gltf/gltf_material_serializer.h"
+#include "assets/serializers/gltf/gltf_mesh_serializer.h"
+#include "assets/serializers/gltf/gltf_texture_serializer.h"
 #include "assets/scene_asset.h"
 #include "core/wunder_logger.h"
 #include "core/wunder_macros.h"
+#include "glm/mat4x4.hpp"
+#include "include/assets/light_asset.h"
+#include "include/assets/material_asset.h"
+#include "include/assets/texture_asset.h"
+#include "tiny_gltf.h"
 #include "tinygltf/tinygltf_utils.h"
 
 namespace wunder {

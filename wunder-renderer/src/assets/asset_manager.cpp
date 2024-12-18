@@ -2,7 +2,7 @@
 
 #include <tiny_gltf.h>
 
-#include "assets/gltf/gltf_asset_importer.h"
+#include "assets/serializers/gltf/gltf_asset_importer.h"
 #include "core/wunder_filesystem.h"
 
 namespace wunder {

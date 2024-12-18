@@ -29,8 +29,8 @@
 
 #include <glm/glm.hpp>
 
-#include "assets/components/material_asset.h"
-#include "assets/components/mesh_asset.h"
+#include "include/assets/material_asset.h"
+#include "include/assets/mesh_asset.h"
 // GLSL Type
 using ivec2 = glm::ivec2;
 using vec2 = glm::vec2;

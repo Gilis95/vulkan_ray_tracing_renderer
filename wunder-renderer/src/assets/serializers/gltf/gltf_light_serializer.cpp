@@ -1,6 +1,6 @@
-#include "assets/gltf/gltf_light_serializer.h"
+#include "assets/serializers/gltf/gltf_light_serializer.h"
 
-#include "assets/components/light_asset.h"
+#include "include/assets/light_asset.h"
 #include "tinygltf/tinygltf_utils.h"
 
 namespace wunder {

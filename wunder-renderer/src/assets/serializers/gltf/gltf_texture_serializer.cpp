@@ -1,9 +1,8 @@
-#include "assets/gltf/gltf_texture_serializer.h"
+#include "assets/serializers/gltf/gltf_texture_serializer.h"
 
-#include <tiny_gltf.h>
-
-#include "assets/components/texture_asset.h"
 #include "core/wunder_macros.h"
+#include "include/assets/texture_asset.h"
+#include "tiny_gltf.h"
 
 namespace wunder {
 namespace {

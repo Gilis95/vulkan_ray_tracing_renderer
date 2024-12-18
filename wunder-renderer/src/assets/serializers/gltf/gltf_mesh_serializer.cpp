@@ -1,11 +1,10 @@
-#include "include/assets/gltf/gltf_mesh_serializer.h"
-
-#include <tiny_gltf.h>
+#include "include/assets/serializers/gltf/gltf_mesh_serializer.h"
 
 #include "assets/asset_storage.h"
 #include "assets/asset_types.h"
-#include "assets/components/mesh_asset.h"
 #include "glm/vec4.hpp"
+#include "assets/mesh_asset.h"
+#include "tiny_gltf.h"
 #include "tinygltf/tinygltf_utils.h"
 
 namespace wunder {

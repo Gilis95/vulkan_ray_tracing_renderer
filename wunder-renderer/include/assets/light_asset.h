@@ -5,8 +5,9 @@
 #ifndef WUNDER_LIGHT_ASSET_H
 #define WUNDER_LIGHT_ASSET_H
 
-#include <glm/vec4.hpp>
 #include <variant>
+
+#include "glm/vec4.hpp"
 
 namespace wunder {
 struct spot_light {

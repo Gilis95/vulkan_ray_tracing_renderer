@@ -1,6 +1,5 @@
 #include "gla/vulkan/ray-trace/vulkan_bottom_level_acceleration_structure.h"
 
-#include "assets/components/mesh_asset.h"
 #include "core/wunder_macros.h"
 #include "gla/vulkan/ray-trace/vulkan_bottom_level_acceleration_structure_build_info.h"
 #include "gla/vulkan/vulkan_buffer.h"
@@ -9,6 +8,7 @@
 #include "gla/vulkan/vulkan_device.h"
 #include "gla/vulkan/vulkan_layer_abstraction_factory.h"
 #include "gla/vulkan/vulkan_types.h"
+#include "include/assets/mesh_asset.h"
 
 namespace wunder::vulkan {
 bottom_level_acceleration_structure::bottom_level_acceleration_structure() = default;

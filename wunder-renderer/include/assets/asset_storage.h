@@ -6,8 +6,8 @@
 #include <unordered_map>
 #include <vector>
 
+#include "asset.h"
 #include "assets/asset_types.h"
-#include "assets/components/asset.h"
 #include "core/vector_map.h"
 #include "core/wunder_macros.h"
 

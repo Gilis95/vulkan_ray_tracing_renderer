@@ -2,10 +2,10 @@
 
 #include "assets/asset_manager.h"
 #include "assets/asset_types.h"
-#include "assets/components/material_asset.h"
-#include "assets/components/texture_asset.h"
 #include "core/project.h"
 #include "gla/vulkan/vulkan_texture.h"
+#include "include/assets/material_asset.h"
+#include "include/assets/texture_asset.h"
 
 namespace wunder::vulkan {
 

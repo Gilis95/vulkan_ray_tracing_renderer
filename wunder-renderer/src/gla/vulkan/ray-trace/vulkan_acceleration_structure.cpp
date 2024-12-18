@@ -2,7 +2,6 @@
 
 #include <cstring>
 
-#include "assets/components/mesh_asset.h"
 #include "core/wunder_macros.h"
 #include "gla/vulkan/ray-trace/vulkan_acceleration_structure_build_info.h"
 #include "gla/vulkan/vulkan_buffer.h"
@@ -13,6 +12,7 @@
 #include "gla/vulkan/vulkan_layer_abstraction_factory.h"
 #include "gla/vulkan/vulkan_renderer.h"
 #include "gla/vulkan/vulkan_types.h"
+#include "include/assets/mesh_asset.h"
 
 namespace wunder::vulkan {
 acceleration_structure::acceleration_structure() = default;

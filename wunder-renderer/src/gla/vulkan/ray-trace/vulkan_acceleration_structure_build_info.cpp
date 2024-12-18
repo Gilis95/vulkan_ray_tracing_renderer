@@ -4,10 +4,10 @@
 
 #include <cstring>
 
-#include "assets/components/mesh_asset.h"
 #include "gla/vulkan/vulkan_context.h"
 #include "gla/vulkan/vulkan_device.h"
 #include "gla/vulkan/vulkan_layer_abstraction_factory.h"
+#include "include/assets/mesh_asset.h"
 
 namespace wunder::vulkan {
 acceleration_structure_build_info::acceleration_structure_build_info() = default;
