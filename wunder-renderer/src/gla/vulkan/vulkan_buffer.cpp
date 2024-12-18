@@ -12,6 +12,8 @@
 
 namespace wunder::vulkan {
 
+buffer::buffer() : buffer({.m_enabled = false}) {}
+
 buffer::buffer(descriptor_build_data descriptor_build_data)
     : m_descriptor_build_data(std::move(descriptor_build_data)) {}
 
@@ -51,9 +53,10 @@ void buffer::bind(renderer& renderer) /*override*/
   context& vulkan_context =
       layer_abstraction_factory::instance().get_vulkan_context();
   auto& device = vulkan_context.get_device();
-  VkBufferDeviceAddressInfo info = {};
+  VkBufferDeviceAddressInfo info;
+  std::memset(&info, 0, sizeof(VkBufferDeviceAddressInfo));
+
   info.sType = VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO;
-  info.pNext = nullptr;
   info.buffer = m_vk_buffer;
 
   return vkGetBufferDeviceAddress(device.get_vulkan_logical_device(), &info);

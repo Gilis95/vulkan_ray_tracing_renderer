@@ -14,10 +14,10 @@
 namespace wunder {
 class asset_storage {
  public:
-  [[nodiscard]] asset_handle add_asset(asset&& asset);
+  asset_handle add_asset(asset&& asset);
 
   template <typename asset_type>
-  optional_const_ref<asset_type> get_asset(asset_handle handle) const;
+  optional_const_ref<asset_type> find_asset(asset_handle handle) const;
 
   template <typename asset_type>
   vector_map<asset_handle, const_ref<asset_type>> find_assets_of() const;
@@ -27,7 +27,7 @@ class asset_storage {
 };
 
 template <typename asset_type>
-optional_ref<const asset_type> asset_storage::get_asset(
+optional_const_ref<asset_type> asset_storage::find_asset(
     asset_handle handle) const {
   auto found_asset_it = m_assets.find(handle);
   ReturnIf(found_asset_it == m_assets.end(), std::nullopt);

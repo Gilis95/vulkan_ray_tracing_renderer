@@ -25,6 +25,8 @@ class write_descriptor_creator {
   VkWriteDescriptorSet operator()(
       const std::vector<VkDescriptorImageInfo>& resource) {
     VkWriteDescriptorSet result;
+    std::memset(&result, 0, sizeof (VkWriteDescriptorSet));
+
     result.descriptorCount = resource.size();
     result.pImageInfo = resource.data();
 
@@ -34,6 +36,8 @@ class write_descriptor_creator {
   VkWriteDescriptorSet operator()(
       const std::vector<VkDescriptorBufferInfo>& resource) {
     VkWriteDescriptorSet result;
+    std::memset(&result, 0, sizeof (VkWriteDescriptorSet));
+
     result.descriptorCount = resource.size();
     result.pBufferInfo = resource.data();
 
@@ -42,6 +46,8 @@ class write_descriptor_creator {
 
   VkWriteDescriptorSet operator()(std::vector<VkBufferView>& resource) {
     VkWriteDescriptorSet result;
+    std::memset(&result, 0, sizeof (VkWriteDescriptorSet));
+
     result.descriptorCount = resource.size();
     result.pTexelBufferView = resource.data();
 
@@ -51,6 +57,7 @@ class write_descriptor_creator {
   VkWriteDescriptorSet operator()(
       std::vector<VkAccelerationStructureKHR>& resources) {
     VkWriteDescriptorSet result;
+    std::memset(&result, 0, sizeof (VkWriteDescriptorSet));
     ReturnIf(resources.empty(), result);
 
     // TODO:: this is a workaround. However currently it has no impacts
@@ -58,12 +65,17 @@ class write_descriptor_creator {
     //  descriptors of this type, placed in separate bindings
     static VkWriteDescriptorSetAccelerationStructureKHR
         descriptor_set_acceleration_structure;
+    std::memset(&descriptor_set_acceleration_structure, 0,
+                sizeof(VkWriteDescriptorSetAccelerationStructureKHR));
 
+    descriptor_set_acceleration_structure.sType =
+        VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET_ACCELERATION_STRUCTURE_KHR;
     descriptor_set_acceleration_structure.accelerationStructureCount =
         resources.size();
     descriptor_set_acceleration_structure.pAccelerationStructures =
         resources.data();
 
+    result.descriptorCount = descriptor_set_acceleration_structure.accelerationStructureCount;
     result.pNext = &descriptor_set_acceleration_structure;
     return result;
   }
@@ -125,13 +137,15 @@ void descriptor_set_manager::bake() {
     for (auto& [descriptor_set_bind_identifier, vulkan_resource] :
          descriptor_bindings.m_bindings) {
       VkWriteDescriptorSet result =
-          std::visit(descriptor_creator, vulkan_resource);
+          std::visit(descriptor_creator, vulkan_resource.m_resources);
+      result.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
       result.dstSet = m_descriptor_sets[descriptor_set_identifier];
       result.dstBinding = descriptor_set_bind_identifier;
+      result.descriptorType = vulkan_resource.m_descriptor_type;
       // TODO:: No support for descriptors append at the moment
       result.dstArrayElement = 0;
 
-      write_descriptors.emplace_back(result);
+      write_descriptors.emplace_back(std::move(result));
     }
 
     if (!write_descriptors.empty()) {

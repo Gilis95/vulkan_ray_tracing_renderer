@@ -137,32 +137,24 @@ void try_parse_aabb(const tinygltf::Model& gltf_scene_root,
           .accessors[gltf_primitive.attributes.find("POSITION")->second];
 
   if (!accessor.minValues.empty()) {
-    mesh_asset.m_bounding_box.min = glm::vec3(
+    mesh_asset.m_bounding_box.m_min = glm::vec3(
         accessor.minValues[0], accessor.minValues[1], accessor.minValues[2]);
   } else {
-    mesh_asset.m_bounding_box.min =
+    mesh_asset.m_bounding_box.m_min =
         glm::vec3(std::numeric_limits<float>::max());
     for (const auto& vertex : mesh_asset.m_verticies) {
-      for (int i = 0; i < 3; i++) {
-        if (vertex.m_position[i] < mesh_asset.m_bounding_box.min[i]) {
-          mesh_asset.m_bounding_box.min[i] = vertex.m_position[i];
-        }
-      }
+      mesh_asset.m_bounding_box.insert(vertex.m_position);
     }
   }
 
   if (!accessor.maxValues.empty()) {
-    mesh_asset.m_bounding_box.max = glm::vec3(
+    mesh_asset.m_bounding_box.m_max = glm::vec3(
         accessor.maxValues[0], accessor.maxValues[1], accessor.maxValues[2]);
   } else {
-    mesh_asset.m_bounding_box.max =
+    mesh_asset.m_bounding_box.m_max =
         glm::vec3(-std::numeric_limits<float>::max());
     for (const auto& vertex : mesh_asset.m_verticies) {
-      for (int i = 0; i < 3; i++) {
-        if (vertex.m_position[i] > mesh_asset.m_bounding_box.max[i]) {
-          mesh_asset.m_bounding_box.max[i] = vertex.m_position[i];
-        }
-      }
+      mesh_asset.m_bounding_box.insert(vertex.m_position);
     }
   }
 }
@@ -201,6 +193,7 @@ void try_parse_mesh_tangents(const tinygltf::Model& gltf_scene_root,
                              const tinygltf::Primitive& gltf_primitive,
                              mesh_asset& mesh_asset) {
   std::vector<glm::vec4> tangents;
+  //TODO:: GENERATE tangent in case it's missing
   ReturnUnless(tinygltf::utils::get_attribute<glm::vec4>(
       gltf_scene_root, gltf_primitive, tangents, "TANGENT"));
 

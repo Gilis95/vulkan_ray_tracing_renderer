@@ -8,17 +8,20 @@
 namespace wunder{
 struct aabb
 {
-  glm::vec3 min, max;
-
+ public:
   aabb()
-      : min(0.0f), max(0.0f) {}
+      : m_min(0.0f), m_max(0.0f) {}
 
   aabb(const glm::vec3& min, const glm::vec3& max)
-      : min(min), max(max) {}
+      : m_min(min), m_max(max) {}
+ public:
+  [[nodiscard]] glm::vec3 size()  const { return m_max - m_min; }
+  [[nodiscard]] glm::vec3 center() const { return m_min + size() * 0.5f; }
 
-  glm::vec3 size()  const { return max - min; }
-  glm::vec3 center() const { return min + size() * 0.5f; }
-
+  void insert(const glm::vec3& vertex);
+  void insert(const aabb& box);
+ public:
+  glm::vec3 m_min, m_max;
 };
 
 }

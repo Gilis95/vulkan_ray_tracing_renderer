@@ -19,7 +19,8 @@ acceleration_structure::acceleration_structure() = default;
 
 acceleration_structure::acceleration_structure(
     acceleration_structure&& other) noexcept
-    : ::wunder::vulkan::shader_resource::instance::acceleration_structure(std::move(other)),
+    : ::wunder::vulkan::shader_resource::instance::acceleration_structure(
+          std::move(other)),
       m_acceleration_structure_buffer(
           std::move(other.m_acceleration_structure_buffer)) {
   other.m_descriptor = VK_NULL_HANDLE;
@@ -51,13 +52,15 @@ void acceleration_structure::create_acceleration_structure(
 
   // Allocating the buffer to hold the acceleration structure
   m_acceleration_structure_buffer =
-      device_buffer(
-      acceleration_structure_size,
-      VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_STORAGE_BIT_KHR |
-          VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT);
+      device_buffer({.m_enabled = false}, acceleration_structure_size,
+                    VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_STORAGE_BIT_KHR |
+                        VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT);
 
-  VkAccelerationStructureCreateInfoKHR acceleration_structure_create_info{
-      VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_CREATE_INFO_KHR};
+  VkAccelerationStructureCreateInfoKHR acceleration_structure_create_info;
+  std::memset(&acceleration_structure_create_info, 0,
+              sizeof(VkAccelerationStructureCreateInfoKHR));
+  acceleration_structure_create_info.sType =
+      VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_CREATE_INFO_KHR;
   acceleration_structure_create_info.type = acceleration_structure_type;
   acceleration_structure_create_info.size = acceleration_structure_size;
   acceleration_structure_create_info.buffer =
@@ -110,8 +113,9 @@ VkDeviceAddress acceleration_structure::get_address() {
       layer_abstraction_factory::instance().get_vulkan_context();
   auto& device = vulkan_context.get_device();
 
-  VkAccelerationStructureDeviceAddressInfoKHR info{
-      VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_DEVICE_ADDRESS_INFO_KHR};
+  VkAccelerationStructureDeviceAddressInfoKHR info;
+  std::memset(&info, 0, sizeof(VkAccelerationStructureDeviceAddressInfoKHR));
+  info.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_DEVICE_ADDRESS_INFO_KHR;
   info.accelerationStructure = m_descriptor;
   return vkGetAccelerationStructureDeviceAddressKHR(
       device.get_vulkan_logical_device(), &info);

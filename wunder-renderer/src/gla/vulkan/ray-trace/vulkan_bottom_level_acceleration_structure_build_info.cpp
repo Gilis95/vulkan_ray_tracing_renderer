@@ -14,9 +14,9 @@
 
 namespace wunder::vulkan {
 bottom_level_acceleration_structure_build_info::
-    bottom_level_acceleration_structure_build_info(
-        const mesh_asset& mesh, const buffer& vertex_buffer,
-        const buffer& index_buffer) {
+    bottom_level_acceleration_structure_build_info(const mesh_asset& mesh,
+                                                   const buffer& vertex_buffer,
+                                                   const buffer& index_buffer) {
   clear_geometry_data();
   create_geometry_data(mesh, vertex_buffer, index_buffer);
 
@@ -38,41 +38,30 @@ bottom_level_acceleration_structure_build_info::
  * We're covering only triangle meshes for the moment.
  * TODO:: implement procedural geometries, such as spheres
  */
-void bottom_level_acceleration_structure_build_info::
-    create_geometry_data(const mesh_asset& mesh,
-                         const buffer& vertex_buffer,
-                         const buffer& index_buffer) {  // Building part
-  context& vulkan_context =
-      layer_abstraction_factory::instance().get_vulkan_context();
-  auto& device = vulkan_context.get_device();
-
-  VkBufferDeviceAddressInfo info{VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO};
-  info.buffer = vertex_buffer.get_buffer();
-  VkDeviceAddress vertexAddress =
-      vkGetBufferDeviceAddress(device.get_vulkan_logical_device(), &info);
-  info.buffer = index_buffer.get_buffer();
-  VkDeviceAddress indexAddress =
-      vkGetBufferDeviceAddress(device.get_vulkan_logical_device(), &info);
-
-  VkAccelerationStructureGeometryTrianglesDataKHR triangles;
-  std::memset(&triangles, 0,
-              sizeof(VkAccelerationStructureGeometryTrianglesDataKHR));
-  triangles.sType =
-      VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_TRIANGLES_DATA_KHR;
-  triangles.vertexFormat = VK_FORMAT_R32G32B32_SFLOAT;
-  triangles.vertexData.deviceAddress = vertexAddress;
-  triangles.vertexStride = sizeof(VertexAttributes);
-  triangles.indexType = VK_INDEX_TYPE_UINT32;
-  triangles.indexData.deviceAddress = indexAddress;
-  triangles.maxVertex = mesh.m_verticies.size();
+void bottom_level_acceleration_structure_build_info::create_geometry_data(
+    const mesh_asset& mesh, const buffer& vertex_buffer,
+    const buffer& index_buffer) {  // Building part
+  VkDeviceAddress vertexAddress =vertex_buffer.get_address();
+  VkDeviceAddress indexAddress = index_buffer.get_address();
   // triangles.transformData = ({});
 
   // Setting up the build info of the acceleration
+  std::memset(&m_as_geometry, 0, sizeof(VkAccelerationStructureGeometryKHR));
   m_as_geometry.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_KHR;
   m_as_geometry.geometryType = VK_GEOMETRY_TYPE_TRIANGLES_KHR;
   m_as_geometry.flags =
       VK_GEOMETRY_NO_DUPLICATE_ANY_HIT_INVOCATION_BIT_KHR;  // For AnyHit
-  m_as_geometry.geometry.triangles = triangles;
+
+  std::memset(&m_as_geometry.geometry.triangles, 0,
+              sizeof(VkAccelerationStructureGeometryTrianglesDataKHR));
+  m_as_geometry.geometry.triangles.sType =
+      VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_TRIANGLES_DATA_KHR;
+  m_as_geometry.geometry.triangles.vertexFormat = VK_FORMAT_R32G32B32_SFLOAT;
+  m_as_geometry.geometry.triangles.vertexData.deviceAddress = vertexAddress;
+  m_as_geometry.geometry.triangles.vertexStride = sizeof(VertexAttributes);
+  m_as_geometry.geometry.triangles.indexType = VK_INDEX_TYPE_UINT32;
+  m_as_geometry.geometry.triangles.indexData.deviceAddress = indexAddress;
+  m_as_geometry.geometry.triangles.maxVertex = mesh.m_verticies.size();
 }
 
 }  // namespace wunder::vulkan

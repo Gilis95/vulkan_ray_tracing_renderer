@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "assets/scene_node.h"
+#include "core/aabb.h"
 
 namespace wunder {
 
@@ -24,8 +25,12 @@ class scene_asset {
   [[nodiscard]] std::vector<std::reference_wrapper<const scene_node>>
   filter_nodes() const;
 
+  [[nodiscard]] aabb& mutable_aabb() { return m_aabb; }
+  [[nodiscard]] const aabb& get_aabb() const { return m_aabb; }
+
  private:
   std::vector<scene_node> m_scene_nodes;
+  aabb m_aabb;
 };
 
 template <typename visitor_type>

@@ -92,7 +92,7 @@ struct storage_images : public base {};
 struct acceleration_structure : public base {
   acceleration_structure();
   acceleration_structure(acceleration_structure&& other) noexcept;
-  VkAccelerationStructureKHR m_descriptor;
+  VkAccelerationStructureKHR m_descriptor = VK_NULL_HANDLE;
 };
 
 using element = std::variant<std::reference_wrapper<uniform_buffer>,
@@ -112,15 +112,31 @@ using resource_list =
 
 }  // namespace shader_resource
 
+struct vulkan_descriptor_binding {
+ public:
+  void emplace_resource(const shader_resource::instance::element& resource);
+  void clear_resources();
+
+ private:
+  void initialize_if_empty(
+      shader_resource::instance::resource_list default_value,
+      VkDescriptorType descriptor_type);
+
+ public:
+  VkDescriptorType m_descriptor_type = VK_DESCRIPTOR_TYPE_MAX_ENUM;
+  shader_resource::instance::resource_list m_resources;
+};
+
 struct vulkan_descriptor_bindings {
  public:
   using container_type =
       std::unordered_map<vulkan_descriptor_set_bind_identifier,
-                         shader_resource::instance::resource_list>;
+                         vulkan_descriptor_binding>;
 
  public:
-  void emplace_resource(vulkan_descriptor_set_bind_identifier acceleration_structure,
-                        const shader_resource::instance::element& resource);
+  void emplace_resource(
+      vulkan_descriptor_set_bind_identifier acceleration_structure,
+      const shader_resource::instance::element& resource);
   void clear_resource(vulkan_descriptor_set_bind_identifier bind_identifier);
 
  public:

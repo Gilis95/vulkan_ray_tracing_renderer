@@ -44,7 +44,7 @@ class asset_manager {
 template <typename asset_type>
 optional_const_ref<asset_type> asset_manager::find_asset(
     asset_handle handle) const {
-  return m_asset_storage.get_asset<asset_type>(handle);
+  return m_asset_storage.find_asset<asset_type>(handle);
 }
 
 template <typename asset_type, typename input_iterator>
@@ -58,7 +58,7 @@ assets<asset_type> asset_manager::find_assets(input_iterator begin,
 
     ContinueUnless(handle.is_valid());
 
-    auto maybe_asset = m_asset_storage.get_asset<asset_type>(handle);
+    auto maybe_asset = m_asset_storage.find_asset<asset_type>(handle);
     AssertContinueUnless(maybe_asset.has_value());
 
     const_ref<asset_type> asset = *maybe_asset;

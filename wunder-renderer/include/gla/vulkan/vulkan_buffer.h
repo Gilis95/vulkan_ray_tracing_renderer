@@ -11,7 +11,7 @@ namespace wunder::vulkan {
 class renderer;
 
 class buffer : public non_copyable,
-               public vulkan::shader_resource::instance::storage_buffers {
+               public wunder::vulkan::shader_resource::instance::storage_buffers {
  public:
   struct descriptor_build_data {
     bool m_enabled = false;
@@ -19,7 +19,8 @@ class buffer : public non_copyable,
   };
 
  public:
-  buffer(descriptor_build_data descriptor_build_data);
+  buffer();
+  explicit buffer(descriptor_build_data descriptor_build_data);
   virtual ~buffer();
 
  public:

@@ -91,21 +91,26 @@ void top_level_acceleration_structure_build_info::
       acceleration_structures_instances.data();
   unsigned long size = acceleration_structures_instances.size() *
                        sizeof(VkAccelerationStructureInstanceKHR);
-  VkBufferUsageFlagBits flags = VkBufferUsageFlagBits(
+  auto flags = VkBufferUsageFlagBits(
       VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT |
       VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR);
+
   m_acceleration_structures_buffers = std::make_unique<device_buffer>(
       buffer::descriptor_build_data{.m_enabled = false}, data, size, flags);
 }
 
 void top_level_acceleration_structure_build_info::create_geometry_data(
     std::uint32_t acceleration_structure_instances_count) {
-  VkAccelerationStructureGeometryInstancesDataKHR geometryInstances{
-      VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_INSTANCES_DATA_KHR};
+  VkAccelerationStructureGeometryInstancesDataKHR geometryInstances;
+  std::memset(&geometryInstances, 0,
+              sizeof(VkAccelerationStructureGeometryInstancesDataKHR));
+  geometryInstances.sType =
+      VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_INSTANCES_DATA_KHR;
   geometryInstances.data.deviceAddress =
       m_acceleration_structures_buffers->get_address();
 
   // Set up the geometry to use instance data.
+  std::memset(&m_as_geometry, 0, sizeof(VkAccelerationStructureGeometryKHR));
   m_as_geometry.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_KHR;
   m_as_geometry.geometryType = VK_GEOMETRY_TYPE_INSTANCES_KHR;
   m_as_geometry.geometry.instances = geometryInstances;

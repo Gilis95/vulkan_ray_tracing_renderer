@@ -182,7 +182,7 @@ unique_ptr<buffer> meshes_helper::create_mesh_instances_buffer(
 
   return std::make_unique<device_buffer>(
       buffer::descriptor_build_data{.m_enabled = true,
-                                    .m_descriptor_name = "geoInfo"},
+                                    .m_descriptor_name = "_InstanceInfo"},
       instances.data(), instances.size() * sizeof(InstanceData),
       VK_BUFFER_USAGE_STORAGE_BUFFER_BIT |
           VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT);

@@ -42,8 +42,7 @@ void shader_binding_table::initialize(const pipeline& pipeline) {
   create_sbt_buffer(shader_stages_handles);
 }
 
-void shader_binding_table::initialize_shader_indices(
-    const pipeline& pipeline) {
+void shader_binding_table::initialize_shader_indices(const pipeline& pipeline) {
   for (auto& i : m_shader_handles_indeces) i = {};
 
   const auto& info = pipeline.get_pipeline_create_info();
@@ -76,7 +75,7 @@ void shader_binding_table::initialize_shader_indices(
 std::array<std::vector<uint8_t>, 4>
 shader_binding_table::create_shader_stages_handles(
     const pipeline& pipeline) {  // Fetch all the shader handles used in
-                                        // the pipeline, so that they can be
+                                 // the pipeline, so that they can be
 
   // Get the total number of groups and handle index position
   const auto& pipeline_create_info = pipeline.get_pipeline_create_info();
@@ -161,10 +160,10 @@ void shader_binding_table::create_sbt_buffer(
     auto& shader_stage_handles = shader_stages_handles[i];
     ContinueIf(shader_stage_handles.empty());
     m_shader_group_buffers[i] = std::move(
-        device_buffer(shader_stage_handles.data(),
-                             shader_stage_handles.size() * sizeof(uint8_t),
-                             VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT |
-                                 VK_BUFFER_USAGE_SHADER_BINDING_TABLE_BIT_KHR));
+        device_buffer({.m_enabled = false}, shader_stage_handles.data(),
+                      shader_stage_handles.size() * sizeof(uint8_t),
+                      VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT |
+                          VK_BUFFER_USAGE_SHADER_BINDING_TABLE_BIT_KHR));
 
     set_debug_utils_object_name(device.get_vulkan_logical_device(),
                                 std::format("shader_binding_table:{}", i),
@@ -172,4 +171,4 @@ void shader_binding_table::create_sbt_buffer(
   }
 }
 
-}  // namespace wunder
+}  // namespace wunder::vulkan

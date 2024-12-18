@@ -83,7 +83,6 @@ asset_serialization_result_codes gltf_asset_importer::import_asset(
   auto mesh_id_to_mesh_primitives =
       import_meshes(gltf_model, materials_map, out_storage);
 
-  scene_asset scene;
   auto result = import_scenes(gltf_model, mesh_id_to_mesh_primitives,
                               cameras_map, lights_map, out_storage);
   return result;
@@ -231,6 +230,11 @@ asset_serialization_result_codes import_scenes(
         for (auto mesh_handle : primitives_it->second) {
           mesh_component mesh_component;
           mesh_component.m_handle = mesh_handle;
+
+          auto maybe_mesh_asset = out_storage.find_asset<mesh_asset>(mesh_handle);
+          AssertContinueUnless(maybe_mesh_asset);
+
+          scene.mutable_aabb().insert(maybe_mesh_asset->get().m_bounding_box);
 
           scene_node node;
           node.add_component(
