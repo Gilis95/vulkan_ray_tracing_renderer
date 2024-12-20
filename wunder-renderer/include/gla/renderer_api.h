@@ -1,6 +1,7 @@
 #ifndef RENDERER_API_H
 #define RENDERER_API_H
 
+#include "core/time_unit.h"
 namespace wunder {
 
 struct renderer_properties;
@@ -13,7 +14,7 @@ class renderer_api {
  public:
   void init(const renderer_properties& properties);
 
-  virtual void update(int dt) = 0;
+  virtual void update(time_unit dt) = 0;
 
   virtual const renderer_capabilities& get_capabilities() const = 0;
  protected:

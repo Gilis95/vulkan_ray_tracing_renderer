@@ -28,6 +28,7 @@ class glfw_window : public window {
 
  private:
   GLFWwindow *m_window;
+  void init_input_event_listeners();
 };
 }  // namespace wunder
 

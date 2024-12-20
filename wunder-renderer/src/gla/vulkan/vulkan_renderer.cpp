@@ -116,7 +116,7 @@ void renderer::create_descriptor_manager(const shader &shader) {
   m_pipeline->create_pipeline_layout(shader);
 }
 
-void renderer::update(int dt) /*override*/
+void renderer::update(time_unit dt) /*override*/
 {
   auto graphic_command_buffer = layer_abstraction_factory::instance()
                                     .get_vulkan_context()

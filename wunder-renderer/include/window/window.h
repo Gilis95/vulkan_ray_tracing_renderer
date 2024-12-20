@@ -4,6 +4,8 @@
 #include <cstdint>
 #include <vector>
 
+#include "core/time_unit.h"
+
 namespace wunder::vulkan{
 
 struct vulkan_extensions {
@@ -26,7 +28,7 @@ class window {
  public:
   virtual void init(const window_properties &) = 0;
 
-  virtual void update(int dt) = 0;
+  virtual void update(time_unit dt) = 0;
 
   virtual void shutdown() = 0;
 

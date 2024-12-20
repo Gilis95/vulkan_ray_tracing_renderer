@@ -5,6 +5,7 @@
 #include "application_properties.h"
 #include "assets/scene_asset.h"
 #include "core/project.h"
+#include "core/services_factory.h"
 #include "core/wunder_macros.h"
 #include "event/event_handler.hpp"
 #include "gla/vulkan/vulkan_layer_abstraction_factory.h"
@@ -45,6 +46,7 @@ void application::initialize() {
   vulkan::layer_abstraction_factory::instance().initialize(
       m_properties->m_renderer_properties);
   project::instance().initialize();
+  service_factory::instance().initialize();
 
   initialize_internal();
 }
@@ -58,18 +60,26 @@ void application::run() {
   auto &window = window_factory::instance().get_window();
   auto &gla = vulkan::layer_abstraction_factory::instance();
   auto &renderers = gla.get_renderers();
+  auto& service_factory = service_factory::instance();
 
+  time_unit frame_end = time_unit::from_current_time_in_miliseconds();
   while (m_is_running) {
-    window.update(0);
+    time_unit frame_start = time_unit::from_current_time_in_miliseconds();
+    time_unit frame_duration = frame_start - frame_end;
+
+
+    window.update(frame_duration);
     for (auto &[_, renderer] : renderers) {
-      renderer->update(0);
+      renderer->update(frame_duration);
     }
     FrameMark;
+
+    frame_end = frame_start;
   }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void application::on_event(const window_close_event &) /*override*/
+void application::on_event(const wunder::event::window_close_event &) /*override*/
 {
   m_is_running = false;
 }

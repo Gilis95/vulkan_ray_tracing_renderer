@@ -107,7 +107,7 @@ START_ENUM(DebugMode)
 END_ENUM();
 // clang-format on
 
-// Camera of the scene
+// properties of the scene
 struct SceneCamera {
   mat4 viewInverse;
   mat4 projInverse;

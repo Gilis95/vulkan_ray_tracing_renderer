@@ -133,11 +133,50 @@ constexpr bool is_subset_of<std::tuple<Ts...>, std::tuple<Us...>> =
     (contains<Ts, Us...> && ...);
 
 // helper type for the visitor
-template<class... Ts>
-struct overloaded : Ts... { using Ts::operator()...; };
+template <class... Ts>
+struct overloaded : Ts... {
+  using Ts::operator()...;
+};
 // explicit deduction guide (not needed as of C++20)
-template<class... Ts>
+template <class... Ts>
 overloaded(Ts...) -> overloaded<Ts...>;
+
+#define DEFINE_ENUM_FLAG_OPERATIONS(T, base_type)      \
+  inline T operator~(T a) {                            \
+    return static_cast<T>(~static_cast<base_type>(a)); \
+  }                                                    \
+  inline T operator|(T a, T b) {                       \
+    return static_cast<T>(static_cast<base_type>(a) |  \
+                          static_cast<base_type>(b));  \
+  }                                                    \
+  inline T operator&(T a, T b) {                       \
+    return static_cast<T>(static_cast<base_type>(a) &  \
+                          static_cast<base_type>(b));  \
+  }                                                    \
+  inline T operator^(T a, T b) {                       \
+    return static_cast<T>(static_cast<base_type>(a) ^  \
+                          static_cast<base_type>(b));  \
+  }                                                    \
+  inline T& operator|=(T& a, T b) {                    \
+    a = (a) | (b);                                     \
+    return a;                                          \
+  }                                                    \
+  inline T& operator&=(T& a, T b) {                    \
+    a = (a) & (b);                                     \
+    return a;                                          \
+  }                                                    \
+  inline T& operator^=(T& a, T b) {                    \
+    a = (a) ^ (b);                                     \
+    return a;                                          \
+  }
+
+inline double get_system_time() {
+  auto now(std::chrono::system_clock::now());
+  auto duration = now.time_since_epoch();
+  return std::chrono::duration_cast<std::chrono::microseconds>(duration)
+             .count() /
+         1000.0;
+}
 
 }  // namespace wunder
 

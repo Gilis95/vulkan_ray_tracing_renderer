@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "core/non_copyable.h"
+#include "core/time_unit.h"
 #include "core/vector_map.h"
 #include "core/wunder_memory.h"
 #include "event/event_handler.h"
@@ -41,7 +42,7 @@ class renderer : public renderer_api, public event_handler<scene_activated>, pub
   [[nodiscard]] const renderer_capabilities& get_capabilities() const override;
   descriptor_set_manager& get_descriptor_set_manager();
 
-  void update(int dt) override;
+  void update(time_unit dt) override;
 
  protected:
   void init_internal(const renderer_properties& properties) override;

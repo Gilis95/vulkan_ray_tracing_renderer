@@ -5,8 +5,8 @@
 #ifndef WUNDER_WUNDER_RENDERER_INCLUDE_EVENT_WINDOW_EVENTS_H_
 #define WUNDER_WUNDER_RENDERER_INCLUDE_EVENT_WINDOW_EVENTS_H_
 
-struct window_close_event {
+namespace wunder::event {
+struct window_close_event {};
+}  // namespace wunder::event
 
-};
-
-#endif //WUNDER_WUNDER_RENDERER_INCLUDE_EVENT_WINDOW_EVENTS_H_
+#endif  // WUNDER_WUNDER_RENDERER_INCLUDE_EVENT_WINDOW_EVENTS_H_

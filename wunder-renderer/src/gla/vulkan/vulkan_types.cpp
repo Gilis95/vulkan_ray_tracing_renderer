@@ -95,26 +95,23 @@ void vulkan_descriptor_binding::initialize_if_empty(
 }
 void vulkan_descriptor_binding::clear_resources() {
   // @formatter:off
+  // clang-format off
   std::visit(
       overloaded{
-          // @formatter:off
           [](std::vector<VkDescriptorImageInfo>& descriptors) {
-            // @formatter:off
             descriptors.clear();
           },
-          // @formatter:off
           [](std::vector<VkDescriptorBufferInfo>& descriptors) {
-            // @formatter:off
             descriptors.clear();
           },
-          // @formatter:off
-          [](std::vector<VkBufferView>& descriptors) { descriptors.clear(); },
-          // @formatter:off
+          [](std::vector<VkBufferView>& descriptors) {
+            descriptors.clear();
+          },
           [](std::vector<VkAccelerationStructureKHR>& descriptors) {
-            // @formatter:off
             descriptors.clear();
           }},
       m_resources);
+  // clang-format on
   // @formatter:on
 
   m_descriptor_type = VK_DESCRIPTOR_TYPE_MAX_ENUM;
