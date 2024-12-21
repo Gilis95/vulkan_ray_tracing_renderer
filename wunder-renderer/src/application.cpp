@@ -17,7 +17,7 @@
 namespace wunder {
 /////////////////////////////////////////////////////////////////////////////////////////
 application::application(application_properties &&properties)
-    : event_handler<window_close_event>(),
+    : event_handler<wunder::event::window_close_event>(),
       m_is_running(false),
       m_properties(
           std::make_unique<application_properties>(std::move(properties))) {}

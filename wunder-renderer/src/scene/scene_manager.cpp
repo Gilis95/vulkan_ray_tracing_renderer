@@ -18,13 +18,23 @@ scene_manager::scene_manager() : event_handler<asset_loaded>() {}
 
 scene_manager::~scene_manager() /*override*/ = default;
 
-optional_ref<vulkan::scene> scene_manager::get_api_scene(scene_id id) {
+optional_ref<vulkan::scene> scene_manager::mutable_api_scene(scene_id id) {
   static optional_ref<vulkan::scene> s_empty = std::nullopt;
 
   auto found_active_scene_it = m_active_scenes.find(id);
   return found_active_scene_it == m_active_scenes.end()
              ? s_empty
              : found_active_scene_it->second;
+}
+
+optional_const_ref<scene_asset> scene_manager::get_scene_asset(
+    scene_id id) const {
+  static optional_ref<scene_asset> s_empty = std::nullopt;
+
+  auto found_scene_asset_it = m_loaded_scenes.find(id);
+  ReturnIf(found_scene_asset_it == m_loaded_scenes.end(), s_empty);
+
+  return found_scene_asset_it->second;
 }
 
 bool scene_manager::activate_scene(scene_id id) {
@@ -41,7 +51,7 @@ bool scene_manager::activate_scene(scene_id id) {
   scene.load_scene(found_scene_asset_it->second);
   scene_id = id;
 
-  event_controller::on_event<scene_activated>({scene_id});
+  event_controller::on_event<wunder::event::scene_activated>({scene_id});
 
   return true;
 }
@@ -65,7 +75,7 @@ void scene_manager::on_event(
   m_loaded_scenes.emplace_back(
       std::make_pair(scene_id, maybe_scene_asset.value().get()));
 
-  event_controller::on_event<scene_loaded>({scene_id});
+  event_controller::on_event<wunder::event::scene_loaded>({scene_id});
 }
 
 }  // namespace wunder

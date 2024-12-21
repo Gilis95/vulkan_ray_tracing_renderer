@@ -14,12 +14,11 @@
 #include "event/event_handler.h"
 #include "gla/renderer_api.h"
 
-namespace wunder{
+namespace wunder::event {
 struct scene_activated;
 }
 
 namespace wunder::vulkan {
-
 
 class descriptor_set_manager;
 class shader;
@@ -32,9 +31,12 @@ struct shader_to_compile {
   bool m_optional = true;
 };
 
-class renderer : public renderer_api, public event_handler<scene_activated>, public non_copyable {
+class renderer : public renderer_api,
+                 public event_handler<wunder::event::scene_activated>,
+                 public non_copyable {
  public:
   renderer();
+
  public:
   ~renderer() override;
 
@@ -53,16 +55,14 @@ class renderer : public renderer_api, public event_handler<scene_activated>, pub
   void create_descriptor_manager(const shader& shader);
 
  public:
-   void on_event(const scene_activated&) override;
-
+  void on_event(const wunder::event::scene_activated&) override;
 
  private:
   VkSurfaceKHR m_surface = VK_NULL_HANDLE;  // Vulkan window surface
-  vector_map<VkShaderStageFlagBits, std::vector<unique_ptr<shader>>>
-      m_shaders;
+  vector_map<VkShaderStageFlagBits, std::vector<unique_ptr<shader>>> m_shaders;
   unique_ptr<descriptor_set_manager> m_descriptor_set_manager;
   unique_ptr<pipeline> m_pipeline;
   unique_ptr<shader_binding_table> m_shader_binding_table;
 };
-}  // namespace wunder
+}  // namespace wunder::vulkan
 #endif /* VULKAN_RENDERER_H */

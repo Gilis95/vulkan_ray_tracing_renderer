@@ -18,7 +18,7 @@ namespace wunder {
 
 wunder_application::wunder_application(application_properties&& properties)
     : application(std::move(properties)),
-      event_handler<scene_loaded>()
+      event_handler<wunder::event::scene_loaded>()
 {}
 
 wunder_application::~wunder_application() /*override*/ = default;
@@ -47,7 +47,7 @@ application* create_application() {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void wunder_application::on_event(
-    const scene_loaded& scene_loaded_event) /*override*/
+    const wunder::event::scene_loaded& scene_loaded_event) /*override*/
 {
   project::instance().get_scene_manager().activate_scene(
       scene_loaded_event.m_id);

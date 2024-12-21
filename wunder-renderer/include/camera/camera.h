@@ -31,12 +31,22 @@
 #include "core/input.h"
 #include "core/time_unit.h"
 #include "event/event_handler.h"
-#include "event/input_events.h"
+
+namespace wunder::event {
+struct scene_activated;
+namespace mouse {
+struct move;
+struct scroll;
+}  // namespace mouse
+}  // namespace wunder::event
 
 namespace wunder {
 
 class camera : private event_handler<wunder::event::mouse::move>,
-               private event_handler<wunder::event::mouse::scroll> {
+               private event_handler<wunder::event::mouse::scroll>,
+               private event_handler<wunder::event::scene_activated>
+
+{
  public:
   // clang-format off
     enum class modes { examine, fly, walk};
@@ -61,9 +71,12 @@ class camera : private event_handler<wunder::event::mouse::move>,
 
  public:
   camera();
+  ~camera();
+
  public:
   void update(time_unit dt);
   void update_movement(time_unit dt);
+
  public:
   void set_fov(float _fov);
 
@@ -88,6 +101,7 @@ class camera : private event_handler<wunder::event::mouse::move>,
   // Fitting the camera position and interest to see the bounding box
   void fit(const glm::vec3& boxMin, const glm::vec3& boxMax,
            bool instantFit = true, bool tight = false, float aspect = 1.0f);
+
  public:
   // field of view in degrees
   float get_fov() { return m_current.fov; }
@@ -117,7 +131,6 @@ class camera : private event_handler<wunder::event::mouse::move>,
   // Retrieving the current speed
   float get_speed() const { return m_speed; }
 
-
   properties get_camera_properties() const { return m_current; }
 
   // Clip planes
@@ -136,7 +149,7 @@ class camera : private event_handler<wunder::event::mouse::move>,
   // will be updated and can be retrieved calling getMatrix
   void on_event(const wunder::event::mouse::move& event) override;
   void on_event(const wunder::event::mouse::scroll& event) override;
-
+  void on_event(const wunder::event::scene_activated& event) override;
  private:
   // This should be called in an application loop to update the camera matrix if
   // this one is animated: new position, key movement
@@ -145,6 +158,7 @@ class camera : private event_handler<wunder::event::mouse::move>,
   void update_view_matrix() {
     m_view_matrix = glm::lookAt(m_current.eye, m_current.ctr, m_current.up);
   }
+
  private:
   // Main function which is called to apply a camera motion.
   // It is preferable to
@@ -187,7 +201,6 @@ class camera : private event_handler<wunder::event::mouse::move>,
   // Other
   float m_speed = 3.f;
   glm::vec2 m_clip_planes = glm::vec2(0.001f, 100000000.f);
-
 
   modes m_mode;
   std::unordered_map<camera::actions, std::function<void(float dx, float dy)>>

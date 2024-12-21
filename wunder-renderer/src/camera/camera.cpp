@@ -23,8 +23,14 @@
 #include <chrono>
 #include <iostream>
 
+#include "assets/scene_asset.h"
 #include "core/input_manager.h"
+#include "core/project.h"
 #include "core/services_factory.h"
+#include "event/input_events.h"
+#include "event/event_handler.hpp"
+#include "event/scene_events.h"
+#include "scene/scene_manager.h"
 
 namespace wunder {
 namespace {
@@ -32,7 +38,8 @@ auto k_pressed_or_held_key = key_state::pressed | key_state::held;
 }
 
 camera::camera()
-    : event_handler<wunder::event::mouse::move>(),
+    : event_handler<wunder::event::scene_activated>(),
+      event_handler<wunder::event::mouse::move>(),
       event_handler<wunder::event::mouse::scroll>(),
       m_action_fns(
           {{camera::actions::orbit,
@@ -44,6 +51,9 @@ camera::camera()
             [this](float dy, float dx) { orbit(dx, dy, true); }}}) {
   update_view_matrix();
 }
+
+camera::~camera() = default;
+
 
 void camera::update(time_unit dt) {
   update_movement(dt);
@@ -90,7 +100,6 @@ void camera::update_movement(time_unit dt) {
                                     k_pressed_or_held_key)) {
     move(-factor, 0, actions::dolly);
   }
-
 
   if (input_manager.is_key_in_state(wunder::keyboard::key_code::down,
                                     k_pressed_or_held_key)) {
@@ -429,6 +438,16 @@ void camera::on_event(const wunder::event::mouse::scroll& event) /*override*/
     dolly(dx * m_speed, dx * m_speed);
     update_view_matrix();
   }
+}
+
+void camera::on_event(
+    const wunder::event::scene_activated& event) /*override*/ {
+  auto api_scene =
+      project::instance().get_scene_manager().get_scene_asset(event.m_id);
+  AssertReturnUnless(api_scene);
+
+  const aabb& scene_aabb = api_scene->get().get_aabb();
+  fit(scene_aabb.m_min, scene_aabb.m_max);
 }
 
 // Bezier helper functions

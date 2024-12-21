@@ -14,7 +14,7 @@ class asset_manager;
 
 struct application_properties;
 
-class application : private event_handler<window_close_event>{
+class application : private event_handler<wunder::event::window_close_event>{
  public:
   explicit application(application_properties&& properties);
   ~application() override;
@@ -45,7 +45,7 @@ class application : private event_handler<window_close_event>{
 
   //        void PushOverlay(Layer *layer);
  private:
-  void on_event(const window_close_event&) override;
+  void on_event(const wunder::event::window_close_event&) override;
 
  private:
   bool m_is_running;

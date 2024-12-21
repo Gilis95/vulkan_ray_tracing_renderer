@@ -2,7 +2,6 @@
 #define WUNDER_SCENE_MANAGER_H
 
 #include "core/vector_map.h"
-
 #include "event/event_handler.h"
 #include "scene/scene_types.h"
 
@@ -10,22 +9,26 @@ namespace tinygltf {
 class Model;
 }
 
-namespace wunder::vulkan{
+namespace wunder::vulkan {
 class scene;
 }
 
 namespace wunder {
 struct asset_loaded;
 
-class scene_asset;;
+class scene_asset;
+;
 enum class asset_serialization_result_codes;
 
 class scene_manager : public event_handler<asset_loaded> {
  public:
   scene_manager();
   ~scene_manager() override;
+
  public:
-  optional_ref<vulkan::scene> get_api_scene(scene_id id);
+  [[nodiscard]] optional_ref<vulkan::scene> mutable_api_scene(scene_id id);
+  [[nodiscard]] optional_const_ref<scene_asset> get_scene_asset(
+      scene_id id) const;
 
   bool activate_scene(scene_id id);
   bool deactivate_scene(scene_id id);

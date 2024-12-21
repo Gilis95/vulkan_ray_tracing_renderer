@@ -45,7 +45,7 @@ void glfw_window::init(const window_properties &properties) {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void glfw_window::update(int dt) {
+void glfw_window::update(time_unit dt) {
   // poll for process events
   glfwPollEvents();
 
@@ -58,7 +58,8 @@ void glfw_window::shutdown() { glfwTerminate(); }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void glfw_window::on_close(GLFWwindow *window) {
-  event_controller::on_event<window_close_event>(window_close_event{});
+  event_controller::on_event<wunder::event::window_close_event>(
+      wunder::event::window_close_event{});
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -104,7 +105,8 @@ void glfw_window::init_input_event_listeners() {
 
   glfwSetScrollCallback(
       m_window, [](GLFWwindow *window, double x_offset, double y_offset) {
-        wunder::event::mouse::scroll mouse_scrolled_event(glm::vec2(x_offset, y_offset));
+        wunder::event::mouse::scroll mouse_scrolled_event(
+            glm::vec2(x_offset, y_offset));
         event_controller::on_event(mouse_scrolled_event);
       });
 
@@ -118,13 +120,15 @@ void glfw_window::init_input_event_listeners() {
       m_window, [](GLFWwindow *window, int button, int action, int mods) {
         switch (action) {
           case GLFW_PRESS: {
-            wunder::event::mouse::pressed mouse_pressed_event(static_cast< wunder::mouse::key_code>(button));
+            wunder::event::mouse::pressed mouse_pressed_event(
+                static_cast<wunder::mouse::key_code>(button));
             event_controller::on_event(mouse_pressed_event);
 
             break;
           }
           case GLFW_RELEASE: {
-            wunder::event::mouse::released mouse_released_event(static_cast< wunder::mouse::key_code>(button));
+            wunder::event::mouse::released mouse_released_event(
+                static_cast<wunder::mouse::key_code>(button));
             event_controller::on_event(mouse_released_event);
 
             break;

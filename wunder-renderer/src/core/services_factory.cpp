@@ -23,7 +23,7 @@ void service_factory::initialize() {
 }
 
 void service_factory::update(time_unit dt){
-  m_camera.update(dt);
+  m_camera->update(dt);
 }
 
 

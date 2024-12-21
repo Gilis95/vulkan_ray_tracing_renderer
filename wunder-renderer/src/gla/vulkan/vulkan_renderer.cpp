@@ -5,9 +5,10 @@
 #include <optional>
 
 #include "core/project.h"
-#include "event/scene_events.h"
 #include "event/event_handler.hpp"
+#include "event/scene_events.h"
 #include "gla/renderer_capabilities .h"
+#include "gla/vulkan/scene/vulkan_scene.h"
 #include "gla/vulkan/vulkan_context.h"
 #include "gla/vulkan/vulkan_descriptor_set_manager.h"
 #include "gla/vulkan/vulkan_device.h"
@@ -15,13 +16,10 @@
 #include "gla/vulkan/vulkan_pipeline.h"
 #include "gla/vulkan/vulkan_shader.h"
 #include "gla/vulkan/vulkan_shader_binding_table.h"
-#include "gla/vulkan/scene/vulkan_scene.h"
 #include "scene/scene_manager.h"
 
 namespace wunder::vulkan {
-renderer::renderer()
- :event_handler<scene_activated>()
-{}
+renderer::renderer() : event_handler<wunder::event::scene_activated>() {}
 
 renderer::~renderer() {
   if (m_pipeline.get()) {
@@ -141,8 +139,9 @@ void renderer::update(time_unit dt) /*override*/
   //  &regions[2], &regions[3], size.width, size.height, 1);
 }
 
-void renderer::on_event(const scene_activated &scene_activated_event) {
-  auto api_scene = project::instance().get_scene_manager().get_api_scene(
+void renderer::on_event(
+    const wunder::event::scene_activated &scene_activated_event) {
+  auto api_scene = project::instance().get_scene_manager().mutable_api_scene(
       scene_activated_event.m_id);
 
   AssertReturnUnless(api_scene.has_value());
@@ -151,8 +150,7 @@ void renderer::on_event(const scene_activated &scene_activated_event) {
   m_descriptor_set_manager->bake();
 }
 
-const renderer_capabilities &renderer::get_capabilities()
-    const /*override*/
+const renderer_capabilities &renderer::get_capabilities() const /*override*/
 {
   static renderer_capabilities s_empty;
   return layer_abstraction_factory::instance()
@@ -160,9 +158,8 @@ const renderer_capabilities &renderer::get_capabilities()
       .get_capabilities();
 }
 
-descriptor_set_manager &renderer::get_descriptor_set_manager(){
+descriptor_set_manager &renderer::get_descriptor_set_manager() {
   return *m_descriptor_set_manager;
 }
 
-
-}  // namespace wunder
+}  // namespace wunder::vulkan
