@@ -95,8 +95,8 @@ void top_level_acceleration_structure_build_info::
       VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT |
       VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR);
 
-  m_acceleration_structures_buffers = std::make_unique<device_buffer>(
-      buffer::descriptor_build_data{.m_enabled = false}, data, size, flags);
+  m_acceleration_structures_buffers = std::make_unique<storage_device_buffer>(
+      descriptor_build_data{.m_enabled = false}, data, size, flags);
 }
 
 void top_level_acceleration_structure_build_info::create_geometry_data(

@@ -10,13 +10,14 @@
 #include <cstdint>
 #include <vector>
 
-#include "gla/vulkan/vulkan_buffer.h"
+#include "core/wunder_memory.h"
+#include "gla/vulkan/vulkan_buffer_fwd.h"
 
 namespace wunder::vulkan {
 class pipeline;
 
 class shader_binding_table {
- private:
+ public:
   enum shader_stage_type { raygen, miss, hit, callable };
 
  public:
@@ -25,6 +26,9 @@ class shader_binding_table {
 
  public:
   void initialize(const pipeline& pipeline);
+
+  VkStridedDeviceAddressRegionKHR get_stage_address(
+      shader_stage_type type) const;
 
  private:
   void initialize_shader_indices(const pipeline& pipeline);
@@ -47,8 +51,8 @@ class shader_binding_table {
                                 // this will be included in stage stride size.
                                 // However this is not supported at the moment
 
-  std::array<buffer, 4>
-      m_shader_group_buffers{};  // buffer resembles handler to shader in group
+  std::array<unique_ptr<storage_buffer>, 4>
+      m_shader_group_buffers;  // buffer resembles handler to shader in group
                                  // + data given to sbt
 
   VkPhysicalDeviceRayTracingPipelinePropertiesKHR m_vulkan_pipeline_properties{

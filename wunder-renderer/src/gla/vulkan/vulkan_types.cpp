@@ -13,9 +13,9 @@ void add_resource_template(
   AssertReturnUnless(
       holds_alternative<std::vector<vulkan_resource_type>>(resource_list));
 
-  auto& images_descriptors =
+  auto& descriptors =
       std::get<std::vector<vulkan_resource_type>>(resource_list);
-  images_descriptors.emplace_back(resource.m_descriptor);
+  descriptors.emplace_back(resource.m_descriptor);
 }
 }  // namespace
 
@@ -60,7 +60,17 @@ void vulkan_descriptor_binding::emplace_resource(
           },
 
           [this](const std::reference_wrapper<
-                 shader_resource::instance::uniform_buffer>&) {},
+                 shader_resource::instance::uniform_buffer>& buffer) {
+            initialize_if_empty(std::vector<VkDescriptorBufferInfo>(),
+                                VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
+
+            AssertReturnUnless(m_descriptor_type ==
+                               VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
+
+            add_resource_template<shader_resource::instance::uniform_buffer,
+                                  VkDescriptorBufferInfo>(buffer.get(),
+                                                          m_resources);
+          },
 
           [this](const std::reference_wrapper<
                  shader_resource::instance::storage_buffers>& buffer) {

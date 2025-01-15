@@ -7,6 +7,7 @@
 #include "assets/scene_node.h"
 #include "core/vector_map.h"
 #include "core/wunder_memory.h"
+#include "gla/vulkan/vulkan_buffer_fwd.h"
 
 namespace wunder {
 class material_asset;
@@ -15,7 +16,6 @@ namespace vulkan {
 
 class top_level_acceleration_structure;
 class bottom_level_acceleration_structure_build_info;
-class buffer;
 
 struct vulkan_mesh_scene_node;
 struct vulkan_mesh;
@@ -50,7 +50,7 @@ class meshes_helper {
       const std::vector<vulkan_mesh_scene_node>& mesh_nodes,
       top_level_acceleration_structure& out_acceleration_structure);
 
-  [[nodiscard]] static unique_ptr<buffer> create_mesh_instances_buffer(
+  [[nodiscard]] static unique_ptr<storage_buffer> create_mesh_instances_buffer(
       const std::vector<vulkan_mesh_scene_node>& mesh_nodes);
 
  private:

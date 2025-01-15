@@ -18,7 +18,7 @@ class bottom_level_acceleration_structure : public acceleration_structure {
 
  public:
   void build(
-      buffer& scratch_buffer, VkDeviceAddress scratch_offset,
+      storage_buffer& scratch_buffer, VkDeviceAddress scratch_offset,
       const bottom_level_acceleration_structure_build_info& build_info);
 };
 }  // namespace vulkan

@@ -1,5 +1,6 @@
 #include "core/input_manager.h"
 
+#include "core/time_unit.h"
 #include "core/wunder_macros.h"
 #include "event/event_handler.hpp"
 
@@ -14,7 +15,10 @@ input_manager::input_manager()
 
 input_manager::~input_manager() = default;
 
-void input_manager::update(int dt) {}
+void input_manager::update(time_unit dt) {
+  transition_pressed_keys();
+  clear_released_keys();
+}
 
 bool input_manager::is_key_in_state(wunder::input_key_code key_code,
                                     key_state state) {
@@ -82,7 +86,6 @@ void input_manager::transition_pressed_keys() {
       change_key_state(key, key_state::held);
   }
 }
-void input_manager::transition_pressed_buttons() {}
 void input_manager::clear_released_keys() {
   for (const auto& [key, key_data] : m_key_data) {
     if (key_data.m_state == key_state::released)

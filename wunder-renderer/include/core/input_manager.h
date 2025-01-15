@@ -16,6 +16,8 @@
 
 namespace wunder {
 
+class time_unit;
+
 enum class key_state : std::uint8_t {
   none = 1 << 0,
   pressed = 1 << 1,
@@ -48,7 +50,7 @@ class input_manager
   ~input_manager() override;
 
  public:
-  void update(int dt);
+  void update(time_unit dt);
 
   bool is_key_in_state(wunder::input_key_code key_code, key_state state);
 
@@ -76,7 +78,6 @@ class input_manager
 
   // Internal use only...
   void transition_pressed_keys();
-  void transition_pressed_buttons();
   void clear_released_keys();
 
  private:

@@ -9,7 +9,7 @@ std::optional<light_asset> gltf_light_serializer::serialize(
   auto maybe_colour =
       tinygltf::utils::vector_to_glm<glm::vec4>(gltf_light.color);
   AssertReturnUnless(maybe_colour.has_value(), std::nullopt);
-  speecific_light_type_data light_specific_data;
+  specific_light_type_data light_specific_data;
   if (gltf_light.type == "point") {
     light_specific_data = point_light{};
   } else if (gltf_light.type == "directional") {

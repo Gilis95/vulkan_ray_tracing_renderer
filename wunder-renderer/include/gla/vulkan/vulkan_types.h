@@ -68,7 +68,7 @@ const auto downcast = [](const auto& x) -> const base& { return x; };
 
 namespace instance {
 struct base {
-  virtual void bind(renderer& renderer) = 0;
+  virtual void add_descriptor_to(renderer& renderer) = 0;
 };
 
 struct uniform_buffer : public base {

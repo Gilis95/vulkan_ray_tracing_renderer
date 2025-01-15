@@ -6,10 +6,10 @@
 
 #include "core/wunder_memory.h"
 #include "gla/vulkan/ray-trace/vulkan_acceleration_structure_build_info.h"
+#include "gla/vulkan/vulkan_buffer_fwd.h"
 
 namespace wunder::vulkan {
 
-class buffer;
 class bottom_level_acceleration_structure;
 struct vulkan_mesh_scene_node;
 
@@ -41,7 +41,7 @@ class top_level_acceleration_structure_build_info
       std::uint32_t acceleration_structure_instances_count);
 
  private:
-  unique_ptr<buffer> m_acceleration_structures_buffers;
+  unique_ptr<storage_buffer> m_acceleration_structures_buffers;
 };
 }  // namespace wunder::vulkan
 #endif  // WUNDER_VULKAN_TOP_LEVEL_ACCELERATION_STRUCTURE_BUILD_INFO_H

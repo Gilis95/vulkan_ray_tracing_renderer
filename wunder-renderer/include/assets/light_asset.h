@@ -19,14 +19,14 @@ struct directional_light {};
 
 struct point_light {};
 
-using speecific_light_type_data =
+using specific_light_type_data =
     std::variant<spot_light, directional_light, point_light>;
 
 struct light_asset {
   glm::vec4 color;
   double intensity{1.0};
   double range{0.0};  // 0.0 = infinite
-  speecific_light_type_data specific_data;
+  specific_light_type_data specific_data;
 };
 }  // namespace wunder
 #endif  // WUNDER_LIGHT_ASSET_H

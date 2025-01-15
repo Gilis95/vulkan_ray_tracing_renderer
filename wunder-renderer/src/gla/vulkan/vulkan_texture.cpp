@@ -53,7 +53,7 @@ texture::texture(const texture_asset& asset) {
 
 texture::~texture() = default;
 
-void texture::bind(renderer& renderer)
+void texture::add_descriptor_to(renderer& renderer)
 {
   auto& descriptor_manager = renderer.get_descriptor_set_manager();
   descriptor_manager.add_resource("texturesMap", *this);

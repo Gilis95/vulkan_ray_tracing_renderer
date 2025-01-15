@@ -4,11 +4,14 @@
 
 #include <optional>
 
+#include "camera/camera.h"
 #include "core/project.h"
+#include "core/services_factory.h"
 #include "event/event_handler.hpp"
 #include "event/scene_events.h"
 #include "gla/renderer_capabilities .h"
 #include "gla/vulkan/scene/vulkan_scene.h"
+#include "gla/vulkan/vulkan_command_pool.h"
 #include "gla/vulkan/vulkan_context.h"
 #include "gla/vulkan/vulkan_descriptor_set_manager.h"
 #include "gla/vulkan/vulkan_device.h"
@@ -16,10 +19,11 @@
 #include "gla/vulkan/vulkan_pipeline.h"
 #include "gla/vulkan/vulkan_shader.h"
 #include "gla/vulkan/vulkan_shader_binding_table.h"
+#include "resources/shaders/host_device.h"
 #include "scene/scene_manager.h"
 
 namespace wunder::vulkan {
-renderer::renderer() : event_handler<wunder::event::scene_activated>() {}
+renderer::renderer() : event_handler<wunder::event::scene_activated>() , m_have_active_scene(false) {}
 
 renderer::~renderer() {
   if (m_pipeline.get()) {
@@ -33,6 +37,8 @@ renderer::~renderer() {
 void renderer::init_internal(const renderer_properties &properties) {
   m_pipeline = std::make_unique<pipeline>();
   m_shader_binding_table = std::make_unique<shader_binding_table>();
+  m_state = std::make_unique<RtxState>();
+  m_state->maxDepth = 3;
 
   for (auto &[shader_type, shaders_compile_data] :
        get_shaders_for_compilation()) {
@@ -116,27 +122,43 @@ void renderer::create_descriptor_manager(const shader &shader) {
 
 void renderer::update(time_unit dt) /*override*/
 {
-  auto graphic_command_buffer = layer_abstraction_factory::instance()
-                                    .get_vulkan_context()
-                                    .get_device()
-                                    .get_graphics_queue();
-  //  vkCmdBindPipeline(graphic_command_buffer,
-  //  VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR, m_rtPipeline);
-  //  vkCmdBindDescriptorSets(
-  //      graphic_command_buffer, VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR,
-  //      m_rtPipelineLayout, 0,
-  //                          static_cast<uint32_t>(descSets.size()),
-  //                          descSets.data(), 0, nullptr);
-  //  vkCmdPushConstants(graphic_command_buffer, m_rtPipelineLayout,
-  //                     VK_SHADER_STAGE_RAYGEN_BIT_KHR |
-  //                     VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR |
-  //                     VK_SHADER_STAGE_MISS_BIT_KHR, 0, sizeof(RtxState),
-  //                     &m_state);
-  //
-  //
+  ReturnUnless(m_have_active_scene);
+  command_pool &command_pool = layer_abstraction_factory::instance()
+                                   .get_vulkan_context()
+                                   .get_device()
+                                   .get_command_pool();
+  auto graphic_command_buffer =
+      command_pool.get_current_graphics_command_buffer();
+
+
+  m_pipeline->bind();
+  m_descriptor_set_manager->bind(*m_pipeline);
+
+  vkCmdPushConstants(
+      graphic_command_buffer, m_pipeline->get_vulkan_pipeline_layout(),
+      VK_SHADER_STAGE_RAYGEN_BIT_KHR | VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR |
+          VK_SHADER_STAGE_MISS_BIT_KHR,
+      0, sizeof(RtxState), m_state.get());
+
   //  auto& regions = m_sbtWrapper.getRegions();
-  //  vkCmdTraceRaysKHR(graphic_command_buffer, &regions[0], &regions[1],
-  //  &regions[2], &regions[3], size.width, size.height, 1);
+  VkStridedDeviceAddressRegionKHR raygen_address =
+      m_shader_binding_table->get_stage_address(
+          shader_binding_table::shader_stage_type::raygen);
+  VkStridedDeviceAddressRegionKHR miss_address =
+      m_shader_binding_table->get_stage_address(
+          shader_binding_table::shader_stage_type::miss);
+  VkStridedDeviceAddressRegionKHR hit_address =
+      m_shader_binding_table->get_stage_address(
+          shader_binding_table::shader_stage_type::hit);
+  VkStridedDeviceAddressRegionKHR callable_address =
+      m_shader_binding_table->get_stage_address(
+          shader_binding_table::shader_stage_type::callable);
+
+  vkCmdTraceRaysKHR(graphic_command_buffer, &raygen_address, &miss_address,
+                    &hit_address, &callable_address, 100, 100, 3);
+  ++m_state->frame;
+  
+  command_pool.flush_graphics_command_buffer();
 }
 
 void renderer::on_event(
@@ -146,8 +168,11 @@ void renderer::on_event(
 
   AssertReturnUnless(api_scene.has_value());
   api_scene->get().bind(*this);
+  service_factory::instance().get_camera().bind(*this);
 
   m_descriptor_set_manager->bake();
+
+  m_have_active_scene = true;
 }
 
 const renderer_capabilities &renderer::get_capabilities() const /*override*/

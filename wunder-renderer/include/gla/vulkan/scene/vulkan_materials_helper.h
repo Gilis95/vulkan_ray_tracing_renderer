@@ -3,20 +3,19 @@
 
 #include "assets/asset_types.h"
 #include "include/assets/material_asset.h"
+#include "gla/vulkan/vulkan_buffer_fwd.h"
 
 namespace wunder {
 struct mesh_asset;
 struct texture_asset;
 
 namespace vulkan {
-class buffer;
-
 class materials_helper {
  public:
   [[nodiscard]] static assets<material_asset> extract_material_assets(
       assets<mesh_asset>& mesh_assets);
 
-  [[nodiscard]] static unique_ptr<buffer> create_material_buffer(
+  [[nodiscard]] static unique_ptr<storage_buffer> create_material_buffer(
       const assets<material_asset>& materials,
       const assets<texture_asset>& texture_assets);
 

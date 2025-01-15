@@ -12,12 +12,12 @@
 
 namespace wunder::vulkan {
 
-buffer::buffer() : buffer({.m_enabled = false}) {}
-
-buffer::buffer(descriptor_build_data descriptor_build_data)
+template <typename base_buffer_type>
+buffer<base_buffer_type>::buffer(descriptor_build_data descriptor_build_data)
     : m_descriptor_build_data(std::move(descriptor_build_data)) {}
 
-buffer::buffer(buffer&& other) noexcept
+template <typename base_buffer_type>
+buffer<base_buffer_type>::buffer(buffer&& other) noexcept
     : m_descriptor_build_data(std::move(other.m_descriptor_build_data)),
       m_vk_buffer(other.m_vk_buffer),
       m_allocation(other.m_allocation) {
@@ -25,14 +25,17 @@ buffer::buffer(buffer&& other) noexcept
   other.m_allocation = VK_NULL_HANDLE;
 }
 
-buffer& buffer::operator=(buffer&& other) noexcept {
+template <typename base_buffer_type>
+buffer<base_buffer_type>& buffer<base_buffer_type>::operator=(
+    buffer<base_buffer_type>&& other) noexcept {
   std::swap(m_vk_buffer, other.m_vk_buffer);
   std::swap(m_allocation, other.m_allocation);
 
   return *this;
 }
 
-buffer::~buffer() {
+template <typename base_buffer_type>
+buffer<base_buffer_type>::~buffer() {
   ReturnIf(m_vk_buffer == VK_NULL_HANDLE);
   context& vulkan_context =
       layer_abstraction_factory::instance().get_vulkan_context();
@@ -40,7 +43,12 @@ buffer::~buffer() {
   allocator.destroy_buffer(m_vk_buffer, m_allocation);
 }
 
-void buffer::bind(renderer& renderer) /*override*/
+template <typename base_buffer_type>
+void buffer<base_buffer_type>::update_data(void* data, size_t data_size) {}
+
+template <typename base_buffer_type>
+void buffer<base_buffer_type>::add_descriptor_to(
+    renderer& renderer) /*override*/
 {
   ReturnUnless(m_descriptor_build_data.m_enabled);
 
@@ -49,7 +57,8 @@ void buffer::bind(renderer& renderer) /*override*/
                                   *this);
 }
 
-[[nodiscard]] VkDeviceAddress buffer::get_address() const {
+template <typename base_buffer_type>
+[[nodiscard]] VkDeviceAddress buffer<base_buffer_type>::get_address() const {
   context& vulkan_context =
       layer_abstraction_factory::instance().get_vulkan_context();
   auto& device = vulkan_context.get_device();
@@ -62,4 +71,8 @@ void buffer::bind(renderer& renderer) /*override*/
   return vkGetBufferDeviceAddress(device.get_vulkan_logical_device(), &info);
 }
 
+template class buffer<
+    wunder::vulkan::shader_resource::instance::storage_buffers>;
+template class buffer<
+    wunder::vulkan::shader_resource::instance::uniform_buffer>;
 }  // namespace wunder::vulkan

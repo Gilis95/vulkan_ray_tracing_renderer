@@ -1,6 +1,7 @@
 #include "gla/vulkan/vulkan_log.h"
 
 #include "core/wunder_logger.h"
+#include "core/wunder_macros.h"
 
 VKAPI_ATTR VkBool32 debug_messenger_callback(
     VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
@@ -29,6 +30,9 @@ VKAPI_ATTR VkBool32 debug_messenger_callback(
   if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT) {
     WUNDER_ERROR_TAG("VULKAN", "[{0}]: {1}", callbackData->pMessageIdName,
                      callbackData->pMessage);
+
+    CRASH;
+
     return VK_FALSE;
   }
 

@@ -5,6 +5,7 @@
 #include <future>
 
 #include "core/vector_map.h"
+#include "gla/vulkan/vulkan_command_pool.h"
 #include "gla/vulkan/vulkan_context.h"
 #include "gla/vulkan/vulkan_device.h"
 #include "gla/vulkan/vulkan_layer_abstraction_factory.h"
@@ -18,9 +19,7 @@ class shader;
 void pipeline::create_pipeline_layout(
     const shader& descriptor_declaring_shader) {
   auto& device =
-      layer_abstraction_factory::instance()
-                     .get_vulkan_context()
-                     .get_device();
+      layer_abstraction_factory::instance().get_vulkan_context().get_device();
 
   const auto& descriptor_sets_layout =
       descriptor_declaring_shader.get_descriptor_set_layout();
@@ -28,11 +27,11 @@ void pipeline::create_pipeline_layout(
   vkDestroyPipelineLayout(device.get_vulkan_logical_device(),
                           m_vulkan_pipeline_layout, nullptr);
 
-  //TODO:: This must be comming from shader reflect data!!!
+  // TODO:: This must be comming from shader reflect data!!!
   VkPushConstantRange push_constants{VK_SHADER_STAGE_RAYGEN_BIT_KHR |
-                                       VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR |
-                                       VK_SHADER_STAGE_MISS_BIT_KHR,
-                                   0, sizeof(RtxState)};
+                                         VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR |
+                                         VK_SHADER_STAGE_MISS_BIT_KHR,
+                                     0, sizeof(RtxState)};
 
   VkPipelineLayoutCreateInfo pipeline_layout_create_info{
       VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO};
@@ -47,13 +46,10 @@ void pipeline::create_pipeline_layout(
 }
 
 void pipeline::create_pipeline(
-    const vector_map<VkShaderStageFlagBits,
-                     std::vector<unique_ptr<shader>>>&
+    const vector_map<VkShaderStageFlagBits, std::vector<unique_ptr<shader>>>&
         shaders_of_types) {
   auto& device =
-      layer_abstraction_factory::instance()
-                     .get_vulkan_context()
-                     .get_device();
+      layer_abstraction_factory::instance().get_vulkan_context().get_device();
 
   vkDestroyPipeline(device.get_vulkan_logical_device(), m_vulkan_pipeline,
                     nullptr);
@@ -80,13 +76,13 @@ void pipeline::create_pipeline(
   bool use_deferred{true};
   VkDeferredOperationKHR deferred_op{VK_NULL_HANDLE};
   if (use_deferred) {
-    VK_CHECK_RESULT(vkCreateDeferredOperationKHR(device.get_vulkan_logical_device(),
-                                          nullptr, &deferred_op));
+    VK_CHECK_RESULT(vkCreateDeferredOperationKHR(
+        device.get_vulkan_logical_device(), nullptr, &deferred_op));
   }
 
-  vkCreateRayTracingPipelinesKHR(device.get_vulkan_logical_device(), deferred_op,
-                                 {}, 1, &m_pipeline_create_info, nullptr,
-                                 &m_vulkan_pipeline);
+  vkCreateRayTracingPipelinesKHR(device.get_vulkan_logical_device(),
+                                 deferred_op, {}, 1, &m_pipeline_create_info,
+                                 nullptr, &m_vulkan_pipeline);
 
   if (use_deferred) {
     // Query the maximum amount of concurrency and clamp to the desired maximum
@@ -112,17 +108,28 @@ void pipeline::create_pipeline(
 
     // deferred operation is now complete.  'result' indicates success or
     // failure
-    VK_CHECK_RESULT(vkGetDeferredOperationResultKHR(device.get_vulkan_logical_device(), deferred_op));
+    VK_CHECK_RESULT(vkGetDeferredOperationResultKHR(
+        device.get_vulkan_logical_device(), deferred_op));
 
     vkDestroyDeferredOperationKHR(device.get_vulkan_logical_device(),
                                   deferred_op, nullptr);
   }
 }
 
+void pipeline::bind() {
+  auto graphic_command_buffer = layer_abstraction_factory::instance()
+                                    .get_vulkan_context()
+                                    .get_device()
+                                    .get_command_pool()
+                                    .get_current_graphics_command_buffer();
+
+  vkCmdBindPipeline(graphic_command_buffer, get_bind_point(),
+                    m_vulkan_pipeline);
+}
+
 std::vector<VkPipelineShaderStageCreateInfo>
 pipeline::get_shader_stage_create_info(
-    const vector_map<VkShaderStageFlagBits,
-                     std::vector<unique_ptr<shader>>>&
+    const vector_map<VkShaderStageFlagBits, std::vector<unique_ptr<shader>>>&
         shaders_of_types) {
   std::vector<VkPipelineShaderStageCreateInfo> stages;
 
@@ -224,4 +231,4 @@ pipeline::get_shader_group_create_info(
   return groups;
 }
 
-}  // namespace wunder
+}  // namespace wunder::vulkan

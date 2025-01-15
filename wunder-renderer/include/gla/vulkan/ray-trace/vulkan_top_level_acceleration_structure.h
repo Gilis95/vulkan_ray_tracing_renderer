@@ -16,10 +16,10 @@ class top_level_acceleration_structure : public acceleration_structure {
   top_level_acceleration_structure();
 
  public:
-  void bind(renderer& renderer) override;
+  void add_descriptor_to(renderer& renderer) override;
 
   void build(
-      buffer& scratch_buffer,
+      storage_buffer& scratch_buffer,
       const top_level_acceleration_structure_build_info& build_info);
  private:
   void wait_until_instances_buffer_is_available() const;

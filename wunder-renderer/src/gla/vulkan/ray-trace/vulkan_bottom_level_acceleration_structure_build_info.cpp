@@ -14,9 +14,9 @@
 
 namespace wunder::vulkan {
 bottom_level_acceleration_structure_build_info::
-    bottom_level_acceleration_structure_build_info(const mesh_asset& mesh,
-                                                   const buffer& vertex_buffer,
-                                                   const buffer& index_buffer) {
+    bottom_level_acceleration_structure_build_info(
+        const mesh_asset& mesh, const storage_buffer& vertex_buffer,
+        const storage_buffer& index_buffer) {
   clear_geometry_data();
   create_geometry_data(mesh, vertex_buffer, index_buffer);
 
@@ -39,9 +39,9 @@ bottom_level_acceleration_structure_build_info::
  * TODO:: implement procedural geometries, such as spheres
  */
 void bottom_level_acceleration_structure_build_info::create_geometry_data(
-    const mesh_asset& mesh, const buffer& vertex_buffer,
-    const buffer& index_buffer) {  // Building part
-  VkDeviceAddress vertexAddress =vertex_buffer.get_address();
+    const mesh_asset& mesh, const storage_buffer& vertex_buffer,
+    const storage_buffer& index_buffer) {  // Building part
+  VkDeviceAddress vertexAddress = vertex_buffer.get_address();
   VkDeviceAddress indexAddress = index_buffer.get_address();
   // triangles.transformData = ({});
 

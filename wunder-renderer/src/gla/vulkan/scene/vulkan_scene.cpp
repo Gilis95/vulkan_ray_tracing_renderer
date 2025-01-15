@@ -58,12 +58,12 @@ void scene::load_scene(scene_asset& asset) {
 
 void scene::bind(renderer& renderer) {
   for (auto& texture : m_bound_textures) {
-    texture->bind(renderer);
+    texture->add_descriptor_to(renderer);
   }
 
-  m_material_buffer->bind(renderer);
-  m_mesh_instance_data_buffer->bind(renderer);
-  m_acceleration_structure->bind(renderer);
+  m_material_buffer->add_descriptor_to(renderer);
+  m_mesh_instance_data_buffer->add_descriptor_to(renderer);
+  m_acceleration_structure->add_descriptor_to(renderer);
 }
 
 }  // namespace wunder::vulkan

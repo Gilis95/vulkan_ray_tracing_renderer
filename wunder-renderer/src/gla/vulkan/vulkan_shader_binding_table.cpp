@@ -42,6 +42,14 @@ void shader_binding_table::initialize(const pipeline& pipeline) {
   create_sbt_buffer(shader_stages_handles);
 }
 
+VkStridedDeviceAddressRegionKHR shader_binding_table::get_stage_address(
+    shader_stage_type type) const {
+  return VkStridedDeviceAddressRegionKHR{
+      .deviceAddress = m_shader_group_buffers[type]->get_address(),
+      .stride = 0,
+      .size = 0};
+}
+
 void shader_binding_table::initialize_shader_indices(const pipeline& pipeline) {
   for (auto& i : m_shader_handles_indeces) i = {};
 
@@ -154,20 +162,18 @@ void shader_binding_table::create_sbt_buffer(
   auto& vulkan_context =
       layer_abstraction_factory::instance().get_vulkan_context();
   auto& device = vulkan_context.get_device();
-  auto& allocator = vulkan_context.get_resource_allocator();
 
   for (uint32_t i = 0; i < 4; ++i) {
     auto& shader_stage_handles = shader_stages_handles[i];
     ContinueIf(shader_stage_handles.empty());
-    m_shader_group_buffers[i] = std::move(
-        device_buffer({.m_enabled = false}, shader_stage_handles.data(),
+    m_shader_group_buffers[i] = std::make_unique<storage_device_buffer>(descriptor_build_data{.m_enabled = false}, shader_stage_handles.data(),
                       shader_stage_handles.size() * sizeof(uint8_t),
                       VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT |
-                          VK_BUFFER_USAGE_SHADER_BINDING_TABLE_BIT_KHR));
+                          VK_BUFFER_USAGE_SHADER_BINDING_TABLE_BIT_KHR);
 
     set_debug_utils_object_name(device.get_vulkan_logical_device(),
                                 std::format("shader_binding_table:{}", i),
-                                m_shader_group_buffers[i].get_buffer());
+                                m_shader_group_buffers[i]->get_buffer());
   }
 }
 

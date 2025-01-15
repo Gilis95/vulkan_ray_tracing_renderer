@@ -27,9 +27,15 @@
 #include "core/input_manager.h"
 #include "core/project.h"
 #include "core/services_factory.h"
-#include "event/input_events.h"
 #include "event/event_handler.hpp"
+#include "event/input_events.h"
 #include "event/scene_events.h"
+#include "gla/vulkan/vulkan_command_pool.h"
+#include "gla/vulkan/vulkan_context.h"
+#include "gla/vulkan/vulkan_device.h"
+#include "gla/vulkan/vulkan_device_buffer.h"
+#include "gla/vulkan/vulkan_layer_abstraction_factory.h"
+#include "resources/shaders/host_device.h"
 #include "scene/scene_manager.h"
 
 namespace wunder {
@@ -50,14 +56,19 @@ camera::camera()
            {camera::actions::look_around,
             [this](float dy, float dx) { orbit(dx, dy, true); }}}) {
   update_view_matrix();
+  SceneCamera camera = create_host_camera();
+
+  m_camera_buffer.reset(new vulkan::uniform_device_buffer(
+      {.m_enabled = true, .m_descriptor_name = "_SceneCamera"}, &camera,
+      sizeof(SceneCamera), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT));
 }
 
 camera::~camera() = default;
 
-
 void camera::update(time_unit dt) {
   update_movement(dt);
   update_camera_position_smoothly();
+  update_camera_buffer();
 }
 
 void camera::update_movement(time_unit dt) {
@@ -255,6 +266,10 @@ void camera::fit(const glm::vec3& boxMin, const glm::vec3& boxMax,
 
   // Set the new camera position and interest point
   set_lookat(newEye, boxCenter, m_current.up, instantFit);
+}
+
+void camera::bind(wunder::vulkan::renderer& renderer) {
+  m_camera_buffer->add_descriptor_to(renderer);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -608,5 +623,46 @@ void camera::dolly(float dx, float dy) {
     m_current.ctr += z;
   }
 }
+void camera::update_camera_buffer() {
+  SceneCamera camera = create_host_camera();
 
+  vulkan::context& vulkan_context =
+      vulkan::layer_abstraction_factory::instance().get_vulkan_context();
+  auto& device = vulkan_context.get_device();
+  auto graphics_queue =
+      device.get_command_pool().get_current_graphics_command_buffer();
+
+  // Ensure that the modified UBO is not visible to previous frames.
+  VkBufferMemoryBarrier beforeBarrier{VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER};
+  beforeBarrier.srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
+  beforeBarrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+  beforeBarrier.buffer = m_camera_buffer->get_buffer();
+  beforeBarrier.size = sizeof(camera);
+  vkCmdPipelineBarrier(graphics_queue,
+                       VK_PIPELINE_STAGE_VERTEX_SHADER_BIT |
+                           VK_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR,
+                       VK_PIPELINE_STAGE_TRANSFER_BIT,
+                       VK_DEPENDENCY_DEVICE_GROUP_BIT, 0, nullptr, 1,
+                       &beforeBarrier, 0, nullptr);
+
+  m_camera_buffer->update_data(&camera, sizeof(SceneCamera));
+}
+
+SceneCamera camera::create_host_camera() {
+  SceneCamera camera{};
+  memset(&camera, 0, sizeof(SceneCamera));
+
+  const auto& view = get_view_matrix();
+  auto proj = glm::perspectiveRH_ZO(glm::radians(get_fov()), get_aspect_ratio(),
+                                    0.001f, 100000.0f);
+  proj[1][1] *= -1;
+  camera.viewInverse = glm::inverse(view);
+  camera.projInverse = glm::inverse(proj);
+
+  // Focal is the interest point
+  glm::vec3 eye, center, up;
+  get_lookat(eye, center, up);
+  camera.focalDist = glm::length(center - eye);
+  return camera;
+}
 }  // namespace wunder

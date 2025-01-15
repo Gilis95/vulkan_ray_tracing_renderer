@@ -14,7 +14,7 @@ namespace wunder::vulkan {
 bottom_level_acceleration_structure::bottom_level_acceleration_structure() = default;
 
 void bottom_level_acceleration_structure::build(
-    buffer& scratch_buffer, VkDeviceAddress scratch_buffer_offset,
+    storage_buffer& scratch_buffer, VkDeviceAddress scratch_buffer_offset,
     const bottom_level_acceleration_structure_build_info& build_info) {
   create_acceleration_structure(
       build_info.get_acceleration_structure_type(),

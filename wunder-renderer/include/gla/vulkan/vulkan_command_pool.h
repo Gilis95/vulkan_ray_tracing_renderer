@@ -14,13 +14,8 @@ class command_pool : public non_copyable {
   virtual ~command_pool();
 
  public:
-  [[nodiscard]] VkCommandBuffer get_current_graphics_command_buffer() {
-    return allocate_graphics_command_buffer(true);
-  }
-
-  [[nodiscard]] VkCommandBuffer get_current_compute_command_buffer() {
-    return allocate_compute_command_buffer(true);
-  }
+  [[nodiscard]] VkCommandBuffer get_current_graphics_command_buffer();
+  [[nodiscard]] VkCommandBuffer get_current_compute_command_buffer();
 
   void flush_graphics_command_buffer();
   void flush_compute_command_buffer();
@@ -40,7 +35,7 @@ class command_pool : public non_copyable {
 
   VkCommandBuffer allocate_command_buffer(bool begin, VkCommandPool& out_pool,
                                           VkCommandBuffer& out_buffer);
-  void flush_command_buffer(VkCommandBuffer command_buffer,
+  void flush_command_buffer(VkCommandBuffer& command_buffer,
                             VkCommandPool source_pool, VkQueue queue);
 
  private:

@@ -108,8 +108,8 @@ void meshes_helper::prepare_blas_build_info(
     id = mesh_id;
 
     bottom_level_acceleration_structure_build_info build_info(
-        mesh_asset, _vulkan_mesh->m_vertex_buffer,
-        _vulkan_mesh->m_index_buffer);
+        mesh_asset, *_vulkan_mesh->m_vertex_buffer,
+        *_vulkan_mesh->m_index_buffer);
     out_build_infos.emplace_back(std::move(build_info));
     ++i;
   }
@@ -128,8 +128,8 @@ void meshes_helper::build_blas(
                right.get_vulkan_as_build_sizes_info().accelerationStructureSize;
       });
 
-  buffer scratch_buffer = device_buffer(
-      buffer::descriptor_build_data{.m_enabled = false}, scratch_buffer_size,
+  buffer scratch_buffer = storage_device_buffer(
+      descriptor_build_data{.m_enabled = false}, scratch_buffer_size,
       VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT |
           VK_BUFFER_USAGE_STORAGE_BUFFER_BIT);
 
@@ -152,8 +152,8 @@ void meshes_helper::create_top_level_acceleration_structure(
     const std::vector<vulkan_mesh_scene_node>& mesh_nodes,
     top_level_acceleration_structure& out_acceleration_structure) {
   top_level_acceleration_structure_build_info tlas_build_info(mesh_nodes);
-  buffer scratch_buffer = device_buffer(
-      buffer::descriptor_build_data{.m_enabled = false},
+  buffer scratch_buffer = storage_device_buffer(
+      descriptor_build_data{.m_enabled = false},
       tlas_build_info.get_vulkan_as_build_sizes_info().buildScratchSize,
       VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT |
           VK_BUFFER_USAGE_STORAGE_BUFFER_BIT);
@@ -161,7 +161,7 @@ void meshes_helper::create_top_level_acceleration_structure(
   out_acceleration_structure.build(scratch_buffer, tlas_build_info);
 }
 
-unique_ptr<buffer> meshes_helper::create_mesh_instances_buffer(
+unique_ptr<storage_buffer> meshes_helper::create_mesh_instances_buffer(
     const std::vector<vulkan_mesh_scene_node>& mesh_nodes) {
   std::vector<InstanceData> instances;
 
@@ -177,11 +177,11 @@ unique_ptr<buffer> meshes_helper::create_mesh_instances_buffer(
     });
   }
 
-  unique_ptr<buffer> result;
+  unique_ptr<storage_buffer> result;
   ReturnIf(instances.empty(), result);
 
-  return std::make_unique<device_buffer>(
-      buffer::descriptor_build_data{.m_enabled = true,
+  return std::make_unique<storage_device_buffer>(
+      descriptor_build_data{.m_enabled = true,
                                     .m_descriptor_name = "_InstanceInfo"},
       instances.data(), instances.size() * sizeof(InstanceData),
       VK_BUFFER_USAGE_STORAGE_BUFFER_BIT |

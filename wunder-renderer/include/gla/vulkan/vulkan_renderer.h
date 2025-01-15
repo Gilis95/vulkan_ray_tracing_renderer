@@ -14,6 +14,8 @@
 #include "event/event_handler.h"
 #include "gla/renderer_api.h"
 
+struct RtxState;
+
 namespace wunder::event {
 struct scene_activated;
 }
@@ -58,11 +60,14 @@ class renderer : public renderer_api,
   void on_event(const wunder::event::scene_activated&) override;
 
  private:
+  bool m_have_active_scene;
+
   VkSurfaceKHR m_surface = VK_NULL_HANDLE;  // Vulkan window surface
   vector_map<VkShaderStageFlagBits, std::vector<unique_ptr<shader>>> m_shaders;
   unique_ptr<descriptor_set_manager> m_descriptor_set_manager;
   unique_ptr<pipeline> m_pipeline;
   unique_ptr<shader_binding_table> m_shader_binding_table;
+  unique_ptr<RtxState> m_state;
 };
 }  // namespace wunder::vulkan
 #endif /* VULKAN_RENDERER_H */

@@ -7,7 +7,9 @@
 
 #include <glad/vulkan.h>
 
+#include "core/wunder_memory.h"
 #include "gla/vulkan/vulkan_buffer.h"
+#include "gla/vulkan/vulkan_buffer_fwd.h"
 #include "gla/vulkan/vulkan_types.h"
 
 namespace wunder::vulkan {
@@ -24,7 +26,7 @@ class acceleration_structure
   acceleration_structure& operator=(acceleration_structure&&) noexcept;
 
  public:
-  void bind(renderer& renderer) override;
+  void add_descriptor_to(renderer& renderer) override;
   VkDeviceAddress get_address();
 
  protected:
@@ -33,12 +35,12 @@ class acceleration_structure
       VkDeviceSize acceleration_structure_size);
 
   void build_acceleration_structure(
-      const buffer& scratch_buffer,
+      const storage_buffer& scratch_buffer,
       VkDeviceAddress scratch_buffer_offset,
       const acceleration_structure_build_info& build_info) const;
 
  protected:
-  buffer m_acceleration_structure_buffer;
+  unique_ptr<storage_buffer> m_acceleration_structure_buffer;
 };
-}  // namespace wunder
+}  // namespace wunder::vulkan
 #endif  // WUNDER_VULKAN_ACCELERATION_STRUCTURE_H

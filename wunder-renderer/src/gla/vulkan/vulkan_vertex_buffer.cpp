@@ -2,12 +2,13 @@
 
 #include <vector>
 
+#include "gla/vulkan/vulkan_device_buffer.h"
 #include "include/assets/mesh_asset.h"
 #include "resources/shaders/compress.glsl"
 #include "resources/shaders/host_device.h"
 
 namespace wunder::vulkan {
-buffer vertex_buffer::create(const mesh_asset& asset) {
+unique_ptr<storage_buffer> vertex_buffer::create(const mesh_asset& asset) {
   std::vector<VertexAttributes> vertecies{};
   for (auto& vertex : asset.m_verticies) {
     VertexAttributes device_vertex{};
@@ -34,12 +35,12 @@ buffer vertex_buffer::create(const mesh_asset& asset) {
     vertecies.push_back(std::move(device_vertex));
   }
 
-  return device_buffer{
-      buffer::descriptor_build_data{.m_enabled = false},
+  return std::make_unique<storage_device_buffer>(
+      descriptor_build_data{.m_enabled = false},
       vertecies.data(), vertecies.size() * sizeof(VertexAttributes),
       VK_BUFFER_USAGE_STORAGE_BUFFER_BIT |
           VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT |
-          VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR};
+          VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR);
 }
 
 }  // namespace wunder::vulkan

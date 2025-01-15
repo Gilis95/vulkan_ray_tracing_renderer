@@ -51,10 +51,10 @@ void acceleration_structure::create_acceleration_structure(
   auto& device = vulkan_context.get_device();
 
   // Allocating the buffer to hold the acceleration structure
-  m_acceleration_structure_buffer =
-      device_buffer({.m_enabled = false}, acceleration_structure_size,
+  m_acceleration_structure_buffer.reset(new
+      storage_device_buffer({.m_enabled = false}, acceleration_structure_size,
                     VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_STORAGE_BIT_KHR |
-                        VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT);
+                        VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT));
 
   VkAccelerationStructureCreateInfoKHR acceleration_structure_create_info;
   std::memset(&acceleration_structure_create_info, 0,
@@ -64,7 +64,7 @@ void acceleration_structure::create_acceleration_structure(
   acceleration_structure_create_info.type = acceleration_structure_type;
   acceleration_structure_create_info.size = acceleration_structure_size;
   acceleration_structure_create_info.buffer =
-      m_acceleration_structure_buffer.get_buffer();
+      m_acceleration_structure_buffer->get_buffer();
 
   // Create the acceleration structure
   vkCreateAccelerationStructureKHR(device.get_vulkan_logical_device(),
@@ -73,7 +73,7 @@ void acceleration_structure::create_acceleration_structure(
 }
 
 void acceleration_structure::build_acceleration_structure(
-    const buffer& scratch_buffer, VkDeviceAddress scratch_buffer_offset,
+    const storage_buffer& scratch_buffer, VkDeviceAddress scratch_buffer_offset,
     const acceleration_structure_build_info& build_info) const {
   context& vulkan_context =
       layer_abstraction_factory::instance().get_vulkan_context();
@@ -104,7 +104,7 @@ void acceleration_structure::build_acceleration_structure(
   command_pool.flush_compute_command_buffer();
 }
 
-void acceleration_structure::bind(renderer& renderer) {}
+void acceleration_structure::add_descriptor_to(renderer& renderer) {}
 
 VkDeviceAddress acceleration_structure::get_address() {
   ReturnIf(vkGetAccelerationStructureDeviceAddressKHR == nullptr, 0);

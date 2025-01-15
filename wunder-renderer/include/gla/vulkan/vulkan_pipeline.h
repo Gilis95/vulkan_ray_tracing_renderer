@@ -21,6 +21,7 @@ class pipeline : public non_copyable{
                                         std::vector<unique_ptr<shader>>>&
                            shaders_of_types);
 
+  void bind();
  public:
   [[nodiscard]] VkPipelineLayout get_vulkan_pipeline_layout() const {
     return m_vulkan_pipeline_layout;

@@ -13,7 +13,7 @@ top_level_acceleration_structure::top_level_acceleration_structure()
     : acceleration_structure(){};
 
 void top_level_acceleration_structure::build(
-    buffer& scratch_buffer,
+    storage_buffer& scratch_buffer,
     const top_level_acceleration_structure_build_info& build_info) {
   create_acceleration_structure(
       build_info.get_acceleration_structure_type(),
@@ -44,7 +44,7 @@ void top_level_acceleration_structure::
   command_pool.flush_compute_command_buffer();
 }
 
-void top_level_acceleration_structure::bind(renderer& renderer) {
+void top_level_acceleration_structure::add_descriptor_to(renderer& renderer) {
   auto& descriptor_manager = renderer.get_descriptor_set_manager();
   descriptor_manager.add_resource("topLevelAS", *this);
 }

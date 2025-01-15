@@ -30,7 +30,7 @@ class texture :
   ~texture();
 
  public:
-  void bind(renderer& renderer) override;
+  void add_descriptor_to(renderer& renderer) override;
 
  private:
   VkFormat allocate_image(const std::string& name);

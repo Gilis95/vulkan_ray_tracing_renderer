@@ -30,15 +30,24 @@
 
 #include "core/input.h"
 #include "core/time_unit.h"
+#include "core/wunder_memory.h"
 #include "event/event_handler.h"
+#include "gla/vulkan/vulkan_buffer_fwd.h"
+#include "resources/shaders/host_device.h"
 
-namespace wunder::event {
+namespace wunder {
+namespace vulkan {
+
+class renderer;
+}
+namespace event {
 struct scene_activated;
 namespace mouse {
 struct move;
 struct scroll;
 }  // namespace mouse
-}  // namespace wunder::event
+}  // namespace event
+}  // namespace wunder
 
 namespace wunder {
 
@@ -102,6 +111,7 @@ class camera : private event_handler<wunder::event::mouse::move>,
   void fit(const glm::vec3& boxMin, const glm::vec3& boxMax,
            bool instantFit = true, bool tight = false, float aspect = 1.0f);
 
+  void bind(wunder::vulkan::renderer& renderer);
  public:
   // field of view in degrees
   float get_fov() { return m_current.fov; }
@@ -143,13 +153,10 @@ class camera : private event_handler<wunder::event::mouse::move>,
   bool is_animated() const { return m_anim_done == false; }
 
  public:
-  // Main function to call from the application
-  // On application mouse move, call this function with the current mouse
-  // position, mouse button presses and keyboard modifier. The camera matrix
-  // will be updated and can be retrieved calling getMatrix
   void on_event(const wunder::event::mouse::move& event) override;
   void on_event(const wunder::event::mouse::scroll& event) override;
   void on_event(const wunder::event::scene_activated& event) override;
+
  private:
   // This should be called in an application loop to update the camera matrix if
   // this one is animated: new position, key movement
@@ -205,6 +212,10 @@ class camera : private event_handler<wunder::event::mouse::move>,
   modes m_mode;
   std::unordered_map<camera::actions, std::function<void(float dx, float dy)>>
       m_action_fns;
+
+  unique_ptr<vulkan::uniform_buffer> m_camera_buffer;
+  void update_camera_buffer();
+  SceneCamera create_host_camera();
 };
 
 }  // namespace wunder
