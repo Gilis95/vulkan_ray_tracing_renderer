@@ -28,7 +28,7 @@ target_include_directories(wunder-renderer PUBLIC
         $<INSTALL_INTERFACE:include>
 )
 
-target_link_libraries(wunder-renderer PRIVATE
+target_link_libraries(wunder-renderer PUBLIC
         EnTT
         Vulkan
         tinygltf

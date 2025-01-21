@@ -22,10 +22,9 @@ struct AllocInfo {
   uint64_t AllocatedSize = 0;
   AllocationType Type = AllocationType::None;
 };
-static std::map<VmaAllocation, AllocInfo> s_AllocationMap;
+static std::map<VmaAllocation, AllocInfo> k_allocation_map;
 
-memory_allocator::memory_allocator(std::string tag)
-    : m_Tag(std::move(tag)) {}
+memory_allocator::memory_allocator(std::string tag) : m_Tag(std::move(tag)) {}
 
 memory_allocator::~memory_allocator() {
   vmaDestroyAllocator(m_resource_allocator);
@@ -53,53 +52,57 @@ void memory_allocator::initialize() {
 }
 
 VmaAllocation memory_allocator::allocate_buffer(
-    VkBufferCreateInfo bufferCreateInfo, VmaMemoryUsage usage,
-    VkBuffer& outBuffer) {
-  AssertReturnIf(bufferCreateInfo.size <= 0, VK_NULL_HANDLE);
+    VkBufferCreateInfo buffer_create_info, VmaMemoryUsage usage,
+    VkBuffer& out_buffer) {
+  AssertReturnIf(buffer_create_info.size <= 0, VK_NULL_HANDLE);
 
-  VmaAllocationCreateInfo allocCreateInfo = {};
-  allocCreateInfo.usage = usage;
+  VmaAllocationCreateInfo alloc_create_info = {};
+  alloc_create_info.usage = usage;
 
   VmaAllocation allocation;
-  vmaCreateBuffer(m_resource_allocator, &bufferCreateInfo, &allocCreateInfo,
-                  &outBuffer, &allocation, nullptr);
+  vmaCreateBuffer(m_resource_allocator, &buffer_create_info, &alloc_create_info,
+                  &out_buffer, &allocation, nullptr);
   if (allocation == nullptr) {
     WUNDER_ERROR_TAG("Renderer", "Failed to allocate GPU buffer!");
     WUNDER_ERROR_TAG("Renderer", "  Requested size: {}",
-                     string::utils::bytes_to_string(bufferCreateInfo.size));
+                     string::utils::bytes_to_string(buffer_create_info.size));
   }
 
-  VmaAllocationInfo allocInfo{};
-  vmaGetAllocationInfo(m_resource_allocator, allocation, &allocInfo);
+  VmaAllocationInfo allocation_info{};
+  vmaGetAllocationInfo(m_resource_allocator, allocation, &allocation_info);
   WUNDER_WARN_TAG(
       "Renderer",
       "vulkan_memory_allocator ({0}): allocating buffer; size = {1}", m_Tag,
-      string::utils::bytes_to_string(allocInfo.size));
+      string::utils::bytes_to_string(allocation_info.size));
 
   return allocation;
 }
 
 VmaAllocation memory_allocator::allocate_image(
-    VkImageCreateInfo imageCreateInfo, VmaMemoryUsage usage, VkImage& outImage,
-    VkDeviceSize* allocatedSize) {
-  VmaAllocationCreateInfo allocCreateInfo = {};
-  allocCreateInfo.usage = usage;
+    VkImageCreateInfo image_create_info, VmaMemoryUsage usage,
+    VkImage& outImage, VkDeviceSize* allocatedSize) {
+  VmaAllocationCreateInfo alloc_create_info = {};
+  alloc_create_info.usage = usage;
 
   VmaAllocation allocation;
-  vmaCreateImage(m_resource_allocator, &imageCreateInfo, &allocCreateInfo,
+  vmaCreateImage(m_resource_allocator, &image_create_info, &alloc_create_info,
                  &outImage, &allocation, nullptr);
   if (allocation == nullptr) {
     WUNDER_ERROR_TAG("Renderer", "Failed to allocate GPU image!");
-    WUNDER_ERROR_TAG(
-        "Renderer", "  Requested size: {}x{}x{}", imageCreateInfo.extent.width,
-        imageCreateInfo.extent.height, imageCreateInfo.extent.depth);
-    WUNDER_ERROR_TAG("Renderer", "  Mips: {}", imageCreateInfo.mipLevels);
-    WUNDER_ERROR_TAG("Renderer", "  Layers: {}", imageCreateInfo.arrayLayers);
+    WUNDER_ERROR_TAG("Renderer", "  Requested size: {}x{}x{}",
+                     image_create_info.extent.width,
+                     image_create_info.extent.height,
+                     image_create_info.extent.depth);
+    WUNDER_ERROR_TAG("Renderer", "  Mips: {}", image_create_info.mipLevels);
+    WUNDER_ERROR_TAG("Renderer", "  Layers: {}", image_create_info.arrayLayers);
   }
 
   VmaAllocationInfo allocInfo;
   vmaGetAllocationInfo(m_resource_allocator, allocation, &allocInfo);
-  if (allocatedSize) *allocatedSize = allocInfo.size;
+  if (allocatedSize) {
+    *allocatedSize = allocInfo.size;
+  }
+
   WUNDER_TRACE_TAG(m_Tag, "Allocating image; size = {}",
                    string::utils::bytes_to_string(allocInfo.size));
 
@@ -110,15 +113,14 @@ void memory_allocator::free(VmaAllocation allocation) {
   vmaFreeMemory(m_resource_allocator, allocation);
 }
 
-void memory_allocator::destroy_image(VkImage image,
-                                            VmaAllocation allocation) {
+void memory_allocator::destroy_image(VkImage image, VmaAllocation allocation) {
   AssertReturnUnless(image);
   AssertReturnUnless(allocation);
   vmaDestroyImage(m_resource_allocator, image, allocation);
 }
 
 void memory_allocator::destroy_buffer(VkBuffer buffer,
-                                             VmaAllocation allocation) {
+                                      VmaAllocation allocation) {
   AssertReturnUnless(buffer);
   AssertReturnUnless(allocation);
   vmaDestroyBuffer(m_resource_allocator, buffer, allocation);
@@ -129,9 +131,8 @@ void memory_allocator::unmap_memory(VmaAllocation allocation) {
 }
 
 void memory_allocator::dump_stats() {
-
   VmaTotalStatistics stats;
-  vmaCalculateStatistics(m_resource_allocator,&stats);
+  vmaCalculateStatistics(m_resource_allocator, &stats);
 
   WUNDER_WARN_TAG("Renderer", "-----------------------------------");
   for (auto& b : stats.memoryHeap) {
@@ -152,4 +153,4 @@ VmaAllocator& memory_allocator::get_vma_allocator() {
   return m_resource_allocator;
 }
 
-}  // namespace wunder
+}  // namespace wunder::vulkan

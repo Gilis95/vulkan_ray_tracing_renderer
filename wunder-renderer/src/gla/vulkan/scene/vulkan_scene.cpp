@@ -10,6 +10,7 @@
 #include "gla/vulkan/ray-trace/vulkan_bottom_level_acceleration_structure_build_info.h"
 #include "gla/vulkan/ray-trace/vulkan_top_level_acceleration_structure.h"
 #include "gla/vulkan/ray-trace/vulkan_top_level_acceleration_structure_build_info.h"
+#include "gla/vulkan/scene/vulkan_environment_helper.h"
 #include "gla/vulkan/scene/vulkan_materials_helper.h"
 #include "gla/vulkan/scene/vulkan_mesh.h"
 #include "gla/vulkan/scene/vulkan_mesh_scene_node.h"
@@ -54,9 +55,14 @@ void scene::load_scene(scene_asset& asset) {
   meshes_helper::create_top_level_acceleration_structure(
       m_mesh_nodes, *m_acceleration_structure);
   //  auto& main_camera = camera_entities[0];  // TODO:: handle multiple cameras
+
+  m_sun_and_sky_properties_buffer =
+      vulkan_environment_helper::create_sky_and_sun_properties();
+  m_environment_textures =
+      vulkan_environment_helper::create_environment_texture();
 }
 
-void scene::bind(renderer& renderer) {
+void scene::add_descriptor_to(renderer& renderer) {
   for (auto& texture : m_bound_textures) {
     texture->add_descriptor_to(renderer);
   }
@@ -64,6 +70,8 @@ void scene::bind(renderer& renderer) {
   m_material_buffer->add_descriptor_to(renderer);
   m_mesh_instance_data_buffer->add_descriptor_to(renderer);
   m_acceleration_structure->add_descriptor_to(renderer);
+  m_sun_and_sky_properties_buffer->add_descriptor_to(renderer);
+  m_environment_textures->add_descriptor_to(renderer);
 }
 
 }  // namespace wunder::vulkan

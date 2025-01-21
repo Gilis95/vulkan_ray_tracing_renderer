@@ -23,6 +23,9 @@ class asset_manager {
   asset_serialization_result_codes import_asset(
       const std::filesystem::path& asset);
 
+  asset_serialization_result_codes import_environment_map(
+      const std::filesystem::path& asset);
+
  public:
   template <typename asset_type>
   optional_const_ref<asset_type> find_asset(asset_handle handle) const;

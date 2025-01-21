@@ -48,7 +48,7 @@ asset_storage::find_assets_of() const {
         std::get_if<asset_type>(&asset);
     ContinueUnless(asset_of_type);
 
-    result.push_back(asset_id, asset);
+    result.push_back(std::make_pair(asset_id, std::reference_wrapper(*asset_of_type)));
   }
   return result;
 }

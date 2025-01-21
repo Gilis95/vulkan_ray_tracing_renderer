@@ -13,6 +13,7 @@
 #include "core/wunder_memory.h"
 #include "event/event_handler.h"
 #include "gla/renderer_api.h"
+#include "gla/vulkan/vulkan_texture_fwd.h"
 
 struct RtxState;
 
@@ -68,6 +69,8 @@ class renderer : public renderer_api,
   unique_ptr<pipeline> m_pipeline;
   unique_ptr<shader_binding_table> m_shader_binding_table;
   unique_ptr<RtxState> m_state;
+
+  unique_ptr<storage_texture> m_rtx_generated_image;
 };
 }  // namespace wunder::vulkan
 #endif /* VULKAN_RENDERER_H */

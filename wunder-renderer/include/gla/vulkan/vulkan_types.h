@@ -40,7 +40,7 @@ struct uniform_buffer : public base {};
 // ShaderResource::StorageBuffer storageBuffer;
 struct storage_buffers : public base {};
 
-// resources.sampled_images
+// resources.sampled_image
 // auto& imageSampler = shaderDescriptorSet.ImageSamplers[binding];
 struct sampled_images : public base {};
 
@@ -52,7 +52,7 @@ struct separate_images : public base {};
 // shaderDescriptorSet.SeparateSamplers[binding];
 struct separate_samplers : public base {};
 
-// resources.storage_images
+// resources.storage_image
 // shaderDescriptorSet.StorageImages[binding]
 struct storage_images : public base {};
 
@@ -79,15 +79,23 @@ struct storage_buffers : public base {
   VkDescriptorBufferInfo m_descriptor;
 };
 
-struct sampled_images : public base {
+struct sampled_image : public base {
   VkDescriptorImageInfo m_descriptor;
+
+  static const VkImageUsageFlagBits s_usage = static_cast<VkImageUsageFlagBits>(
+      VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT |
+      VK_IMAGE_USAGE_TRANSFER_DST_BIT);
 };
 
 struct separate_images : public base {};
 
 struct separate_samplers : public base {};
 
-struct storage_images : public base {};
+struct storage_image : public base {
+  VkDescriptorImageInfo m_descriptor;
+
+  static const VkImageUsageFlagBits s_usage = VK_IMAGE_USAGE_STORAGE_BIT;
+};
 
 struct acceleration_structure : public base {
   acceleration_structure();
@@ -97,10 +105,10 @@ struct acceleration_structure : public base {
 
 using element = std::variant<std::reference_wrapper<uniform_buffer>,
                              std::reference_wrapper<storage_buffers>,
-                             std::reference_wrapper<sampled_images>,
+                             std::reference_wrapper<sampled_image>,
                              std::reference_wrapper<separate_images>,
                              std::reference_wrapper<separate_samplers>,
-                             std::reference_wrapper<storage_images>,
+                             std::reference_wrapper<storage_image>,
                              std::reference_wrapper<acceleration_structure>>;
 
 using resource_list =
@@ -155,6 +163,11 @@ struct vulkan_extension_data {
   bool m_optional{false};
   void* m_feature_struct{nullptr};
   uint32_t m_version{0};
+};
+
+struct descriptor_build_data {
+  bool m_enabled = false;
+  std::string m_descriptor_name;
 };
 
 }  // namespace wunder::vulkan

@@ -5,14 +5,15 @@
 #include <vk_mem_alloc.h>
 
 #include "core/wunder_memory.h"
-#include "vulkan_memory_allocator.h"
 #include "gla/vulkan/vulkan_types.h"
+#include "vulkan_memory_allocator.h"
 
 namespace wunder {
 struct texture_asset;
 }
 
 namespace wunder::vulkan {
+
 struct vulkan_image_info {
   VkImage m_image = VK_NULL_HANDLE;
   VkImageView m_image_view = VK_NULL_HANDLE;
@@ -22,26 +23,36 @@ struct vulkan_image_info {
 
 class renderer;
 
-class texture :
- public vulkan::shader_resource::instance::sampled_images {
-
+template <typename base_texture>
+class texture : public base_texture {
  public:
-  texture(const texture_asset& asset);
+  texture(descriptor_build_data build_data, VkFormat image_format,
+          std::uint32_t width, std::uint32_t height);
+  texture(descriptor_build_data build_data, const texture_asset& asset);
   ~texture();
 
  public:
   void add_descriptor_to(renderer& renderer) override;
 
  private:
-  VkFormat allocate_image(const std::string& name);
-  void create_image_view(const std::string& name, const VkFormat& image_format);
-  void try_create_sampler(const texture_asset& asset,
-                          VkDevice vulkan_logical_device,
-                          const std::string& name);
+  void allocate_image(const std::string& name, VkFormat image_format,
+                      std::uint32_t width, std::uint32_t height);
+  void create_image_view(const std::string& name, VkFormat image_format);
 
-  void bind_texture_data(const texture_asset& asset);
+  void try_screate_sampler();
+  void try_create_sampler(const texture_asset& asset, const std::string& name);
+
+  void bind_texture(VkImageLayout target_layout);
+  void bind_texture_data(const texture_asset& asset,
+                         VkImageLayout target_layout);
+
+  void transit_image_layout(VkCommandBuffer& command_buffer,
+                            VkImageLayout old_layout, VkImageLayout new_layout);
+
+  [[nodiscard]] static std::string generate_next_texture_name();
 
  private:
+  descriptor_build_data m_descriptor_build_data;
   vulkan_image_info m_image_info;
   VkDeviceSize m_gpu_allocation_size = 0;
 };

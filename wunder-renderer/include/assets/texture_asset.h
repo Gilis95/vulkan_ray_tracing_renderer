@@ -1,8 +1,13 @@
 #ifndef WUNDER_TEXTURE_ASSET_H
 #define WUNDER_TEXTURE_ASSET_H
 
+#include <glad/vulkan.h>
+#include <vk_mem_alloc.h>
+
 #include <cstdint>
 #include <limits>
+#include <optional>
+#include <variant>
 #include <vector>
 
 namespace wunder {
@@ -21,11 +26,24 @@ struct texture_sampler {
   address_mode_type m_address_mode_v = address_mode_type::CLAMP_TO_EDGE;
 };
 
+struct texture_data {
+  using data_type =
+      std::variant<std::vector<unsigned char>, std::vector<float>>;
+
+  data_type m_data;
+
+  bool is_empty() const;
+  size_t size() const;
+  void copy_to(VmaAllocation& stagingBufferAllocation) const;
+};
+
 struct texture_asset {
-  std::vector<unsigned char> m_texture_data;
+  texture_data m_texture_data;
   int m_width, m_height;
   std::optional<texture_sampler> m_sampler;
   std::uint32_t m_max_lod = std::numeric_limits<uint32_t>::max();
 };
+
+struct environment_texture_asset : public texture_asset {};
 }  // namespace wunder
 #endif  // WUNDER_TEXTURE_ASSET_H

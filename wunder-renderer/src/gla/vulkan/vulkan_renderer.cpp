@@ -19,11 +19,14 @@
 #include "gla/vulkan/vulkan_pipeline.h"
 #include "gla/vulkan/vulkan_shader.h"
 #include "gla/vulkan/vulkan_shader_binding_table.h"
+#include "gla/vulkan/vulkan_texture.h"
 #include "resources/shaders/host_device.h"
 #include "scene/scene_manager.h"
 
 namespace wunder::vulkan {
-renderer::renderer() : event_handler<wunder::event::scene_activated>() , m_have_active_scene(false) {}
+renderer::renderer()
+    : event_handler<wunder::event::scene_activated>(),
+      m_have_active_scene(false) {}
 
 renderer::~renderer() {
   if (m_pipeline.get()) {
@@ -65,6 +68,10 @@ void renderer::init_internal(const renderer_properties &properties) {
       CRASH;
     }
   }
+
+  m_rtx_generated_image.reset(
+      new storage_texture({.m_enabled = true, .m_descriptor_name = "resultImage"},
+                  VK_FORMAT_R32G32B32A32_SFLOAT, 1920, 1080));
 
   m_pipeline->create_pipeline(m_shaders);
   m_shader_binding_table->initialize(*m_pipeline);
@@ -130,7 +137,6 @@ void renderer::update(time_unit dt) /*override*/
   auto graphic_command_buffer =
       command_pool.get_current_graphics_command_buffer();
 
-
   m_pipeline->bind();
   m_descriptor_set_manager->bind(*m_pipeline);
 
@@ -155,9 +161,9 @@ void renderer::update(time_unit dt) /*override*/
           shader_binding_table::shader_stage_type::callable);
 
   vkCmdTraceRaysKHR(graphic_command_buffer, &raygen_address, &miss_address,
-                    &hit_address, &callable_address, 100, 100, 3);
+                    &hit_address, &callable_address, 1920, 1080, 3);
   ++m_state->frame;
-  
+
   command_pool.flush_graphics_command_buffer();
 }
 
@@ -165,10 +171,13 @@ void renderer::on_event(
     const wunder::event::scene_activated &scene_activated_event) {
   auto api_scene = project::instance().get_scene_manager().mutable_api_scene(
       scene_activated_event.m_id);
-
   AssertReturnUnless(api_scene.has_value());
-  api_scene->get().bind(*this);
+
+  m_descriptor_set_manager->clear_resources();
+
+  api_scene->get().add_descriptor_to(*this);
   service_factory::instance().get_camera().bind(*this);
+  m_rtx_generated_image->add_descriptor_to(*this);
 
   m_descriptor_set_manager->bake();
 

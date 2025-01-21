@@ -22,9 +22,9 @@ class memory_allocator : public non_copyable{
   // void Allocate(VkMemoryRequirements requirements, VkDeviceMemory* dest,
   // VkMemoryPropertyFlags flags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
-  VmaAllocation allocate_buffer(VkBufferCreateInfo bufferCreateInfo,
-                                VmaMemoryUsage usage, VkBuffer& outBuffer);
-  VmaAllocation allocate_image(VkImageCreateInfo imageCreateInfo,
+  VmaAllocation allocate_buffer(VkBufferCreateInfo buffer_create_info,
+                                VmaMemoryUsage usage, VkBuffer& out_buffer);
+  VmaAllocation allocate_image(VkImageCreateInfo image_create_info,
                                VmaMemoryUsage usage, VkImage& outImage,
                                VkDeviceSize* allocatedSize = nullptr);
   void free(VmaAllocation allocation);

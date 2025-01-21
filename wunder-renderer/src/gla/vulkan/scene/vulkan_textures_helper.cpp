@@ -34,15 +34,17 @@ assets<texture_asset> textures_helper::extract_texture_assets(
   return result;
 }
 
-std::vector<unique_ptr<wunder::vulkan::texture>> textures_helper::create_texture_buffers(
+std::vector<unique_ptr<wunder::vulkan::sampled_texture>>
+textures_helper::create_texture_buffers(
     const assets<texture_asset>& texture_assets) {
-  std::vector<unique_ptr<wunder::vulkan::texture>> result;
+  std::vector<unique_ptr<wunder::vulkan::sampled_texture>> result;
 
   for (auto& [_, asset] : texture_assets) {
     auto& texture = result.emplace_back();
-    texture.reset(new wunder::vulkan::texture(asset.get()));
+    texture.reset(new wunder::vulkan::sampled_texture(
+        {.m_enabled = true, .m_descriptor_name = "texturesMap"}, asset.get()));
   }
 
   return result;
 }
-}  // namespace wunder
+}  // namespace wunder::vulkan

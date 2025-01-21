@@ -83,6 +83,15 @@ class write_descriptor_creator {
 }  // namespace
 
 namespace wunder::vulkan {
+
+void descriptor_set_manager::clear_resources(){
+  for(auto& [_, input_resource]: m_input_resources){
+    for(auto& [_,binding] : input_resource.m_bindings){
+      binding.clear_resources();
+    }
+  }
+}
+
 void descriptor_set_manager::clear_resource(
     const vulkan_resource_identifier& resource_identifier) {
   optional_const_ref<shader_resource::declaration::base>

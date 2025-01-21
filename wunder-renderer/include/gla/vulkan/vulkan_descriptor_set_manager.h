@@ -21,6 +21,7 @@ class descriptor_set_manager : public non_copyable {
   void initialize(const shader& vulkan_shader);
 
  public:
+  void clear_resources();
   void clear_resource(const vulkan_resource_identifier& resource_identifier);
   void add_resource(const vulkan_resource_identifier& resource_identifier,
                     shader_resource::instance::element resource);

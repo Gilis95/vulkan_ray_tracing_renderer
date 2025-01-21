@@ -24,7 +24,9 @@ wunder_application::wunder_application(application_properties&& properties)
 wunder_application::~wunder_application() /*override*/ = default;
 
 void wunder_application::initialize_internal() {
-  project::instance().get_asset_manager().import_asset(
+  asset_manager& asset_manager = project::instance().get_asset_manager();
+  asset_manager.import_environment_map("wunder-renderer/resources/std_env.hdr");
+  asset_manager.import_asset(
       "wunder-sandbox/resources/cube.gltf");
 }
 

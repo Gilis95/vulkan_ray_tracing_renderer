@@ -10,11 +10,6 @@
 namespace wunder::vulkan {
 class renderer;
 
-struct descriptor_build_data {
-  bool m_enabled = false;
-  std::string m_descriptor_name;
-};
-
 template <typename base_buffer_type>
 class buffer : public non_copyable, public base_buffer_type {
  public:

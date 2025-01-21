@@ -13,6 +13,8 @@
 
 namespace {
 
+uint32_t texture_counter = 0;
+
 std::unordered_map<wunder::texture_filter_type, VkFilter> s_filters = {
     {wunder::texture_filter_type::NEAREST, VK_FILTER_NEAREST},  // NEAREST
     {wunder::texture_filter_type::LINEAR, VK_FILTER_LINEAR},    // LINEA
@@ -23,45 +25,125 @@ std::unordered_map<wunder::mipmap_mode_type, VkSamplerMipmapMode> s_mip_map{
     {wunder::mipmap_mode_type::LINEAR,
      VK_SAMPLER_MIPMAP_MODE_LINEAR}  // LINEAR_MIPMAP_LINEAR
 };
-std::unordered_map<wunder::address_mode_type, VkSamplerAddressMode> s_address_mode{
-    {wunder::address_mode_type::CLAMP_TO_EDGE,
-     VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE},
-    {wunder::address_mode_type::MIRRORED_REPEAT,
-     VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT},
-    {wunder::address_mode_type::REPEAT, VK_SAMPLER_ADDRESS_MODE_REPEAT}};
+std::unordered_map<wunder::address_mode_type, VkSamplerAddressMode>
+    s_address_mode{
+        {wunder::address_mode_type::CLAMP_TO_EDGE,
+         VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE},
+        {wunder::address_mode_type::MIRRORED_REPEAT,
+         VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT},
+        {wunder::address_mode_type::REPEAT, VK_SAMPLER_ADDRESS_MODE_REPEAT}};
+
+std::unordered_map<VkImageLayout, VkPipelineStageFlags>
+    s_layout_to_pipeline_stage{
+        {VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_PIPELINE_STAGE_TRANSFER_BIT},
+
+        {VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, VK_PIPELINE_STAGE_TRANSFER_BIT},
+        {VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+         VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT},
+        {VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+         VK_PIPELINE_STAGE_ALL_COMMANDS_BIT},
+        {VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+         VK_PIPELINE_STAGE_ALL_COMMANDS_BIT},
+        {VK_IMAGE_LAYOUT_PREINITIALIZED, VK_PIPELINE_STAGE_HOST_BIT},
+        {VK_IMAGE_LAYOUT_UNDEFINED, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT}};
+
+std::unordered_map<VkImageLayout, VkAccessFlags> s_layout_to_access_flags{
+    {VK_IMAGE_LAYOUT_PREINITIALIZED, VK_ACCESS_HOST_WRITE_BIT},
+    {VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_ACCESS_TRANSFER_WRITE_BIT},
+    {VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, VK_ACCESS_TRANSFER_READ_BIT},
+    {VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+     VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT},
+    {VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+     VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT},
+    {VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_ACCESS_SHADER_READ_BIT},
+};
+
+VkPipelineStageFlags pipeline_stage_for_layout(VkImageLayout layout) {
+  auto pipeline_stage_it = s_layout_to_pipeline_stage.find(layout);
+  ReturnIf(pipeline_stage_it == s_layout_to_pipeline_stage.end(),
+           VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT);
+
+  return pipeline_stage_it->second;
+}
+
+VkAccessFlags access_flags_for_image_layout(VkImageLayout layout) {
+  auto access_flags_it = s_layout_to_access_flags.find(layout);
+  ReturnIf(access_flags_it == s_layout_to_access_flags.end(), VkAccessFlags());
+  return access_flags_it->second;
+}
+
 }  // namespace
 
 namespace wunder::vulkan {
 
-texture::texture(const texture_asset& asset) {
+template <typename base_texture>
+texture<base_texture>::texture(descriptor_build_data build_data,
+                               VkFormat image_format, std::uint32_t width,
+                               std::uint32_t height)
+    : m_descriptor_build_data(std::move(build_data)) {
+  std::string name = generate_next_texture_name();
+  VkImageLayout target_layout = VK_IMAGE_LAYOUT_GENERAL;
+
+  allocate_image(name, image_format, width, height);
+  create_image_view(name, image_format);
+  try_screate_sampler();
+  bind_texture(target_layout);
+
+  base_texture::m_descriptor.imageLayout = target_layout;
+}
+
+template <typename base_texture>
+texture<base_texture>::texture(descriptor_build_data build_data,
+                               const texture_asset& asset)
+    : m_descriptor_build_data(std::move(build_data)) {
+  std::string name = generate_next_texture_name();
+
+  VkFormat image_format = VK_FORMAT_R8G8B8A8_UNORM;
+  VkImageLayout target_layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+  allocate_image(name, image_format, asset.m_width, asset.m_height);
+  create_image_view(name, image_format);
+  try_create_sampler(asset, name);
+  bind_texture_data(asset, target_layout);
+
+  base_texture::m_descriptor.imageLayout = target_layout;
+}
+
+template <typename base_texture>
+texture<base_texture>::~texture() = default;
+
+template <typename base_texture>
+void texture<base_texture>::add_descriptor_to(renderer& renderer) {
+  ReturnUnless(m_descriptor_build_data.m_enabled);
+  auto& descriptor_manager = renderer.get_descriptor_set_manager();
+  descriptor_manager.add_resource(m_descriptor_build_data.m_descriptor_name,
+                                  *this);
+}
+
+template <typename base_texture>
+void texture<base_texture>::try_screate_sampler() {
   auto& vulkan_context =
       layer_abstraction_factory::instance().get_vulkan_context();
   auto& device = vulkan_context.get_device();
-  auto vulkan_logical_device = device.get_vulkan_logical_device();;
+  auto vulkan_logical_device = device.get_vulkan_logical_device();
 
-  std::string name = "texture";
+  VkSamplerCreateInfo sampler_create_info{};
+  memset(&sampler_create_info, 0, sizeof(sampler_create_info));
+  sampler_create_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+  sampler_create_info.maxLod = std::numeric_limits<float>::max();
 
-  VkFormat image_format =
-      allocate_image( name);
+  VK_CHECK_RESULT(vkCreateSampler(vulkan_logical_device, &sampler_create_info,
+                                  nullptr, &(m_image_info.m_sampler)));
+};
 
-  create_image_view(name, image_format);
-  try_create_sampler(asset, vulkan_logical_device, name);
-  bind_texture_data(asset);
+template <typename base_texture>
+void texture<base_texture>::try_create_sampler(const texture_asset& asset,
+                                               const std::string& name) {
+  auto& vulkan_context =
+      layer_abstraction_factory::instance().get_vulkan_context();
+  auto& device = vulkan_context.get_device();
+  auto vulkan_logical_device = device.get_vulkan_logical_device();
 
-  m_descriptor.imageLayout =  VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-}
-
-texture::~texture() = default;
-
-void texture::add_descriptor_to(renderer& renderer)
-{
-  auto& descriptor_manager = renderer.get_descriptor_set_manager();
-  descriptor_manager.add_resource("texturesMap", *this);
-}
-
-void texture::try_create_sampler(const texture_asset& asset,
-                                        VkDevice vulkan_logical_device,
-                                        const std::string& name) {
   ReturnUnless(asset.m_sampler.has_value());
 
   auto& model_sampler = asset.m_sampler.value();
@@ -78,7 +160,7 @@ void texture::try_create_sampler(const texture_asset& asset,
   sampler_create_info.magFilter = s_filters[model_sampler.m_mag_filter];
   sampler_create_info.minFilter = s_filters[model_sampler.m_min_filter];
 
-  //TODO::
+  // TODO::
   sampler_create_info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
 
   sampler_create_info.mipLodBias = 0.0f;
@@ -89,15 +171,17 @@ void texture::try_create_sampler(const texture_asset& asset,
   VK_CHECK_RESULT(vkCreateSampler(vulkan_logical_device, &sampler_create_info,
                                   nullptr, &(m_image_info.m_sampler)));
 
-  m_descriptor.sampler = m_image_info.m_sampler;
+  base_texture::m_descriptor.sampler = m_image_info.m_sampler;
 
   set_debug_utils_object_name(vulkan_logical_device, VK_OBJECT_TYPE_SAMPLER,
                               std::format("{} default sampler", name),
                               m_image_info.m_sampler);
 }
 
-void texture::create_image_view( const std::string& name,
-    const VkFormat& image_format) {  // Create a default image view
+template <typename base_texture>
+void texture<base_texture>::create_image_view(
+    const std::string& name,
+    VkFormat image_format) {  // Create a default image view
   auto& vulkan_context =
       layer_abstraction_factory::instance().get_vulkan_context();
   auto& device = vulkan_context.get_device();
@@ -122,14 +206,18 @@ void texture::create_image_view( const std::string& name,
                                     &image_view_create_info, nullptr,
                                     &(m_image_info.m_image_view)));
 
-  m_descriptor.imageView = m_image_info.m_image_view;
+  base_texture::m_descriptor.imageView = m_image_info.m_image_view;
 
   set_debug_utils_object_name(vulkan_logical_device, VK_OBJECT_TYPE_IMAGE_VIEW,
                               std::format("{} default image view", name),
                               m_image_info.m_image_view);
 }
 
-VkFormat texture::allocate_image(const std::string& name) {
+template <typename base_texture>
+void texture<base_texture>::allocate_image(const std::string& name,
+                                           VkFormat image_format,
+                                           std::uint32_t width,
+                                           std::uint32_t height) {
   auto& vulkan_context =
       layer_abstraction_factory::instance().get_vulkan_context();
   auto& device = vulkan_context.get_device();
@@ -137,22 +225,19 @@ VkFormat texture::allocate_image(const std::string& name) {
   auto& allocator = vulkan_context.get_resource_allocator();
 
   VmaMemoryUsage memoryUsage = VMA_MEMORY_USAGE_GPU_ONLY;
-  VkFormat image_format = VK_FORMAT_R8G8B8A8_UNORM;
 
   VkImageCreateInfo image_create_info = {};
   image_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
   image_create_info.imageType = VK_IMAGE_TYPE_2D;
   image_create_info.format = image_format;
-  image_create_info.extent.width = 1;
-  image_create_info.extent.height = 1;
+  image_create_info.extent.width = width;
+  image_create_info.extent.height = height;
   image_create_info.extent.depth = 1;
   image_create_info.mipLevels = 1;
   image_create_info.arrayLayers = 1;
   image_create_info.samples = VK_SAMPLE_COUNT_1_BIT;
   image_create_info.tiling = VK_IMAGE_TILING_OPTIMAL;
-  image_create_info.usage = VK_IMAGE_USAGE_SAMPLED_BIT |
-                            VK_IMAGE_USAGE_TRANSFER_SRC_BIT |
-                            VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+  image_create_info.usage = base_texture::s_usage;
 
   m_image_info.m_memory_alloc =
       allocator.allocate_image(image_create_info, memoryUsage,
@@ -160,47 +245,95 @@ VkFormat texture::allocate_image(const std::string& name) {
   set_debug_utils_object_name(vulkan_logical_device, VK_OBJECT_TYPE_IMAGE,
                               std::format("{} default image view", name),
                               m_image_info.m_image);
-  return image_format;
 }
 
-void texture::bind_texture_data(const texture_asset& asset) {
-  //TODO:: handle non-existing texture
+template <typename base_texture>
+void texture<base_texture>::bind_texture(VkImageLayout target_layout) {
+  auto& vulkan_context =
+      layer_abstraction_factory::instance().get_vulkan_context();
+  auto& device = vulkan_context.get_device();
+  auto& command_pool = device.get_command_pool();
+  VkCommandBuffer command_buffer =
+      command_pool.get_current_compute_command_buffer();
+
+  transit_image_layout(command_buffer, VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED,
+                       target_layout);
+
+  command_pool.flush_compute_command_buffer();
+}
+
+template <typename base_texture>
+void texture<base_texture>::bind_texture_data(const texture_asset& asset,
+                                              VkImageLayout target_layout) {
+  // TODO:: handle non-existing texture
   const auto& texture_data = asset.m_texture_data;
-  ReturnIf(texture_data.empty());
+  ReturnIf(texture_data.is_empty());
 
   auto& vulkan_context =
       layer_abstraction_factory::instance().get_vulkan_context();
   auto& device = vulkan_context.get_device();
-  auto vulkan_logical_device = device.get_vulkan_logical_device();
   auto& command_pool = device.get_command_pool();
   auto& allocator = vulkan_context.get_resource_allocator();
 
   VkMemoryAllocateInfo memAllocInfo{};
+  memset(&memAllocInfo, 0, sizeof(VkMemoryAllocateInfo));
+
   memAllocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
 
   // Create staging buffer
   VkBufferCreateInfo buffer_create_info{};
+  memset(&buffer_create_info, 0, sizeof(VkBufferCreateInfo));
+
   buffer_create_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
   buffer_create_info.size = texture_data.size();
   buffer_create_info.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
   buffer_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-  VkBuffer stagingBuffer;
+  VkBuffer staging_buffer;
   VmaAllocation stagingBufferAllocation = allocator.allocate_buffer(
-      buffer_create_info, VMA_MEMORY_USAGE_CPU_TO_GPU, stagingBuffer);
+      buffer_create_info, VMA_MEMORY_USAGE_CPU_TO_GPU, staging_buffer);
 
   // Copy data to staging buffer
-  auto* dest_data = allocator.map_memory<uint8_t>(stagingBufferAllocation);
-
-  memcpy(dest_data, texture_data.data(), texture_data.size());
+  texture_data.copy_to(stagingBufferAllocation);
   allocator.unmap_memory(stagingBufferAllocation);
 
-  VkCommandBuffer copy_cmd = command_pool.get_current_compute_command_buffer();
+  VkCommandBuffer command_buffer =
+      command_pool.get_current_compute_command_buffer();
 
+  VkBufferImageCopy buffer_copy_region = {};
+  buffer_copy_region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+  buffer_copy_region.imageSubresource.mipLevel = 0;
+  buffer_copy_region.imageSubresource.baseArrayLayer = 0;
+  buffer_copy_region.imageSubresource.layerCount = 1;
+  buffer_copy_region.imageExtent.width = asset.m_width;
+  buffer_copy_region.imageExtent.height = asset.m_height;
+  buffer_copy_region.imageExtent.depth = 1;
+  buffer_copy_region.bufferOffset = 0;
+
+  transit_image_layout(command_buffer, VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED,
+                       VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+
+  // Copy mip levels from staging buffer
+  vkCmdCopyBufferToImage(command_buffer, staging_buffer, m_image_info.m_image,
+                         VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1,
+                         &buffer_copy_region);
+
+  transit_image_layout(command_buffer,
+                       VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                       target_layout);
+
+  command_pool.flush_compute_command_buffer();
+}
+
+template <typename base_texture>
+void texture<base_texture>::transit_image_layout(
+    VkCommandBuffer& command_buffer, VkImageLayout old_layout,
+    VkImageLayout new_layout) {
   // Image memory barriers for the texture image
 
   // The sub resource range describes the regions of the image that will be
   // transitioned using the memory barriers below
   VkImageSubresourceRange subresource_range = {};
+  memset(&subresource_range, 0, sizeof(VkImageSubresourceRange));
   // Image only contains color data
   subresource_range.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
   // Start at first mip level
@@ -216,33 +349,26 @@ void texture::bind_texture_data(const texture_asset& asset) {
   image_memory_barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
   image_memory_barrier.image = m_image_info.m_image;
   image_memory_barrier.subresourceRange = subresource_range;
-  image_memory_barrier.srcAccessMask = 0;
-  image_memory_barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-  image_memory_barrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-  image_memory_barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+  image_memory_barrier.srcAccessMask = access_flags_for_image_layout(old_layout);
+  image_memory_barrier.dstAccessMask = access_flags_for_image_layout(new_layout);
+  image_memory_barrier.oldLayout = old_layout;
+  image_memory_barrier.newLayout = new_layout;
 
   // Insert a memory dependency at the proper pipeline stages that will execute
   // the image layout transition Source pipeline stage is host write/read
   // exection (VK_PIPELINE_STAGE_HOST_BIT) Destination pipeline stage is copy
   // command exection (VK_PIPELINE_STAGE_TRANSFER_BIT)
-  vkCmdPipelineBarrier(copy_cmd, VK_PIPELINE_STAGE_HOST_BIT,
-                       VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0,
+  vkCmdPipelineBarrier(command_buffer, pipeline_stage_for_layout(old_layout),
+                       pipeline_stage_for_layout(new_layout), 0, 0, nullptr, 0,
                        nullptr, 1, &image_memory_barrier);
-
-  VkBufferImageCopy buffer_copy_region = {};
-  buffer_copy_region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-  buffer_copy_region.imageSubresource.mipLevel = 0;
-  buffer_copy_region.imageSubresource.baseArrayLayer = 0;
-  buffer_copy_region.imageSubresource.layerCount = 1;
-  buffer_copy_region.imageExtent.width = asset.m_width;
-  buffer_copy_region.imageExtent.height = asset.m_height;
-  buffer_copy_region.imageExtent.depth = 1;
-  buffer_copy_region.bufferOffset = 0;
-
-  // Copy mip levels from staging buffer
-  vkCmdCopyBufferToImage(copy_cmd, stagingBuffer, m_image_info.m_image,
-                         VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1,
-                         &buffer_copy_region);
 }
 
-}  // namespace wunder
+template <typename base_texture>
+std::string texture<base_texture>::generate_next_texture_name() {
+  return "texture" + std::to_string(texture_counter++);
+}
+
+template class texture<vulkan::shader_resource::instance::sampled_image>;
+
+template class texture<vulkan::shader_resource::instance::storage_image>;
+}  // namespace wunder::vulkan
