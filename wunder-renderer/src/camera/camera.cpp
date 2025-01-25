@@ -268,7 +268,7 @@ void camera::fit(const glm::vec3& boxMin, const glm::vec3& boxMax,
   set_lookat(newEye, boxCenter, m_current.up, instantFit);
 }
 
-void camera::bind(wunder::vulkan::renderer& renderer) {
+void camera::bind(wunder::vulkan::rtx_renderer& renderer) {
   m_camera_buffer->add_descriptor_to(renderer);
 }
 

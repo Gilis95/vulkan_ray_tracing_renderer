@@ -13,7 +13,7 @@ namespace wunder {
 namespace vulkan {
 
 struct vulkan_mesh;
-class renderer;
+class rtx_renderer;
 
 struct vulkan_mesh_scene_node {
  public:

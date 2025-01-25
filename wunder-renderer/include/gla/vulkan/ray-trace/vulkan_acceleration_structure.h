@@ -10,7 +10,7 @@
 #include "core/wunder_memory.h"
 #include "gla/vulkan/vulkan_buffer.h"
 #include "gla/vulkan/vulkan_buffer_fwd.h"
-#include "gla/vulkan/vulkan_types.h"
+#include "gla/vulkan/vulkan_shader_types.h"
 
 namespace wunder::vulkan {
 class acceleration_structure_build_info;
@@ -26,7 +26,7 @@ class acceleration_structure
   acceleration_structure& operator=(acceleration_structure&&) noexcept;
 
  public:
-  void add_descriptor_to(renderer& renderer) override;
+  void add_descriptor_to(rtx_renderer& renderer) override;
   VkDeviceAddress get_address();
 
  protected:

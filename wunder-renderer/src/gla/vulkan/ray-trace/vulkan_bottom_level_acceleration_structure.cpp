@@ -7,7 +7,7 @@
 #include "gla/vulkan/vulkan_context.h"
 #include "gla/vulkan/vulkan_device.h"
 #include "gla/vulkan/vulkan_layer_abstraction_factory.h"
-#include "gla/vulkan/vulkan_types.h"
+#include "gla/vulkan/vulkan_shader_types.h"
 #include "include/assets/mesh_asset.h"
 
 namespace wunder::vulkan {

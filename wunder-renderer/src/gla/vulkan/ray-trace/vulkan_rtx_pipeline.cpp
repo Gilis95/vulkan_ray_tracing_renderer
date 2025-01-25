@@ -1,6 +1,4 @@
-#include "gla/vulkan/vulkan_pipeline.h"
-
-#include <glad/vulkan.h>
+#include "include/gla/vulkan/ray-trace/vulkan_rtx_pipeline.h"
 
 #include <future>
 
@@ -11,41 +9,25 @@
 #include "gla/vulkan/vulkan_layer_abstraction_factory.h"
 #include "gla/vulkan/vulkan_macros.h"
 #include "gla/vulkan/vulkan_shader.h"
+#include "glad/vulkan.h"
 #include "resources/shaders/host_device.h"
 
 namespace wunder::vulkan {
 class shader;
 
-void pipeline::create_pipeline_layout(
-    const shader& descriptor_declaring_shader) {
-  auto& device =
-      layer_abstraction_factory::instance().get_vulkan_context().get_device();
+rtx_pipeline::rtx_pipeline()
+    : base_pipeline(VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR) {}
 
-  const auto& descriptor_sets_layout =
-      descriptor_declaring_shader.get_descriptor_set_layout();
 
-  vkDestroyPipelineLayout(device.get_vulkan_logical_device(),
-                          m_vulkan_pipeline_layout, nullptr);
-
-  // TODO:: This must be comming from shader reflect data!!!
+VkPushConstantRange rtx_pipeline::get_push_constant_range() const {
   VkPushConstantRange push_constants{VK_SHADER_STAGE_RAYGEN_BIT_KHR |
                                          VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR |
                                          VK_SHADER_STAGE_MISS_BIT_KHR,
                                      0, sizeof(RtxState)};
-
-  VkPipelineLayoutCreateInfo pipeline_layout_create_info{
-      VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO};
-  pipeline_layout_create_info.pushConstantRangeCount = 1;
-  pipeline_layout_create_info.pPushConstantRanges = &push_constants;
-  pipeline_layout_create_info.setLayoutCount =
-      static_cast<uint32_t>(descriptor_sets_layout.size());
-  pipeline_layout_create_info.pSetLayouts = descriptor_sets_layout.data();
-  vkCreatePipelineLayout(device.get_vulkan_logical_device(),
-                         &pipeline_layout_create_info, nullptr,
-                         &m_vulkan_pipeline_layout);
+  return push_constants;
 }
 
-void pipeline::create_pipeline(
+void rtx_pipeline::initialize_pipeline(
     const vector_map<VkShaderStageFlagBits, std::vector<unique_ptr<shader>>>&
         shaders_of_types) {
   auto& device =
@@ -116,34 +98,8 @@ void pipeline::create_pipeline(
   }
 }
 
-void pipeline::bind() {
-  auto graphic_command_buffer = layer_abstraction_factory::instance()
-                                    .get_vulkan_context()
-                                    .get_device()
-                                    .get_command_pool()
-                                    .get_current_graphics_command_buffer();
-
-  vkCmdBindPipeline(graphic_command_buffer, get_bind_point(),
-                    m_vulkan_pipeline);
-}
-
-std::vector<VkPipelineShaderStageCreateInfo>
-pipeline::get_shader_stage_create_info(
-    const vector_map<VkShaderStageFlagBits, std::vector<unique_ptr<shader>>>&
-        shaders_of_types) {
-  std::vector<VkPipelineShaderStageCreateInfo> stages;
-
-  for (auto& [shader_type, shaders] : shaders_of_types) {
-    for (auto& shader : shaders) {
-      stages.push_back(shader->get_shader_stage_info());
-    }
-  }
-
-  return stages;
-}
-
 std::vector<VkRayTracingShaderGroupCreateInfoKHR>
-pipeline::get_shader_group_create_info(
+rtx_pipeline::get_shader_group_create_info(
     std::vector<VkPipelineShaderStageCreateInfo>& stages) const {
   std::vector<VkRayTracingShaderGroupCreateInfoKHR> groups;
   auto add_group = [&groups](VkRayTracingShaderGroupTypeKHR type,

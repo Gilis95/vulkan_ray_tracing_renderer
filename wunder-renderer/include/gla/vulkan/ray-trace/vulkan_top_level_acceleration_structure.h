@@ -9,14 +9,14 @@
 namespace wunder::vulkan {
 
 class top_level_acceleration_structure_build_info;
-class renderer;
+class rtx_renderer;
 
 class top_level_acceleration_structure : public acceleration_structure {
  public:
   top_level_acceleration_structure();
 
  public:
-  void add_descriptor_to(renderer& renderer) override;
+  void add_descriptor_to(rtx_renderer& renderer) override;
 
   void build(
       storage_buffer& scratch_buffer,

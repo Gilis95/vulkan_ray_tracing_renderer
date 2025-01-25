@@ -14,7 +14,7 @@
 #include "gla/vulkan/vulkan_buffer_fwd.h"
 
 namespace wunder::vulkan {
-class pipeline;
+class rtx_pipeline;
 
 class shader_binding_table {
  public:
@@ -25,16 +25,16 @@ class shader_binding_table {
   ~shader_binding_table();
 
  public:
-  void initialize(const pipeline& pipeline);
+  void initialize(const rtx_pipeline& pipeline);
 
   VkStridedDeviceAddressRegionKHR get_stage_address(
       shader_stage_type type) const;
 
  private:
-  void initialize_shader_indices(const pipeline& pipeline);
+  void initialize_shader_indices(const rtx_pipeline& pipeline);
 
   std::array<std::vector<uint8_t>, 4> create_shader_stages_handles(
-      const pipeline& pipeline);
+      const rtx_pipeline& pipeline);
   void create_sbt_buffer(
       const std::array<std::vector<uint8_t>, 4>& shader_stages_handles);
 

@@ -10,8 +10,8 @@
 #include "gla/vulkan/vulkan_device.h"
 #include "gla/vulkan/vulkan_device_buffer.h"
 #include "gla/vulkan/vulkan_layer_abstraction_factory.h"
-#include "gla/vulkan/vulkan_renderer.h"
-#include "gla/vulkan/vulkan_types.h"
+#include "gla/vulkan/vulkan_rtx_renderer.h"
+#include "gla/vulkan/vulkan_shader_types.h"
 #include "include/assets/mesh_asset.h"
 
 namespace wunder::vulkan {
@@ -104,7 +104,7 @@ void acceleration_structure::build_acceleration_structure(
   command_pool.flush_compute_command_buffer();
 }
 
-void acceleration_structure::add_descriptor_to(renderer& renderer) {}
+void acceleration_structure::add_descriptor_to(rtx_renderer& renderer) {}
 
 VkDeviceAddress acceleration_structure::get_address() {
   ReturnIf(vkGetAccelerationStructureDeviceAddressKHR == nullptr, 0);

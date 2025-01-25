@@ -25,7 +25,7 @@ namespace wunder::vulkan {
 
 class descriptor_set_manager;
 class shader;
-class pipeline;
+class rtx_pipeline;
 class shader_binding_table;
 
 struct shader_to_compile {
@@ -34,14 +34,14 @@ struct shader_to_compile {
   bool m_optional = true;
 };
 
-class renderer : public renderer_api,
+class rtx_renderer : public renderer_api,
                  public event_handler<wunder::event::scene_activated>,
                  public non_copyable {
  public:
-  renderer();
+  explicit rtx_renderer(const renderer_properties&);
 
  public:
-  ~renderer() override;
+  ~rtx_renderer() override;
 
  public:
   [[nodiscard]] const renderer_capabilities& get_capabilities() const override;
@@ -61,12 +61,13 @@ class renderer : public renderer_api,
   void on_event(const wunder::event::scene_activated&) override;
 
  private:
+  const renderer_properties& m_renderer_properties;
   bool m_have_active_scene;
 
   VkSurfaceKHR m_surface = VK_NULL_HANDLE;  // Vulkan window surface
   vector_map<VkShaderStageFlagBits, std::vector<unique_ptr<shader>>> m_shaders;
   unique_ptr<descriptor_set_manager> m_descriptor_set_manager;
-  unique_ptr<pipeline> m_pipeline;
+  unique_ptr<rtx_pipeline> m_rtx_pipeline;
   unique_ptr<shader_binding_table> m_shader_binding_table;
   unique_ptr<RtxState> m_state;
 

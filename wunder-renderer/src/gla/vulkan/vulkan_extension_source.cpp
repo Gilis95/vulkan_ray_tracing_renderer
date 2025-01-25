@@ -5,7 +5,7 @@
 
 #include "core/wunder_logger.h"
 #include "core/wunder_macros.h"
-#include "gla/vulkan/vulkan_types.h"
+#include "gla/vulkan/vulkan_shader_types.h"
 
 namespace wunder::vulkan {
 void add_supported_extensions(

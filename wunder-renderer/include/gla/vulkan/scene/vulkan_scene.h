@@ -19,7 +19,7 @@ class scene_asset;
 namespace vulkan {
 class vulkan_mesh_scene_node;
 class top_level_acceleration_structure;
-class renderer;
+class rtx_renderer;
 
 class scene : public non_copyable {
  public:
@@ -32,7 +32,7 @@ class scene : public non_copyable {
 
  public:
   void load_scene(scene_asset& asset);
-  void add_descriptor_to(renderer& renderer);
+  void add_descriptor_to(rtx_renderer& renderer);
 
  private:
   std::vector<unique_ptr<sampled_texture>> m_bound_textures;

@@ -14,6 +14,7 @@ enum class gpu_to_use { Invalid = -1, Integrated, Dedicated, Count };
 
 struct renderer_properties {
  public:
+  std::uint32_t m_height,m_width;
   driver m_driver;
   renderer_type m_renderer;
   gpu_to_use m_gpu_to_use;

@@ -2,8 +2,8 @@
 // Created by christian on 8/12/24.
 //
 
-#ifndef WUNDER_VULKAN_TYPES_H
-#define WUNDER_VULKAN_TYPES_H
+#ifndef WUNDER_VULKAN_SHADER_TYPES_H
+#define WUNDER_VULKAN_SHADER_TYPES_H
 
 #include <glad/vulkan.h>
 
@@ -19,7 +19,7 @@ using vulkan_resource_identifier = std::string;
 using vulkan_descriptor_set_identifier = std::uint32_t;
 using vulkan_descriptor_set_bind_identifier = std::uint32_t;
 
-class renderer;
+class rtx_renderer;
 
 namespace shader_resource {
 
@@ -68,7 +68,7 @@ const auto downcast = [](const auto& x) -> const base& { return x; };
 
 namespace instance {
 struct base {
-  virtual void add_descriptor_to(renderer& renderer) = 0;
+  virtual void add_descriptor_to(rtx_renderer& renderer) = 0;
 };
 
 struct uniform_buffer : public base {
@@ -171,4 +171,4 @@ struct descriptor_build_data {
 };
 
 }  // namespace wunder::vulkan
-#endif  // WUNDER_VULKAN_TYPES_H
+#endif  // WUNDER_VULKAN_SHADER_TYPES_H

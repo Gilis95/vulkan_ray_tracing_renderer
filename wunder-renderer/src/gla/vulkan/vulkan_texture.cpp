@@ -8,7 +8,7 @@
 #include "gla/vulkan/vulkan_layer_abstraction_factory.h"
 #include "gla/vulkan/vulkan_macros.h"
 #include "gla/vulkan/vulkan_memory_allocator.h"
-#include "gla/vulkan/vulkan_renderer.h"
+#include "gla/vulkan/vulkan_rtx_renderer.h"
 #include "include/assets/texture_asset.h"
 
 namespace {

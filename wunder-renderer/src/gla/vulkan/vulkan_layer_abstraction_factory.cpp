@@ -12,22 +12,22 @@
 #include "gla/vulkan/vulkan_descriptor_set_manager.h"
 #include "gla/vulkan/vulkan_device.h"
 #include "gla/vulkan/vulkan_physical_device.h"
-#include "gla/vulkan/vulkan_pipeline.h"
-#include "gla/vulkan/vulkan_renderer.h"
+#include "gla/vulkan/vulkan_rtx_renderer.h"
 #include "gla/vulkan/vulkan_shader.h"
 #include "gla/vulkan/vulkan_shader_binding_table.h"
+#include "include/gla/vulkan/ray-trace/vulkan_rtx_pipeline.h"
 
 namespace {
-std::unique_ptr<wunder::vulkan::renderer> create_ray_trace_vulkan_render(
+std::unique_ptr<wunder::vulkan::rtx_renderer> create_ray_trace_vulkan_render(
     const wunder::renderer_properties &properties) {
-  auto renderer = std::make_unique<wunder::vulkan::renderer>();
+  auto renderer = std::make_unique<wunder::vulkan::rtx_renderer>(properties);
   renderer->init(properties);
 
   return renderer;
 }
 
 using renderer_create_fn =
-    std::function<std::unique_ptr<wunder::vulkan::renderer>(
+    std::function<std::unique_ptr<wunder::vulkan::rtx_renderer>(
         const wunder::renderer_properties &)>;
 
 auto ray_tracing_renderer_mapping =
@@ -69,15 +69,15 @@ void layer_abstraction_factory::create_vulkan_context(
   m_context->init(properties);
 }
 
-optional_ref<renderer> layer_abstraction_factory::get_renderer_api(renderer_type type) {
-  static optional_ref<renderer> s_empty = std::nullopt;
+optional_ref<rtx_renderer> layer_abstraction_factory::get_renderer_api(renderer_type type) {
+  static optional_ref<rtx_renderer> s_empty = std::nullopt;
 
   auto found_renderer_it = m_renderers.find(type);
   return found_renderer_it == m_renderers.end() ? s_empty
                                                 : *found_renderer_it->second;
 }
 
-vector_map<renderer_type, unique_ptr<renderer>> &
+vector_map<renderer_type, unique_ptr<rtx_renderer>> &
 layer_abstraction_factory::get_renderers() {
   return m_renderers;
 }

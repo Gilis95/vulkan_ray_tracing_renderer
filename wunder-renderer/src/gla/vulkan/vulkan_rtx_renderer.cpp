@@ -1,5 +1,3 @@
-#include "gla/vulkan/vulkan_renderer.h"
-
 #include <glad/vulkan.h>
 
 #include <optional>
@@ -16,29 +14,31 @@
 #include "gla/vulkan/vulkan_descriptor_set_manager.h"
 #include "gla/vulkan/vulkan_device.h"
 #include "gla/vulkan/vulkan_layer_abstraction_factory.h"
-#include "gla/vulkan/vulkan_pipeline.h"
+#include "gla/vulkan/vulkan_rtx_renderer.h"
 #include "gla/vulkan/vulkan_shader.h"
 #include "gla/vulkan/vulkan_shader_binding_table.h"
 #include "gla/vulkan/vulkan_texture.h"
+#include "include/gla/vulkan/ray-trace/vulkan_rtx_pipeline.h"
 #include "resources/shaders/host_device.h"
 #include "scene/scene_manager.h"
 
 namespace wunder::vulkan {
-renderer::renderer()
+rtx_renderer::rtx_renderer(const renderer_properties &renderer_properties)
     : event_handler<wunder::event::scene_activated>(),
+      m_renderer_properties(renderer_properties),
       m_have_active_scene(false) {}
 
-renderer::~renderer() {
-  if (m_pipeline.get()) {
-    AssertLogUnless(m_pipeline.release());
+rtx_renderer::~rtx_renderer() {
+  if (m_rtx_pipeline.get()) {
+    AssertLogUnless(m_rtx_pipeline.release());
   }
   if (m_shader_binding_table.get()) {
     AssertLogUnless(m_shader_binding_table.release());
   }
 }
 
-void renderer::init_internal(const renderer_properties &properties) {
-  m_pipeline = std::make_unique<pipeline>();
+void rtx_renderer::init_internal(const renderer_properties &properties) {
+  m_rtx_pipeline = std::make_unique<rtx_pipeline>();
   m_shader_binding_table = std::make_unique<shader_binding_table>();
   m_state = std::make_unique<RtxState>();
   m_state->maxDepth = 3;
@@ -69,16 +69,17 @@ void renderer::init_internal(const renderer_properties &properties) {
     }
   }
 
-  m_rtx_generated_image.reset(
-      new storage_texture({.m_enabled = true, .m_descriptor_name = "resultImage"},
-                  VK_FORMAT_R32G32B32A32_SFLOAT, 1920, 1080));
+  m_rtx_generated_image.reset(new storage_texture(
+      {.m_enabled = true, .m_descriptor_name = "rtxGeneratedImage"},
+      VK_FORMAT_R32G32B32A32_SFLOAT, m_renderer_properties.m_width,
+      m_renderer_properties.m_height));
 
-  m_pipeline->create_pipeline(m_shaders);
-  m_shader_binding_table->initialize(*m_pipeline);
+  m_rtx_pipeline->initialize_pipeline(m_shaders);
+  m_shader_binding_table->initialize(*m_rtx_pipeline);
 }
 
 vector_map<VkShaderStageFlagBits, std::vector<shader_to_compile>>
-renderer::get_shaders_for_compilation() {
+rtx_renderer::get_shaders_for_compilation() {
   vector_map<VkShaderStageFlagBits, std::vector<shader_to_compile>>
       shaders_to_compile;
   shaders_to_compile[VkShaderStageFlagBits::VK_SHADER_STAGE_RAYGEN_BIT_KHR] =
@@ -87,7 +88,7 @@ renderer::get_shaders_for_compilation() {
               .m_shader_path =
                   "wunder-renderer/resources/shaders/pathtrace.rgen",
               .m_on_successful_compile =
-                  std::bind(&renderer::create_descriptor_manager, this,
+                  std::bind(&rtx_renderer::create_descriptor_manager, this,
                             std::placeholders::_1),
               .m_optional = false}});
   shaders_to_compile[VkShaderStageFlagBits::VK_SHADER_STAGE_ANY_HIT_BIT_KHR] =
@@ -120,14 +121,14 @@ renderer::get_shaders_for_compilation() {
   return shaders_to_compile;
 }
 
-void renderer::create_descriptor_manager(const shader &shader) {
+void rtx_renderer::create_descriptor_manager(const shader &shader) {
   m_descriptor_set_manager = std::make_unique<descriptor_set_manager>();
   m_descriptor_set_manager->initialize(shader);
 
-  m_pipeline->create_pipeline_layout(shader);
+  m_rtx_pipeline->initialize_pipeline_layout(shader);
 }
 
-void renderer::update(time_unit dt) /*override*/
+void rtx_renderer::update(time_unit dt) /*override*/
 {
   ReturnUnless(m_have_active_scene);
   command_pool &command_pool = layer_abstraction_factory::instance()
@@ -137,11 +138,11 @@ void renderer::update(time_unit dt) /*override*/
   auto graphic_command_buffer =
       command_pool.get_current_graphics_command_buffer();
 
-  m_pipeline->bind();
-  m_descriptor_set_manager->bind(*m_pipeline);
+  m_rtx_pipeline->bind();
+  m_descriptor_set_manager->bind(*m_rtx_pipeline);
 
   vkCmdPushConstants(
-      graphic_command_buffer, m_pipeline->get_vulkan_pipeline_layout(),
+      graphic_command_buffer, m_rtx_pipeline->get_vulkan_pipeline_layout(),
       VK_SHADER_STAGE_RAYGEN_BIT_KHR | VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR |
           VK_SHADER_STAGE_MISS_BIT_KHR,
       0, sizeof(RtxState), m_state.get());
@@ -167,7 +168,7 @@ void renderer::update(time_unit dt) /*override*/
   command_pool.flush_graphics_command_buffer();
 }
 
-void renderer::on_event(
+void rtx_renderer::on_event(
     const wunder::event::scene_activated &scene_activated_event) {
   auto api_scene = project::instance().get_scene_manager().mutable_api_scene(
       scene_activated_event.m_id);
@@ -184,7 +185,7 @@ void renderer::on_event(
   m_have_active_scene = true;
 }
 
-const renderer_capabilities &renderer::get_capabilities() const /*override*/
+const renderer_capabilities &rtx_renderer::get_capabilities() const /*override*/
 {
   static renderer_capabilities s_empty;
   return layer_abstraction_factory::instance()
@@ -192,7 +193,7 @@ const renderer_capabilities &renderer::get_capabilities() const /*override*/
       .get_capabilities();
 }
 
-descriptor_set_manager &renderer::get_descriptor_set_manager() {
+descriptor_set_manager &rtx_renderer::get_descriptor_set_manager() {
   return *m_descriptor_set_manager;
 }
 

@@ -9,7 +9,7 @@
 
 #include "core/non_copyable.h"
 #include "core/wunder_memory.h"
-#include "gla/vulkan/vulkan_types.h"
+#include "gla/vulkan/vulkan_shader_types.h"
 
 namespace wunder::vulkan {
 enum class shader_operation_output_code {

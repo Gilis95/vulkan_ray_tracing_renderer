@@ -62,7 +62,7 @@ void scene::load_scene(scene_asset& asset) {
       vulkan_environment_helper::create_environment_texture();
 }
 
-void scene::add_descriptor_to(renderer& renderer) {
+void scene::add_descriptor_to(rtx_renderer& renderer) {
   for (auto& texture : m_bound_textures) {
     texture->add_descriptor_to(renderer);
   }

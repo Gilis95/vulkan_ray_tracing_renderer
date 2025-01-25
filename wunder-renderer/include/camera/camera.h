@@ -38,7 +38,7 @@
 namespace wunder {
 namespace vulkan {
 
-class renderer;
+class rtx_renderer;
 }
 namespace event {
 struct scene_activated;
@@ -111,7 +111,7 @@ class camera : private event_handler<wunder::event::mouse::move>,
   void fit(const glm::vec3& boxMin, const glm::vec3& boxMax,
            bool instantFit = true, bool tight = false, float aspect = 1.0f);
 
-  void bind(wunder::vulkan::renderer& renderer);
+  void bind(wunder::vulkan::rtx_renderer& renderer);
  public:
   // field of view in degrees
   float get_fov() { return m_current.fov; }

@@ -8,7 +8,7 @@
 #include "gla/vulkan/vulkan_device.h"
 #include "gla/vulkan/vulkan_layer_abstraction_factory.h"
 #include "gla/vulkan/vulkan_memory_allocator.h"
-#include "gla/vulkan/vulkan_renderer.h"
+#include "gla/vulkan/vulkan_rtx_renderer.h"
 
 namespace wunder::vulkan {
 
@@ -48,7 +48,7 @@ void buffer<base_buffer_type>::update_data(void* data, size_t data_size) {}
 
 template <typename base_buffer_type>
 void buffer<base_buffer_type>::add_descriptor_to(
-    renderer& renderer) /*override*/
+    rtx_renderer& renderer) /*override*/
 {
   ReturnUnless(m_descriptor_build_data.m_enabled);
 

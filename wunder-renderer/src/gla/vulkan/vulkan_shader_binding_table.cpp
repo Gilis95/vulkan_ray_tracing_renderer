@@ -11,7 +11,7 @@
 #include "gla/vulkan/vulkan_macros.h"
 #include "gla/vulkan/vulkan_memory_allocator.h"
 #include "gla/vulkan/vulkan_physical_device.h"
-#include "gla/vulkan/vulkan_pipeline.h"
+#include "include/gla/vulkan/ray-trace/vulkan_rtx_pipeline.h"
 
 namespace wunder::vulkan {
 namespace {
@@ -35,7 +35,7 @@ shader_binding_table::shader_binding_table() noexcept {
 
 shader_binding_table::~shader_binding_table() = default;
 
-void shader_binding_table::initialize(const pipeline& pipeline) {
+void shader_binding_table::initialize(const rtx_pipeline& pipeline) {
   initialize_shader_indices(pipeline);
   std::array<std::vector<uint8_t>, 4> shader_stages_handles =
       create_shader_stages_handles(pipeline);
@@ -50,7 +50,7 @@ VkStridedDeviceAddressRegionKHR shader_binding_table::get_stage_address(
       .size = 0};
 }
 
-void shader_binding_table::initialize_shader_indices(const pipeline& pipeline) {
+void shader_binding_table::initialize_shader_indices(const rtx_pipeline& pipeline) {
   for (auto& i : m_shader_handles_indeces) i = {};
 
   const auto& info = pipeline.get_pipeline_create_info();
@@ -82,7 +82,7 @@ void shader_binding_table::initialize_shader_indices(const pipeline& pipeline) {
 
 std::array<std::vector<uint8_t>, 4>
 shader_binding_table::create_shader_stages_handles(
-    const pipeline& pipeline) {  // Fetch all the shader handles used in
+    const rtx_pipeline& pipeline) {  // Fetch all the shader handles used in
                                  // the pipeline, so that they can be
 
   // Get the total number of groups and handle index position

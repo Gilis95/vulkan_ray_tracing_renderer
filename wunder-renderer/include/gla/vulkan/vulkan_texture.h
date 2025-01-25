@@ -5,7 +5,7 @@
 #include <vk_mem_alloc.h>
 
 #include "core/wunder_memory.h"
-#include "gla/vulkan/vulkan_types.h"
+#include "gla/vulkan/vulkan_shader_types.h"
 #include "vulkan_memory_allocator.h"
 
 namespace wunder {
@@ -21,7 +21,7 @@ struct vulkan_image_info {
   VmaAllocation m_memory_alloc = VK_NULL_HANDLE;
 };
 
-class renderer;
+class rtx_renderer;
 
 template <typename base_texture>
 class texture : public base_texture {
@@ -32,7 +32,7 @@ class texture : public base_texture {
   ~texture();
 
  public:
-  void add_descriptor_to(renderer& renderer) override;
+  void add_descriptor_to(rtx_renderer& renderer) override;
 
  private:
   void allocate_image(const std::string& name, VkFormat image_format,

@@ -6,7 +6,7 @@
 #include "gla/vulkan/vulkan_command_pool.h"
 #include "gla/vulkan/vulkan_macros.h"
 #include "gla/vulkan/vulkan_physical_device.h"
-#include "gla/vulkan/vulkan_types.h"
+#include "gla/vulkan/vulkan_shader_types.h"
 
 namespace {
 struct ExtensionHeader  // Helper struct to link extensions together

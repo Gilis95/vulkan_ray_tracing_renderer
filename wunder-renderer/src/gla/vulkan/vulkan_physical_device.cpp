@@ -4,7 +4,7 @@
 #include "gla/vulkan/vulkan.h"
 #include "gla/vulkan/vulkan_macros.h"
 #include "gla/vulkan/vulkan_physical_device_types.h"
-#include "gla/vulkan/vulkan_types.h"
+#include "gla/vulkan/vulkan_shader_types.h"
 
 namespace wunder::vulkan {
 ////////////////////////////////////////////////////////////////////////////////////
