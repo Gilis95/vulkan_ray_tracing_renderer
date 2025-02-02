@@ -5,22 +5,25 @@
 
 #include "core/vector_map.h"
 #include "core/wunder_memory.h"
-#include "gla/vulkan/vulkan_base_pipeline.h"
 #include "gla/vulkan/rasterize/vulkan_rasterize_pipeline_state.h"
+#include "gla/vulkan/vulkan_base_pipeline.h"
+
+namespace wunder::vulkan {
+  class render_pass;
+}
 
 namespace wunder::vulkan {
 
-class vulkan_rasterize_pipeline : public base_pipeline {
+class rasterize_pipeline : public base_pipeline {
  public:
-  vulkan_rasterize_pipeline() noexcept;
+  rasterize_pipeline() noexcept;
 
  public:
- protected:
   [[nodiscard]] VkPushConstantRange get_push_constant_range() const override;
 
   void initialize_pipeline(const vector_map<VkShaderStageFlagBits,
                                             std::vector<unique_ptr<shader>>>&
-                               shaders_of_types, const VkRenderPass& renderPass);
+                               shaders_of_types, render_pass& renderPass);
  private:
   VkGraphicsPipelineCreateInfo m_pipeline_create_info;
   VkPipelineCache m_pipeline_cache;

@@ -35,6 +35,7 @@
 #include "gla/vulkan/vulkan_device.h"
 #include "gla/vulkan/vulkan_device_buffer.h"
 #include "gla/vulkan/vulkan_layer_abstraction_factory.h"
+#include "gla/vulkan/ray-trace/vulkan_rtx_renderer.h"
 #include "resources/shaders/host_device.h"
 #include "scene/scene_manager.h"
 

@@ -4,11 +4,11 @@
 #include <glad/vulkan.h>
 namespace wunder::vulkan {
 
-class vulkan_rasterize_pipeline;
+class rasterize_pipeline;
 
 class vulkan_rasterize_pipeline_state {
  private:
-  friend vulkan_rasterize_pipeline;
+  friend rasterize_pipeline;
  public:
   vulkan_rasterize_pipeline_state();
  protected:

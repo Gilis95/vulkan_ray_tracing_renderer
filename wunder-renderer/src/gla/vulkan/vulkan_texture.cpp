@@ -8,8 +8,8 @@
 #include "gla/vulkan/vulkan_layer_abstraction_factory.h"
 #include "gla/vulkan/vulkan_macros.h"
 #include "gla/vulkan/vulkan_memory_allocator.h"
-#include "gla/vulkan/vulkan_rtx_renderer.h"
 #include "include/assets/texture_asset.h"
+#include "include/gla/vulkan/ray-trace/vulkan_rtx_renderer.h"
 
 namespace {
 
@@ -76,17 +76,26 @@ VkAccessFlags access_flags_for_image_layout(VkImageLayout layout) {
 
 namespace wunder::vulkan {
 
+vulkan_image_info::~vulkan_image_info() {
+  auto& vulkan_context =
+      layer_abstraction_factory::instance().get_vulkan_context();
+  auto& allocator = vulkan_context.get_resource_allocator();
+
+  allocator.destroy_image(m_image, m_memory_alloc);
+}
+
 template <typename base_texture>
 texture<base_texture>::texture(descriptor_build_data build_data,
                                VkFormat image_format, std::uint32_t width,
                                std::uint32_t height)
-    : m_descriptor_build_data(std::move(build_data)) {
+    : m_descriptor_build_data(std::move(build_data)),
+      m_image_info(std::make_shared<vulkan_image_info>()) {
   std::string name = generate_next_texture_name();
   VkImageLayout target_layout = VK_IMAGE_LAYOUT_GENERAL;
 
   allocate_image(name, image_format, width, height);
   create_image_view(name, image_format);
-  try_screate_sampler();
+  try_create_sampler();
   bind_texture(target_layout);
 
   base_texture::m_descriptor.imageLayout = target_layout;
@@ -95,7 +104,8 @@ texture<base_texture>::texture(descriptor_build_data build_data,
 template <typename base_texture>
 texture<base_texture>::texture(descriptor_build_data build_data,
                                const texture_asset& asset)
-    : m_descriptor_build_data(std::move(build_data)) {
+    : m_descriptor_build_data(std::move(build_data)),
+      m_image_info(std::make_shared<vulkan_image_info>()) {
   std::string name = generate_next_texture_name();
 
   VkFormat image_format = VK_FORMAT_R8G8B8A8_UNORM;
@@ -113,15 +123,15 @@ template <typename base_texture>
 texture<base_texture>::~texture() = default;
 
 template <typename base_texture>
-void texture<base_texture>::add_descriptor_to(renderer& renderer) {
+void texture<base_texture>::add_descriptor_to(base_renderer& renderer) {
   ReturnUnless(m_descriptor_build_data.m_enabled);
-  auto& descriptor_manager = renderer.get_descriptor_set_manager();
+  auto& descriptor_manager = renderer.mutable_descriptor_set_manager();
   descriptor_manager.add_resource(m_descriptor_build_data.m_descriptor_name,
                                   *this);
 }
 
 template <typename base_texture>
-void texture<base_texture>::try_screate_sampler() {
+void texture<base_texture>::try_create_sampler() {
   auto& vulkan_context =
       layer_abstraction_factory::instance().get_vulkan_context();
   auto& device = vulkan_context.get_device();
@@ -133,7 +143,7 @@ void texture<base_texture>::try_screate_sampler() {
   sampler_create_info.maxLod = std::numeric_limits<float>::max();
 
   VK_CHECK_RESULT(vkCreateSampler(vulkan_logical_device, &sampler_create_info,
-                                  nullptr, &(m_image_info.m_sampler)));
+                                  nullptr, &(m_image_info->m_sampler)));
 };
 
 template <typename base_texture>
@@ -169,13 +179,13 @@ void texture<base_texture>::try_create_sampler(const texture_asset& asset,
   sampler_create_info.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
 
   VK_CHECK_RESULT(vkCreateSampler(vulkan_logical_device, &sampler_create_info,
-                                  nullptr, &(m_image_info.m_sampler)));
+                                  nullptr, &(m_image_info->m_sampler)));
 
-  base_texture::m_descriptor.sampler = m_image_info.m_sampler;
+  base_texture::m_descriptor.sampler = m_image_info->m_sampler;
 
   set_debug_utils_object_name(vulkan_logical_device, VK_OBJECT_TYPE_SAMPLER,
                               std::format("{} default sampler", name),
-                              m_image_info.m_sampler);
+                              m_image_info->m_sampler);
 }
 
 template <typename base_texture>
@@ -200,17 +210,17 @@ void texture<base_texture>::create_image_view(
   image_view_create_info.subresourceRange.baseArrayLayer = 0;
   image_view_create_info.subresourceRange.layerCount =
       VK_REMAINING_ARRAY_LAYERS;
-  image_view_create_info.image = m_image_info.m_image;
+  image_view_create_info.image = m_image_info->m_image;
 
   VK_CHECK_RESULT(vkCreateImageView(vulkan_logical_device,
                                     &image_view_create_info, nullptr,
-                                    &(m_image_info.m_image_view)));
+                                    &(m_image_info->m_image_view)));
 
-  base_texture::m_descriptor.imageView = m_image_info.m_image_view;
+  base_texture::m_descriptor.imageView = m_image_info->m_image_view;
 
   set_debug_utils_object_name(vulkan_logical_device, VK_OBJECT_TYPE_IMAGE_VIEW,
                               std::format("{} default image view", name),
-                              m_image_info.m_image_view);
+                              m_image_info->m_image_view);
 }
 
 template <typename base_texture>
@@ -239,12 +249,12 @@ void texture<base_texture>::allocate_image(const std::string& name,
   image_create_info.tiling = VK_IMAGE_TILING_OPTIMAL;
   image_create_info.usage = base_texture::s_usage;
 
-  m_image_info.m_memory_alloc =
+  m_image_info->m_memory_alloc =
       allocator.allocate_image(image_create_info, memoryUsage,
-                               m_image_info.m_image, &m_gpu_allocation_size);
+                               m_image_info->m_image, &m_gpu_allocation_size);
   set_debug_utils_object_name(vulkan_logical_device, VK_OBJECT_TYPE_IMAGE,
                               std::format("{} default image view", name),
-                              m_image_info.m_image);
+                              m_image_info->m_image);
 }
 
 template <typename base_texture>
@@ -313,7 +323,7 @@ void texture<base_texture>::bind_texture_data(const texture_asset& asset,
                        VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
 
   // Copy mip levels from staging buffer
-  vkCmdCopyBufferToImage(command_buffer, staging_buffer, m_image_info.m_image,
+  vkCmdCopyBufferToImage(command_buffer, staging_buffer, m_image_info->m_image,
                          VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1,
                          &buffer_copy_region);
 
@@ -347,10 +357,12 @@ void texture<base_texture>::transit_image_layout(
   image_memory_barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
   image_memory_barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
   image_memory_barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-  image_memory_barrier.image = m_image_info.m_image;
+  image_memory_barrier.image = m_image_info->m_image;
   image_memory_barrier.subresourceRange = subresource_range;
-  image_memory_barrier.srcAccessMask = access_flags_for_image_layout(old_layout);
-  image_memory_barrier.dstAccessMask = access_flags_for_image_layout(new_layout);
+  image_memory_barrier.srcAccessMask =
+      access_flags_for_image_layout(old_layout);
+  image_memory_barrier.dstAccessMask =
+      access_flags_for_image_layout(new_layout);
   image_memory_barrier.oldLayout = old_layout;
   image_memory_barrier.newLayout = new_layout;
 

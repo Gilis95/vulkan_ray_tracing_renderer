@@ -3,24 +3,25 @@
 #include "gla/vulkan/vulkan_context.h"
 #include "gla/vulkan/vulkan_device.h"
 #include "gla/vulkan/vulkan_layer_abstraction_factory.h"
+#include "gla/vulkan/rasterize/vulkan_render_pass.h"
 #include "resources/shaders/host_device.h"
 
 namespace wunder::vulkan {
-vulkan_rasterize_pipeline::vulkan_rasterize_pipeline() noexcept
+rasterize_pipeline::rasterize_pipeline() noexcept
     : base_pipeline(VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS),
       m_pipeline_create_info(),
       m_pipeline_cache(VK_NULL_HANDLE) {}
 
 [[nodiscard]] VkPushConstantRange
-vulkan_rasterize_pipeline::get_push_constant_range() const {
+rasterize_pipeline::get_push_constant_range() const {
   return VkPushConstantRange{VK_SHADER_STAGE_FRAGMENT_BIT, 0,
                              sizeof(Tonemapper)};
 }
 
-void vulkan_rasterize_pipeline::initialize_pipeline(
+void rasterize_pipeline::initialize_pipeline(
     const vector_map<VkShaderStageFlagBits, std::vector<unique_ptr<shader>>>&
         shaders_of_types,
-    const VkRenderPass& renderPass) {
+    render_pass& renderPass) {
   device& device =
       layer_abstraction_factory::instance().get_vulkan_context().get_device();
 
@@ -34,7 +35,7 @@ void vulkan_rasterize_pipeline::initialize_pipeline(
   m_pipeline_state.add_state_to(m_pipeline_create_info);
 
   m_pipeline_create_info.layout = m_vulkan_pipeline_layout;
-  m_pipeline_create_info.renderPass = renderPass;
+  m_pipeline_create_info.renderPass = renderPass.get_vulkan_render_pass();
   m_pipeline_create_info.stageCount =
       static_cast<uint32_t>(stages.size());  // Stages are shaders
   m_pipeline_create_info.pStages = stages.data();

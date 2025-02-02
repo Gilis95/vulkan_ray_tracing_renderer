@@ -8,7 +8,7 @@
 #include "gla/vulkan/vulkan_device.h"
 #include "gla/vulkan/vulkan_layer_abstraction_factory.h"
 #include "gla/vulkan/vulkan_memory_allocator.h"
-#include "gla/vulkan/vulkan_rtx_renderer.h"
+#include "include/gla/vulkan/ray-trace/vulkan_rtx_renderer.h"
 
 namespace wunder::vulkan {
 
@@ -48,11 +48,11 @@ void buffer<base_buffer_type>::update_data(void* data, size_t data_size) {}
 
 template <typename base_buffer_type>
 void buffer<base_buffer_type>::add_descriptor_to(
-    rtx_renderer& renderer) /*override*/
+    base_renderer& renderer) /*override*/
 {
   ReturnUnless(m_descriptor_build_data.m_enabled);
 
-  auto& descriptor_manager = renderer.get_descriptor_set_manager();
+  auto& descriptor_manager = renderer.mutable_descriptor_set_manager();
   descriptor_manager.add_resource(m_descriptor_build_data.m_descriptor_name,
                                   *this);
 }

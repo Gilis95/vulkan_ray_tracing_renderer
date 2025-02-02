@@ -10,7 +10,7 @@
 #include "gla/vulkan/vulkan_layer_abstraction_factory.h"
 #include "gla/vulkan/vulkan_macros.h"
 #include "gla/vulkan/vulkan_shader.h"
-#include "include/gla/vulkan/ray-trace/vulkan_rtx_pipeline.h"
+#include "include/gla/vulkan/vulkan_base_pipeline.h"
 
 namespace {
 enum class descriptor_pool_creator_result {
@@ -167,7 +167,7 @@ void descriptor_set_manager::bake() {
   }
 }
 
-void descriptor_set_manager::bind(const rtx_pipeline& pipeline) const {
+void descriptor_set_manager::bind(const base_pipeline& pipeline) const {
   auto& device =
       layer_abstraction_factory::instance().get_vulkan_context().get_device();
 

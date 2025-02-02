@@ -1,11 +1,17 @@
 #ifndef RENDERER_API_H
 #define RENDERER_API_H
 
+#include <functional>
+
 #include "core/time_unit.h"
 namespace wunder {
 
 struct renderer_properties;
 struct renderer_capabilities;
+
+namespace vulkan {
+class shader;
+}
 
 class renderer_api {
  public:

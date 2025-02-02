@@ -19,7 +19,7 @@ using vulkan_resource_identifier = std::string;
 using vulkan_descriptor_set_identifier = std::uint32_t;
 using vulkan_descriptor_set_bind_identifier = std::uint32_t;
 
-class rtx_renderer;
+class base_renderer;
 
 namespace shader_resource {
 
@@ -68,7 +68,7 @@ const auto downcast = [](const auto& x) -> const base& { return x; };
 
 namespace instance {
 struct base {
-  virtual void add_descriptor_to(rtx_renderer& renderer) = 0;
+  virtual void add_descriptor_to(base_renderer& renderer) = 0;
 };
 
 struct uniform_buffer : public base {

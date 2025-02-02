@@ -190,12 +190,13 @@ class descriptor_set_layout_creator {
 
 namespace wunder::vulkan {
 shader::shader(std::string&& shader_name,
-                             VkShaderStageFlagBits vulkan_shader_type)
+               VkShaderStageFlagBits vulkan_shader_type)
     : m_shader_name(std::move(shader_name)),
       m_vulkan_shader_type(vulkan_shader_type) {}
 
-std::expected<unique_ptr<shader>, shader_operation_output_code> shader::create(const std::filesystem::path& spirv_path,
-                      const VkShaderStageFlagBits stage) {
+std::expected<unique_ptr<shader>, shader_operation_output_code> shader::create(
+    const std::filesystem::path& spirv_path,
+    const VkShaderStageFlagBits stage) {
   auto spirv_real_path = wunder_filesystem::instance().resolve_path(spirv_path);
   AssertReturnUnless(
       std::filesystem::exists(spirv_real_path),
@@ -208,17 +209,16 @@ std::expected<unique_ptr<shader>, shader_operation_output_code> shader::create(c
   auto expected = compile_shader(spirv_istream, shader_dir, shader_name, stage);
   ReturnIf(!expected.has_value(), std::unexpected(expected.error()));
 
-  auto shader_ptr =
-      std::make_unique<shader>(std::move(shader_name), stage);
+  auto shader_ptr = std::make_unique<shader>(std::move(shader_name), stage);
   shader_ptr->initialize(expected.value());
   return shader_ptr;
 }
 
 std::expected<std::vector<std::uint32_t>, shader_operation_output_code>
 shader::compile_shader(std::ifstream& spirv_istream,
-                              const std::filesystem::path& shader_parent_dir,
-                              const std::string& shader_name,
-                              const VkShaderStageFlagBits stage) {
+                       const std::filesystem::path& shader_parent_dir,
+                       const std::string& shader_name,
+                       const VkShaderStageFlagBits stage) {
   static shaderc::Compiler compiler;
 
   shaderc_util::FileFinder fileFinder;
@@ -256,9 +256,7 @@ shader::compile_shader(std::ifstream& spirv_istream,
 void shader::initialize(const std::vector<std::uint32_t>& debug_spirv) {
   AssertReturnIf(debug_spirv.empty());
   auto& device =
-      layer_abstraction_factory::instance()
-                     .get_vulkan_context()
-                     .get_device();
+      layer_abstraction_factory::instance().get_vulkan_context().get_device();
 
   VkShaderModuleCreateInfo moduleCreateInfo{};
 
@@ -356,9 +354,10 @@ void shader::initialize_descriptor_set_layout() {
   auto layout_creator = descriptor_set_layout_creator();
   for (auto& [_, resource_declaration_variant] :
        m_reflection_data.m_shader_resources_declaration) {
-    const wunder::vulkan::shader_resource::declaration::base& resource_declaration =
-        std::visit(wunder::vulkan::shader_resource::declaration::downcast,
-                   resource_declaration_variant);
+    const wunder::vulkan::shader_resource::declaration::base&
+        resource_declaration =
+            std::visit(wunder::vulkan::shader_resource::declaration::downcast,
+                       resource_declaration_variant);
 
     auto& layout_bindings = per_set_layout_bindings[resource_declaration.m_set];
     layout_bindings.emplace_back(
@@ -366,9 +365,7 @@ void shader::initialize_descriptor_set_layout() {
   }
 
   auto& device =
-      layer_abstraction_factory::instance()
-                     .get_vulkan_context()
-                     .get_device();
+      layer_abstraction_factory::instance().get_vulkan_context().get_device();
   VkDevice vulkan_logical_device = device.get_vulkan_logical_device();
 
   for (auto& [set_identifier, layout_bindings] : per_set_layout_bindings) {

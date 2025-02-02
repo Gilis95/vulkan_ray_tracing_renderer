@@ -178,6 +178,33 @@ inline static void set_debug_utils_object_name(VkDevice device,
                               handle);
 }
 
+inline static void set_debug_utils_object_name(VkDevice device,
+                                               const std::string& name,
+                                               VkImageView handle) {
+  set_debug_utils_object_name(device, VK_OBJECT_TYPE_IMAGE_VIEW, name, handle);
+}
+
+inline static void set_debug_utils_object_name(VkDevice device,
+                                               const std::string& name,
+                                               VkRenderPass handle) {
+  set_debug_utils_object_name(device, VkObjectType::VK_OBJECT_TYPE_RENDER_PASS,
+                              name, handle);
+}
+
+inline static void set_debug_utils_object_name(VkDevice device,
+                                               const std::string& name,
+                                               VkSemaphore handle) {
+  set_debug_utils_object_name(device, VkObjectType::VK_OBJECT_TYPE_SEMAPHORE,
+                              name, handle);
+}
+
+inline static void set_debug_utils_object_name(VkDevice device,
+                                               const std::string& name,
+                                               VkFramebuffer handle) {
+  set_debug_utils_object_name(device, VkObjectType::VK_OBJECT_TYPE_FRAMEBUFFER,
+                              name, handle);
+}
+
 }  // namespace wunder::vulkan
 
 #endif  // WUNDER_VULKAN_MACROS_H

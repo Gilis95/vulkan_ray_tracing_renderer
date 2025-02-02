@@ -64,7 +64,6 @@ class physical_device : public vulkan_extension_source,
   [[nodiscard]] const physical_device_info& get_device_info() const {
     return m_device_info;
   }
-
  private:
   [[nodiscard]] physical_device_info& mutable_device_info() {
     return m_device_info;

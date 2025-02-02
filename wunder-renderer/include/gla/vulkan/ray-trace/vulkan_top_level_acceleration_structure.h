@@ -16,7 +16,7 @@ class top_level_acceleration_structure : public acceleration_structure {
   top_level_acceleration_structure();
 
  public:
-  void add_descriptor_to(rtx_renderer& renderer) override;
+  void add_descriptor_to(base_renderer& renderer) override;
 
   void build(
       storage_buffer& scratch_buffer,

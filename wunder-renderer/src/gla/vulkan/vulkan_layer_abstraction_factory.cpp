@@ -12,10 +12,10 @@
 #include "gla/vulkan/vulkan_descriptor_set_manager.h"
 #include "gla/vulkan/vulkan_device.h"
 #include "gla/vulkan/vulkan_physical_device.h"
-#include "gla/vulkan/vulkan_rtx_renderer.h"
 #include "gla/vulkan/vulkan_shader.h"
 #include "gla/vulkan/vulkan_shader_binding_table.h"
-#include "include/gla/vulkan/ray-trace/vulkan_rtx_pipeline.h"
+#include "gla/vulkan/ray-trace/vulkan_rtx_pipeline.h"
+#include "gla/vulkan/ray-trace/vulkan_rtx_renderer.h"
 
 namespace {
 std::unique_ptr<wunder::vulkan::rtx_renderer> create_ray_trace_vulkan_render(

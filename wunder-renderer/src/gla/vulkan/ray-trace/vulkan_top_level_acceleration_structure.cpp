@@ -6,7 +6,7 @@
 #include "gla/vulkan/vulkan_descriptor_set_manager.h"
 #include "gla/vulkan/vulkan_device.h"
 #include "gla/vulkan/vulkan_layer_abstraction_factory.h"
-#include "gla/vulkan/vulkan_rtx_renderer.h"
+#include "include/gla/vulkan/ray-trace/vulkan_rtx_renderer.h"
 
 namespace wunder::vulkan {
 top_level_acceleration_structure::top_level_acceleration_structure()
@@ -45,8 +45,8 @@ void top_level_acceleration_structure::
 }
 
 void top_level_acceleration_structure::add_descriptor_to(
-    rtx_renderer& renderer) {
-  auto& descriptor_manager = renderer.get_descriptor_set_manager();
+    base_renderer& renderer) {
+  auto& descriptor_manager = renderer.mutable_descriptor_set_manager();
   descriptor_manager.add_resource("topLevelAS", *this);
 }
 }  // namespace wunder::vulkan

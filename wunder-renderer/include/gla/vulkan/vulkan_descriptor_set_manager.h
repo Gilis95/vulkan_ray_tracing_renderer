@@ -14,7 +14,7 @@
 namespace wunder::vulkan {
 
 class shader;
-class rtx_pipeline;
+class base_pipeline;
 
 class descriptor_set_manager : public non_copyable {
  public:
@@ -27,7 +27,7 @@ class descriptor_set_manager : public non_copyable {
                     shader_resource::instance::element resource);
 
   void bake();
-  void bind(const rtx_pipeline& pipeline) const;
+  void bind(const base_pipeline& pipeline) const;
 
   optional_const_ref<shader_resource::declaration::base>
   find_resource_declaration(

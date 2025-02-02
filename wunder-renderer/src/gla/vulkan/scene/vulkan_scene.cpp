@@ -10,6 +10,7 @@
 #include "gla/vulkan/ray-trace/vulkan_bottom_level_acceleration_structure_build_info.h"
 #include "gla/vulkan/ray-trace/vulkan_top_level_acceleration_structure.h"
 #include "gla/vulkan/ray-trace/vulkan_top_level_acceleration_structure_build_info.h"
+#include "gla/vulkan/ray-trace/vulkan_rtx_renderer.h"
 #include "gla/vulkan/scene/vulkan_environment_helper.h"
 #include "gla/vulkan/scene/vulkan_materials_helper.h"
 #include "gla/vulkan/scene/vulkan_mesh.h"

@@ -1,4 +1,4 @@
-#include <glad/vulkan.h>
+#include "include/gla/vulkan/ray-trace/vulkan_rtx_renderer.h"
 
 #include <optional>
 
@@ -8,16 +8,17 @@
 #include "event/event_handler.hpp"
 #include "event/scene_events.h"
 #include "gla/renderer_capabilities .h"
+#include "gla/vulkan/rasterize/vulkan_rasterize_renderer.h"
 #include "gla/vulkan/scene/vulkan_scene.h"
 #include "gla/vulkan/vulkan_command_pool.h"
 #include "gla/vulkan/vulkan_context.h"
 #include "gla/vulkan/vulkan_descriptor_set_manager.h"
 #include "gla/vulkan/vulkan_device.h"
 #include "gla/vulkan/vulkan_layer_abstraction_factory.h"
-#include "gla/vulkan/vulkan_rtx_renderer.h"
 #include "gla/vulkan/vulkan_shader.h"
 #include "gla/vulkan/vulkan_shader_binding_table.h"
 #include "gla/vulkan/vulkan_texture.h"
+#include "glad/vulkan.h"
 #include "include/gla/vulkan/ray-trace/vulkan_rtx_pipeline.h"
 #include "resources/shaders/host_device.h"
 #include "scene/scene_manager.h"
@@ -40,42 +41,17 @@ rtx_renderer::~rtx_renderer() {
 void rtx_renderer::init_internal(const renderer_properties &properties) {
   m_rtx_pipeline = std::make_unique<rtx_pipeline>();
   m_shader_binding_table = std::make_unique<shader_binding_table>();
+  m_rasterize_renderer = std::make_unique<rasterize_renderer>(properties);
+
   m_state = std::make_unique<RtxState>();
   m_state->maxDepth = 3;
 
-  for (auto &[shader_type, shaders_compile_data] :
-       get_shaders_for_compilation()) {
-    auto &shaders_of_type = m_shaders[shader_type];
-
-    for (auto &shader_compile_data : shaders_compile_data) {
-      auto maybe_shader =
-          shader::create(shader_compile_data.m_shader_path, shader_type);
-      if (maybe_shader.has_value()) {
-        auto &shader =
-            shaders_of_type.emplace_back(std::move(maybe_shader.value()));
-
-        ContinueUnless(shader_compile_data.m_on_successful_compile);
-        shader_compile_data.m_on_successful_compile(*shader);
-        continue;
-      }
-
-      WUNDER_ERROR_TAG("Renderer",
-                       "Failed to compile {0} of type {1}. Error:  {2}",
-                       shader_compile_data.m_shader_path.string(),
-                       static_cast<int>(shader_type),
-                       static_cast<int>(maybe_shader.error()));
-      ContinueIf(shader_compile_data.m_optional);
-      CRASH;
-    }
-  }
-
-  m_rtx_generated_image.reset(new storage_texture(
-      {.m_enabled = true, .m_descriptor_name = "rtxGeneratedImage"},
-      VK_FORMAT_R32G32B32A32_SFLOAT, m_renderer_properties.m_width,
-      m_renderer_properties.m_height));
+  initialize_shaders();
 
   m_rtx_pipeline->initialize_pipeline(m_shaders);
   m_shader_binding_table->initialize(*m_rtx_pipeline);
+
+  m_rasterize_renderer->initialize();
 }
 
 vector_map<VkShaderStageFlagBits, std::vector<shader_to_compile>>
@@ -138,6 +114,8 @@ void rtx_renderer::update(time_unit dt) /*override*/
   auto graphic_command_buffer =
       command_pool.get_current_graphics_command_buffer();
 
+  m_rasterize_renderer->begin_frame();
+
   m_rtx_pipeline->bind();
   m_descriptor_set_manager->bind(*m_rtx_pipeline);
 
@@ -162,9 +140,12 @@ void rtx_renderer::update(time_unit dt) /*override*/
           shader_binding_table::shader_stage_type::callable);
 
   vkCmdTraceRaysKHR(graphic_command_buffer, &raygen_address, &miss_address,
-                    &hit_address, &callable_address, 1920, 1080, 3);
+                    &hit_address, &callable_address,
+                    m_renderer_properties.m_width,
+                    m_renderer_properties.m_height, 3);
   ++m_state->frame;
 
+  m_rasterize_renderer->end_frame();
   command_pool.flush_graphics_command_buffer();
 }
 
@@ -178,7 +159,7 @@ void rtx_renderer::on_event(
 
   api_scene->get().add_descriptor_to(*this);
   service_factory::instance().get_camera().bind(*this);
-  m_rtx_generated_image->add_descriptor_to(*this);
+  m_rasterize_renderer->get_output_image().add_descriptor_to(*this);
 
   m_descriptor_set_manager->bake();
 
@@ -192,9 +173,4 @@ const renderer_capabilities &rtx_renderer::get_capabilities() const /*override*/
       .get_vulkan_context()
       .get_capabilities();
 }
-
-descriptor_set_manager &rtx_renderer::get_descriptor_set_manager() {
-  return *m_descriptor_set_manager;
-}
-
 }  // namespace wunder::vulkan

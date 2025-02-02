@@ -32,18 +32,6 @@ void vulkan_descriptor_binding::emplace_resource(
   std::visit(
       overloaded{
           [this](const std::reference_wrapper<
-                 shader_resource::instance::sampled_image>& image) {
-            initialize_if_empty(std::vector<VkDescriptorImageInfo>(),
-                                VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
-
-            AssertReturnUnless(m_descriptor_type ==
-                               VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
-
-            add_resource_template<shader_resource::instance::sampled_image,
-                                  VkDescriptorImageInfo>(image.get(),
-                                                         m_resources);
-          },
-          [this](const std::reference_wrapper<
                  shader_resource::instance::acceleration_structure>&
                      acceleration_structure) {
             initialize_if_empty(std::vector<VkAccelerationStructureKHR>(),
@@ -90,6 +78,18 @@ void vulkan_descriptor_binding::emplace_resource(
           [this](const std::reference_wrapper<
                  shader_resource::instance::separate_samplers>&) {},
 
+          [this](const std::reference_wrapper<
+                 shader_resource::instance::sampled_image>& image) {
+            initialize_if_empty(std::vector<VkDescriptorImageInfo>(),
+                                VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
+
+            AssertReturnUnless(m_descriptor_type ==
+                               VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
+
+            add_resource_template<shader_resource::instance::sampled_image,
+                                  VkDescriptorImageInfo>(image.get(),
+                                                         m_resources);
+          },
           [this](const std::reference_wrapper<
                  shader_resource::instance::storage_image>& image) {
             initialize_if_empty(std::vector<VkDescriptorImageInfo>(),
