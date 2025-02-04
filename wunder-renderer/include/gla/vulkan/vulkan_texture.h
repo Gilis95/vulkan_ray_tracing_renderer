@@ -80,7 +80,9 @@ template <typename other_base_texture>
 texture<base_texture>::texture(const texture<other_base_texture>& other)
     : m_descriptor_build_data(other.get_descriptor_build_data()),
       m_image_info(other.get_image_info()),
-      m_gpu_allocation_size(other.get_gpu_allocation_size()) {}
+      m_gpu_allocation_size(other.get_gpu_allocation_size()) {
+  base_texture::m_descriptor=other.m_descriptor;
+}
 
 }  // namespace wunder::vulkan
 #endif  // WUNDER_VULKAN_TEXTURE_H

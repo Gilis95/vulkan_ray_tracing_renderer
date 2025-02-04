@@ -31,7 +31,7 @@ void rtx_pipeline::initialize_pipeline(
     const vector_map<VkShaderStageFlagBits, std::vector<unique_ptr<shader>>>&
         shaders_of_types) {
   auto& device =
-      layer_abstraction_factory::instance().get_vulkan_context().get_device();
+      layer_abstraction_factory::instance().get_vulkan_context().mutable_device();
 
   vkDestroyPipeline(device.get_vulkan_logical_device(), m_vulkan_pipeline,
                     nullptr);

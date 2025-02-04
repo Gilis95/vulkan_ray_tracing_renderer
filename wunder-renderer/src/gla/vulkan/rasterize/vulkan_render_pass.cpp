@@ -2,6 +2,7 @@
 
 #include <glad/vulkan.h>
 
+#include "gla/vulkan/rasterize/vulkan_swap_chain.h"
 #include "gla/vulkan/vulkan_command_pool.h"
 #include "gla/vulkan/vulkan_context.h"
 #include "gla/vulkan/vulkan_device.h"
@@ -20,8 +21,8 @@ render_pass::~render_pass() { deallocate(); }
 void render_pass::initialize() {
   context& vulkan_context =
       layer_abstraction_factory::instance().get_vulkan_context();
-  auto& device = vulkan_context.get_device();
-  auto& physical_device = vulkan_context.get_physical_device();
+  auto& device = vulkan_context.mutable_device();
+  auto& physical_device = vulkan_context.mutable_physical_device();
   auto vk_device = device.get_vulkan_logical_device();
 
   if (m_render_pass) {
@@ -88,7 +89,7 @@ void render_pass::deallocate() {
   context& vulkan_context =
       layer_abstraction_factory::instance().get_vulkan_context();
 
-  auto& device = vulkan_context.get_device();
+  auto& device = vulkan_context.mutable_device();
   auto vk_device = device.get_vulkan_logical_device();
 
   vkDestroyRenderPass(vk_device, m_render_pass, nullptr);
@@ -98,8 +99,8 @@ void render_pass::begin(VkFramebuffer framebuffer, VkExtent2D size) {
   context& vulkan_context =
       layer_abstraction_factory::instance().get_vulkan_context();
 
-  auto& device = vulkan_context.get_device();
-  auto& command_pool = device.get_command_pool();
+  auto command_buffer =
+      vulkan_context.mutable_swap_chain().get_current_command_buffer();
 
   std::array<VkClearValue, 2> clear_values{};
   clear_values[0].color = {{0.0f, 0.0f, 0.0f, 0.0f}};
@@ -113,17 +114,16 @@ void render_pass::begin(VkFramebuffer framebuffer, VkExtent2D size) {
   render_pass_begin_info.framebuffer = framebuffer;
   render_pass_begin_info.renderArea = {{}, size};
 
-  vkCmdBeginRenderPass(command_pool.get_current_graphics_command_buffer(),
-                       &render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
+  vkCmdBeginRenderPass(command_buffer, &render_pass_begin_info,
+                       VK_SUBPASS_CONTENTS_INLINE);
 }
 
 void render_pass::end() {
   context& vulkan_context =
       layer_abstraction_factory::instance().get_vulkan_context();
+  auto command_buffer =
+      vulkan_context.mutable_swap_chain().get_current_command_buffer();
 
-  auto& device = vulkan_context.get_device();
-  auto& command_pool = device.get_command_pool();
-
-  vkCmdEndRenderPass(command_pool.get_current_graphics_command_buffer());
+  vkCmdEndRenderPass(command_buffer);
 }
 }  // namespace wunder::vulkan

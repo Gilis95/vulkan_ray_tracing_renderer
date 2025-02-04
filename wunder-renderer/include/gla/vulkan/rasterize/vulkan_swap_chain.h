@@ -15,7 +15,7 @@ class render_pass;
 
 class swap_chain : public non_copyable {
  public:
-  struct queue_element {
+  struct queue_element : public non_copyable {
    public:
     struct semaphore_entry {
       VkSemaphore read_semaphore = VK_NULL_HANDLE;
@@ -23,6 +23,8 @@ class swap_chain : public non_copyable {
     };
 
    public:
+    queue_element();
+    queue_element(queue_element&& other);
     ~queue_element();
 
    public:
@@ -35,20 +37,29 @@ class swap_chain : public non_copyable {
     VkFence m_fence;
     semaphore_entry m_semaphore_entry;
   };
+
  public:
-  swap_chain(std::uint32_t width, std::uint32_t  height);
+  swap_chain(std::uint32_t width, std::uint32_t height);
+
  public:
   void resize(uint32_t width, uint32_t height);
 
   void initialize();
   void deallocate();
 
+ public:
   std::optional<std::uint32_t> acquire();
+
+  void begin_command_buffer();
+  VkCommandBuffer get_current_command_buffer();
+  void flush_current_command_buffer();
+
  public:
   void begin_render_pass() const;
   void end_render_pass() const;
 
   render_pass& mutable_render_pass();
+
  private:
   void initialize_render_pass();
 
@@ -65,6 +76,7 @@ class swap_chain : public non_copyable {
 
   void update_barriers() const;
   void wait_idle() const;
+  void wait_element_to_rendered(size_t element_idx);
 
  private:
   bool m_vsync_enabled;
@@ -83,7 +95,7 @@ class swap_chain : public non_copyable {
   VkDeviceMemory m_depth_memory;  // Depth/Stencil
   VkImageView m_depth_view;       // Depth/Stencil
 
-  VkFormat m_color_format{VK_FORMAT_B8G8R8A8_UNORM};
+  VkFormat m_colour_format{VK_FORMAT_B8G8R8A8_UNORM};
   VkColorSpaceKHR m_color_space;
 };
 }  // namespace wunder::vulkan

@@ -1,7 +1,8 @@
 #include "gla/vulkan/vulkan_base_pipeline.h"
 
-#include "gla/vulkan/vulkan_context.h"
+#include "gla/vulkan/rasterize/vulkan_swap_chain.h"
 #include "gla/vulkan/vulkan_command_pool.h"
+#include "gla/vulkan/vulkan_context.h"
 #include "gla/vulkan/vulkan_device.h"
 #include "gla/vulkan/vulkan_layer_abstraction_factory.h"
 #include "gla/vulkan/vulkan_shader.h"
@@ -12,8 +13,9 @@ base_pipeline::base_pipeline(VkPipelineBindPoint bind_point)
 
 void base_pipeline::initialize_pipeline_layout(
     const shader& descriptor_declaring_shader) {
-  auto& device =
-      layer_abstraction_factory::instance().get_vulkan_context().get_device();
+  auto& device = layer_abstraction_factory::instance()
+                     .get_vulkan_context()
+                     .mutable_device();
 
   const auto& descriptor_sets_layout =
       descriptor_declaring_shader.get_descriptor_set_layout();
@@ -54,9 +56,8 @@ base_pipeline::get_shader_stage_create_info(
 void base_pipeline::bind() {
   auto graphic_command_buffer = layer_abstraction_factory::instance()
                                     .get_vulkan_context()
-                                    .get_device()
-                                    .get_command_pool()
-                                    .get_current_graphics_command_buffer();
+                                    .mutable_swap_chain()
+                                    .get_current_command_buffer();
 
   vkCmdBindPipeline(graphic_command_buffer, get_bind_point(),
                     m_vulkan_pipeline);

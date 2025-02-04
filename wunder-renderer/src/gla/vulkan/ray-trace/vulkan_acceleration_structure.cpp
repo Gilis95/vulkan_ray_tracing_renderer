@@ -37,7 +37,7 @@ acceleration_structure::~acceleration_structure() {
 
   context& vulkan_context =
       layer_abstraction_factory::instance().get_vulkan_context();
-  auto& device = vulkan_context.get_device();
+  auto& device = vulkan_context.mutable_device();
 
   vkDestroyAccelerationStructureKHR(device.get_vulkan_logical_device(),
                                     m_descriptor, VK_NULL_HANDLE);
@@ -48,7 +48,7 @@ void acceleration_structure::create_acceleration_structure(
     VkDeviceSize acceleration_structure_size) {
   context& vulkan_context =
       layer_abstraction_factory::instance().get_vulkan_context();
-  auto& device = vulkan_context.get_device();
+  auto& device = vulkan_context.mutable_device();
 
   // Allocating the buffer to hold the acceleration structure
   m_acceleration_structure_buffer.reset(new
@@ -77,7 +77,7 @@ void acceleration_structure::build_acceleration_structure(
     const acceleration_structure_build_info& build_info) const {
   context& vulkan_context =
       layer_abstraction_factory::instance().get_vulkan_context();
-  auto& device = vulkan_context.get_device();
+  auto& device = vulkan_context.mutable_device();
   auto& command_pool = device.get_command_pool();
 
   std::vector<VkAccelerationStructureBuildRangeInfoKHR> as_build_offset_info = {
@@ -111,7 +111,7 @@ VkDeviceAddress acceleration_structure::get_address() {
 
   context& vulkan_context =
       layer_abstraction_factory::instance().get_vulkan_context();
-  auto& device = vulkan_context.get_device();
+  auto& device = vulkan_context.mutable_device();
 
   VkAccelerationStructureDeviceAddressInfoKHR info;
   std::memset(&info, 0, sizeof(VkAccelerationStructureDeviceAddressInfoKHR));

@@ -629,7 +629,7 @@ void camera::update_camera_buffer() {
 
   vulkan::context& vulkan_context =
       vulkan::layer_abstraction_factory::instance().get_vulkan_context();
-  auto& device = vulkan_context.get_device();
+  auto& device = vulkan_context.mutable_device();
   auto graphics_queue =
       device.get_command_pool().get_current_graphics_command_buffer();
 

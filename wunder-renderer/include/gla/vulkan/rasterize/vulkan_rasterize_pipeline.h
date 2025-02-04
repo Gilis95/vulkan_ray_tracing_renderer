@@ -23,7 +23,7 @@ class rasterize_pipeline : public base_pipeline {
 
   void initialize_pipeline(const vector_map<VkShaderStageFlagBits,
                                             std::vector<unique_ptr<shader>>>&
-                               shaders_of_types, render_pass& renderPass);
+                               shaders_of_types);
  private:
   VkGraphicsPipelineCreateInfo m_pipeline_create_info;
   VkPipelineCache m_pipeline_cache;

@@ -33,9 +33,9 @@ memory_allocator::~memory_allocator() {
 void memory_allocator::initialize() {
   auto& vulkan_context =
       layer_abstraction_factory::instance().get_vulkan_context();
-  auto& physical_device = vulkan_context.get_physical_device();
-  auto& device = vulkan_context.get_device();
-  auto& vulkan = vulkan_context.get_vulkan();
+  auto& physical_device = vulkan_context.mutable_physical_device();
+  auto& device = vulkan_context.mutable_device();
+  auto& vulkan = vulkan_context.mutable_vulkan();
 
   VmaAllocatorCreateInfo vma_allocator_create_info;
   memset(&vma_allocator_create_info, 0, sizeof(VmaAllocatorCreateInfo));

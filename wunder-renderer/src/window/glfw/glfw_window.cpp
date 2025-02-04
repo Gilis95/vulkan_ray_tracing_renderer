@@ -9,6 +9,9 @@
 #include "event/event_controller.h"
 #include "event/input_events.h"
 #include "event/window_events.h"
+#include "gla/vulkan/vulkan.h"
+#include "gla/vulkan/vulkan_context.h"
+#include "gla/vulkan/vulkan_layer_abstraction_factory.h"
 #include "window/window_properties.h"
 
 namespace wunder {
@@ -31,26 +34,29 @@ void glfw_window::init(const window_properties &properties) {
   AssertReturnUnless(status == GLFW_TRUE);
   glfwSetErrorCallback(glfw_error_callback);
 
+  glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+
   m_window = glfwCreateWindow(properties.m_width, properties.m_height,
                               properties.m_title.c_str(), NULL, NULL);
 
   // create context for current window
-  glfwMakeContextCurrent(m_window);
   glfwSetWindowCloseCallback(m_window, &on_close);
 
-  init_input_event_listeners();
+  // Setup Vulkan
+  if(glfwVulkanSupported() == 0)
+  {
+    WUNDER_ERROR_TAG("Window: ", "GLFW: Vulkan not supported!");
+    CRASH;
+  }
 
-  // VSync
-  glfwSwapInterval(0);
+
+  init_input_event_listeners();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void glfw_window::update(time_unit dt) {
   // poll for process events
   glfwPollEvents();
-
-  // swap front and back buffer
-  glfwSwapBuffers(m_window);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -74,6 +80,21 @@ void glfw_window::fill_vulkan_extensions(
   memcpy(out_extensions.m_extensions.data(), extensions,
          count * sizeof(extensions));
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////
+VkSurfaceKHR glfw_window::create_vulkan_surface() const {
+  VkSurfaceKHR result;
+  vulkan::context &vulkan_context =
+      vulkan::layer_abstraction_factory::instance().get_vulkan_context();
+  auto &vulkan_instance = vulkan_context.mutable_vulkan();
+
+  glfwCreateWindowSurface(vulkan_instance.get_instance(), m_window, nullptr,
+                          &result);
+
+  return result;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
 void glfw_window::init_input_event_listeners() {
   glfwSetKeyCallback(m_window, [](GLFWwindow *window, int key, int scanCode,
                                   int action, int mods) {

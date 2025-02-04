@@ -11,8 +11,8 @@ namespace wunder::vulkan {
 command_pool::command_pool() {
   context& vulkan_context =
       layer_abstraction_factory::instance().get_vulkan_context();
-  auto& physical_device = vulkan_context.get_physical_device();
-  auto& logical_device = vulkan_context.get_device();
+  auto& physical_device = vulkan_context.mutable_physical_device();
+  auto& logical_device = vulkan_context.mutable_device();
 
   VkCommandPoolCreateInfo cmd_pool_info = {};
   cmd_pool_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
@@ -34,7 +34,7 @@ command_pool::command_pool() {
 
 command_pool::~command_pool() {
   auto& logical_device =
-      layer_abstraction_factory::instance().get_vulkan_context().get_device();
+      layer_abstraction_factory::instance().get_vulkan_context().mutable_device();
 
   auto vulkanDevice = logical_device.get_vulkan_logical_device();
 
@@ -58,7 +58,7 @@ VkCommandBuffer command_pool::get_current_compute_command_buffer() {
 
 void command_pool::flush_graphics_command_buffer() {
   auto& logical_device =
-      layer_abstraction_factory::instance().get_vulkan_context().get_device();
+      layer_abstraction_factory::instance().get_vulkan_context().mutable_device();
 
   flush_command_buffer(m_current_graphics_command_buffer,
                        m_graphics_command_pool,
@@ -67,7 +67,7 @@ void command_pool::flush_graphics_command_buffer() {
 
 void command_pool::flush_compute_command_buffer() {
   auto& logical_device =
-      layer_abstraction_factory::instance().get_vulkan_context().get_device();
+      layer_abstraction_factory::instance().get_vulkan_context().mutable_device();
 
   flush_command_buffer(m_current_compute_command_buffer, m_compute_command_pool,
                        logical_device.get_compute_queue());
@@ -77,7 +77,7 @@ void command_pool::flush_command_buffer(VkCommandBuffer& command_buffer,
                                         VkCommandPool source_pool,
                                         VkQueue queue) {
   auto& logical_device =
-      layer_abstraction_factory::instance().get_vulkan_context().get_device();
+      layer_abstraction_factory::instance().get_vulkan_context().mutable_device();
 
   auto vulkan_logical_device = logical_device.get_vulkan_logical_device();
 
@@ -130,7 +130,7 @@ VkCommandBuffer command_pool::allocate_command_buffer(
   AssertReturnUnless(out_buffer == VK_NULL_HANDLE, out_buffer);
 
   auto& logical_device =
-      layer_abstraction_factory::instance().get_vulkan_context().get_device();
+      layer_abstraction_factory::instance().get_vulkan_context().mutable_device();
 
   auto vulkan_logical_device = logical_device.get_vulkan_logical_device();
 

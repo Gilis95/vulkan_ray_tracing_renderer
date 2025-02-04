@@ -28,9 +28,9 @@
 
 
 #define TONEMAP_UNCHARTED
-#include "random.glsl"
-#include "tonemapping.glsl"
-#include "host_device.h"
+#include "../random.glsl"
+#include "../tonemapping.glsl"
+#include "../host_device.h"
 
 
 layout(location = 0) in vec2 uvCoords;

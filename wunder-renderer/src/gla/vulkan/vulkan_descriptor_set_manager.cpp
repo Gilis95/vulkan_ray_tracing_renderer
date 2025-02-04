@@ -4,7 +4,7 @@
 #include <variant>
 
 #include "core/wunder_macros.h"
-#include "gla/vulkan/vulkan_command_pool.h"
+#include "gla/vulkan/rasterize/vulkan_swap_chain.h"
 #include "gla/vulkan/vulkan_context.h"
 #include "gla/vulkan/vulkan_device.h"
 #include "gla/vulkan/vulkan_layer_abstraction_factory.h"
@@ -25,7 +25,7 @@ class write_descriptor_creator {
   VkWriteDescriptorSet operator()(
       const std::vector<VkDescriptorImageInfo>& resource) {
     VkWriteDescriptorSet result;
-    std::memset(&result, 0, sizeof (VkWriteDescriptorSet));
+    std::memset(&result, 0, sizeof(VkWriteDescriptorSet));
 
     result.descriptorCount = resource.size();
     result.pImageInfo = resource.data();
@@ -36,7 +36,7 @@ class write_descriptor_creator {
   VkWriteDescriptorSet operator()(
       const std::vector<VkDescriptorBufferInfo>& resource) {
     VkWriteDescriptorSet result;
-    std::memset(&result, 0, sizeof (VkWriteDescriptorSet));
+    std::memset(&result, 0, sizeof(VkWriteDescriptorSet));
 
     result.descriptorCount = resource.size();
     result.pBufferInfo = resource.data();
@@ -46,7 +46,7 @@ class write_descriptor_creator {
 
   VkWriteDescriptorSet operator()(std::vector<VkBufferView>& resource) {
     VkWriteDescriptorSet result;
-    std::memset(&result, 0, sizeof (VkWriteDescriptorSet));
+    std::memset(&result, 0, sizeof(VkWriteDescriptorSet));
 
     result.descriptorCount = resource.size();
     result.pTexelBufferView = resource.data();
@@ -57,7 +57,7 @@ class write_descriptor_creator {
   VkWriteDescriptorSet operator()(
       std::vector<VkAccelerationStructureKHR>& resources) {
     VkWriteDescriptorSet result;
-    std::memset(&result, 0, sizeof (VkWriteDescriptorSet));
+    std::memset(&result, 0, sizeof(VkWriteDescriptorSet));
     ReturnIf(resources.empty(), result);
 
     // TODO:: this is a workaround. However currently it has no impacts
@@ -75,7 +75,8 @@ class write_descriptor_creator {
     descriptor_set_acceleration_structure.pAccelerationStructures =
         resources.data();
 
-    result.descriptorCount = descriptor_set_acceleration_structure.accelerationStructureCount;
+    result.descriptorCount =
+        descriptor_set_acceleration_structure.accelerationStructureCount;
     result.pNext = &descriptor_set_acceleration_structure;
     return result;
   }
@@ -84,9 +85,9 @@ class write_descriptor_creator {
 
 namespace wunder::vulkan {
 
-void descriptor_set_manager::clear_resources(){
-  for(auto& [_, input_resource]: m_input_resources){
-    for(auto& [_,binding] : input_resource.m_bindings){
+void descriptor_set_manager::clear_resources() {
+  for (auto& [_, input_resource] : m_input_resources) {
+    for (auto& [_, binding] : input_resource.m_bindings) {
       binding.clear_resources();
     }
   }
@@ -133,8 +134,9 @@ void descriptor_set_manager::add_resource(
 
 void descriptor_set_manager::bake() {
   std::vector<VkWriteDescriptorSet> write_descriptors;
-  auto& device =
-      layer_abstraction_factory::instance().get_vulkan_context().get_device();
+  auto& device = layer_abstraction_factory::instance()
+                     .get_vulkan_context()
+                     .mutable_device();
   VkDevice vulkan_logical_device = device.get_vulkan_logical_device();
   write_descriptor_creator descriptor_creator;
 
@@ -168,13 +170,12 @@ void descriptor_set_manager::bake() {
 }
 
 void descriptor_set_manager::bind(const base_pipeline& pipeline) const {
-  auto& device =
-      layer_abstraction_factory::instance().get_vulkan_context().get_device();
+  auto command_buffer = layer_abstraction_factory::instance()
+                            .get_vulkan_context()
+                            .mutable_swap_chain()
+                            .get_current_command_buffer();
 
-  auto& command_pool = device.get_command_pool();
-
-  vkCmdBindDescriptorSets(command_pool.get_current_graphics_command_buffer(),
-                          pipeline.get_bind_point(),
+  vkCmdBindDescriptorSets(command_buffer, pipeline.get_bind_point(),
                           pipeline.get_vulkan_pipeline_layout(), 0,
                           static_cast<uint32_t>(m_descriptor_sets.size()),
                           m_descriptor_sets.data(), 0, nullptr);
@@ -207,7 +208,7 @@ void descriptor_set_manager::initialize(const shader& vulkan_shader) {
   poolInfo.pPoolSizes = poolSizes;
 
   context& context = layer_abstraction_factory::instance().get_vulkan_context();
-  auto* const device = context.get_device().get_vulkan_logical_device();
+  auto* const device = context.mutable_device().get_vulkan_logical_device();
 
   VK_CHECK_RESULT(
       vkCreateDescriptorPool(device, &poolInfo, nullptr, &m_descriptor_pool));

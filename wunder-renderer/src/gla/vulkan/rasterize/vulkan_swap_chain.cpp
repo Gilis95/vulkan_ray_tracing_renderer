@@ -6,12 +6,34 @@
 #include "gla/vulkan/vulkan_device.h"
 #include "gla/vulkan/vulkan_macros.h"
 #include "gla/vulkan/vulkan_physical_device.h"
+#include "window/window_factory.h"
 
 namespace wunder::vulkan {
+swap_chain::queue_element::queue_element() = default;
+
+swap_chain::queue_element::queue_element(queue_element&& other)
+    : m_image(other.m_image),
+      m_image_view(other.m_image_view),
+      m_command_buffer(other.m_command_buffer),
+      m_framebuffer(other.m_framebuffer),
+      m_barrier(other.m_barrier),
+      m_fence(other.m_fence),
+      m_semaphore_entry(std::move(other.m_semaphore_entry))
+
+{
+  other.m_image = VK_NULL_HANDLE;
+  other.m_image_view = VK_NULL_HANDLE;
+  other.m_command_buffer = VK_NULL_HANDLE;
+  other.m_framebuffer = VK_NULL_HANDLE;
+  other.m_fence = VK_NULL_HANDLE;
+  other.m_semaphore_entry.read_semaphore = VK_NULL_HANDLE;
+  other.m_semaphore_entry.written_semaphore = VK_NULL_HANDLE;
+};
+
 swap_chain::queue_element::~queue_element() {
   context& vulkan_context =
       layer_abstraction_factory::instance().get_vulkan_context();
-  auto& device = vulkan_context.get_device();
+  auto& device = vulkan_context.mutable_device();
   auto vk_device = device.get_vulkan_logical_device();
 
   //  vkDestroyImage(vk_device, m_image, nullptr);
@@ -28,16 +50,15 @@ swap_chain::swap_chain(std::uint32_t width, std::uint32_t height)
       m_height(height),
       m_current_queue_element{},
       m_queue_elements{},
-      m_render_pass(VK_NULL_HANDLE),
+      m_render_pass(),
       m_surface(VK_NULL_HANDLE),
       m_swap_chain(VK_NULL_HANDLE),
       m_command_pool(VK_NULL_HANDLE),
       m_depth_image(VK_NULL_HANDLE),
       m_depth_memory(VK_NULL_HANDLE),
       m_depth_view(VK_NULL_HANDLE),
-      m_color_format{VK_FORMAT_B8G8R8A8_UNORM},
-      m_color_space{VK_COLOR_SPACE_SRGB_NONLINEAR_KHR} {
-}
+      m_colour_format{VK_FORMAT_B8G8R8A8_UNORM},
+      m_color_space{VK_COLOR_SPACE_SRGB_NONLINEAR_KHR} {}
 
 void swap_chain::resize(uint32_t width, uint32_t height) {
   wait_idle();
@@ -61,7 +82,7 @@ void swap_chain::initialize() {
 void swap_chain::deallocate() {
   context& vulkan_context =
       layer_abstraction_factory::instance().get_vulkan_context();
-  auto& device = vulkan_context.get_device();
+  auto& device = vulkan_context.mutable_device();
   auto vk_device = device.get_vulkan_logical_device();
 
   m_queue_elements.clear();
@@ -80,23 +101,27 @@ void swap_chain::deallocate() {
 std::optional<std::uint32_t> swap_chain::acquire() {
   context& vulkan_context =
       layer_abstraction_factory::instance().get_vulkan_context();
-  auto& device = vulkan_context.get_device();
+  auto& device = vulkan_context.mutable_device();
   auto vk_device = device.get_vulkan_logical_device();
 
   for (int i = 0; i < 2; i++) {
-    auto current_image_idx =
-        (m_current_queue_element + 1) % m_queue_elements.size();
+    auto next_image_idx = (m_current_queue_element) % m_queue_elements.size();
     VkSemaphore semaphore =
-        m_queue_elements[current_image_idx].m_semaphore_entry.read_semaphore;
+        m_queue_elements[next_image_idx].m_semaphore_entry.read_semaphore;
+
     VkResult result;
-    result = vkAcquireNextImageKHR(vk_device, m_swap_chain, UINT64_MAX,
-                                   semaphore, (VkFence)VK_NULL_HANDLE,
+    // other option would be having an amount of semaphores with 1 greater than a swap chain elements
+    wait_element_to_rendered(next_image_idx);
+    result = vkAcquireNextImageKHR(vk_device, m_swap_chain, 10000, semaphore,
+                                   (VkFence)VK_NULL_HANDLE,
                                    &m_current_queue_element);
+    wait_element_to_rendered(m_current_queue_element);
 
     if (result == VK_SUCCESS) {
       return m_current_queue_element;
-    } else if (result == VK_ERROR_OUT_OF_DATE_KHR ||
-               result == VK_SUBOPTIMAL_KHR) {
+    }
+
+    if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
       resize(m_width, m_height);
     }
   }
@@ -104,28 +129,104 @@ std::optional<std::uint32_t> swap_chain::acquire() {
   return std::nullopt;
 }
 
+void swap_chain::begin_command_buffer() {
+  auto command_buffer =
+      m_queue_elements[m_current_queue_element].m_command_buffer;
+
+  VkCommandBufferBeginInfo beginInfo{
+      VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO};
+  beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+  vkBeginCommandBuffer(command_buffer, &beginInfo);
+}
+
+VkCommandBuffer swap_chain::get_current_command_buffer() {
+  return m_queue_elements[m_current_queue_element].m_command_buffer;
+}
+
+void swap_chain::flush_current_command_buffer() {
+  context& vulkan_context =
+      layer_abstraction_factory::instance().get_vulkan_context();
+  auto& device = vulkan_context.mutable_device();
+  auto vk_device = device.get_vulkan_logical_device();
+  auto device_queue = device.get_graphics_queue();
+  auto& queue_element = m_queue_elements[m_current_queue_element];
+
+  vkEndCommandBuffer(queue_element.m_command_buffer);
+
+  vkResetFences(vk_device, 1, &queue_element.m_fence);
+
+  bool m_use_nv_link = false;
+  // In case of using NVLINK
+  const uint32_t deviceMask = m_use_nv_link ? 0b0000'0011 : 0b0000'0001;
+  const std::array<uint32_t, 2> deviceIndex = {0, 1};
+
+  VkDeviceGroupSubmitInfo deviceGroupSubmitInfo{
+      .sType = VK_STRUCTURE_TYPE_DEVICE_GROUP_SUBMIT_INFO_KHR,
+      .pNext = VK_NULL_HANDLE,
+      .waitSemaphoreCount = 1,
+      .pWaitSemaphoreDeviceIndices = deviceIndex.data(),
+      .commandBufferCount = 1,
+      .pCommandBufferDeviceMasks = &deviceMask,
+      .signalSemaphoreCount = m_use_nv_link ? 2u : 1u,
+      .pSignalSemaphoreDeviceIndices = deviceIndex.data(),
+  };
+
+  // Pipeline stage at which the queue submission will wait (via
+  // pWaitSemaphores)
+  const VkPipelineStageFlags waitStageMask =
+      VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+  // The submit info structure specifies a command buffer queue submission batch
+  VkSubmitInfo submitInfo{
+      .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
+      .pNext = &deviceGroupSubmitInfo,
+      .waitSemaphoreCount = 1,  // One wait semaphore
+      .pWaitSemaphores = &queue_element.m_semaphore_entry.read_semaphore,
+      .pWaitDstStageMask = &waitStageMask,
+      .commandBufferCount = 1,  // One command buffer
+      .pCommandBuffers = &queue_element.m_command_buffer,
+      .signalSemaphoreCount = 1,  // One signal semaphore
+      .pSignalSemaphores = &queue_element.m_semaphore_entry.written_semaphore,
+  };
+
+  // Submit to the graphics queue passing a wait fence
+  vkQueueSubmit(device_queue, 1, &submitInfo, queue_element.m_fence);
+
+  VkPresentInfoKHR present_info{
+      .sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
+      .pNext = VK_NULL_HANDLE,
+      .waitSemaphoreCount = 1,
+      .pWaitSemaphores = &queue_element.m_semaphore_entry.written_semaphore,
+      .swapchainCount = 1,
+      .pSwapchains = &m_swap_chain,
+      .pImageIndices = &m_current_queue_element,
+      .pResults = VK_NULL_HANDLE,
+  };
+
+  VK_CHECK_RESULT(vkQueuePresentKHR(device_queue, &present_info));
+
+  ++m_current_queue_element;
+}
+
 void swap_chain::begin_render_pass() const {
   m_render_pass->begin(m_queue_elements[m_current_queue_element].m_framebuffer,
                        {.width = m_width, .height = m_height});
 }
 
-void swap_chain::end_render_pass() const {
-  m_render_pass->end();
-}
+void swap_chain::end_render_pass() const { m_render_pass->end(); }
 
-render_pass& swap_chain::mutable_render_pass(){
-  return *m_render_pass;
-}
+render_pass& swap_chain::mutable_render_pass() { return *m_render_pass; }
 
 void swap_chain::initialize_swap_chain() {
   context& vulkan_context =
       layer_abstraction_factory::instance().get_vulkan_context();
-  auto& physical_device = vulkan_context.get_physical_device();
-  auto& device = vulkan_context.get_device();
+  auto& physical_device = vulkan_context.mutable_physical_device();
+  auto& device = vulkan_context.mutable_device();
   auto vk_physical_device = physical_device.get_vulkan_physical_device();
   auto vk_device = device.get_vulkan_logical_device();
 
   VkSwapchainKHR old_swap_chain = m_swap_chain;
+
+  m_surface = window_factory::instance().get_window().create_vulkan_surface();
 
   uint32_t surface_format_count;
   VK_CHECK_RESULT(vkGetPhysicalDeviceSurfaceFormatsKHR(
@@ -137,7 +238,7 @@ void swap_chain::initialize_swap_chain() {
       surface_formats.data()));
 
   m_color_space = surface_formats[0].colorSpace;
-  m_color_format = surface_formats[0].format;
+  m_colour_format = surface_formats[0].format;
 
   // Get physical device surface properties and formats
   VkSurfaceCapabilitiesKHR surface_capabilities;
@@ -233,7 +334,7 @@ void swap_chain::initialize_swap_chain() {
   swapchain_create_info.pNext = NULL;
   swapchain_create_info.surface = m_surface;
   swapchain_create_info.minImageCount = desiredNumberOfSwapchainImages;
-  swapchain_create_info.imageFormat = m_color_format;
+  swapchain_create_info.imageFormat = m_colour_format;
   swapchain_create_info.imageColorSpace = m_color_space;
   swapchain_create_info.imageExtent = {swapchain_extent.width,
                                        swapchain_extent.height};
@@ -273,13 +374,14 @@ void swap_chain::initialize_swap_chain() {
 }
 
 void swap_chain::initialize_render_pass() {  // Render Pass
+  m_render_pass = make_unique<render_pass>(m_colour_format);
 }
 
 void swap_chain::initialize_depth_buffer() {
   context& vulkan_context =
       layer_abstraction_factory::instance().get_vulkan_context();
-  auto& physical_device = vulkan_context.get_physical_device();
-  auto& device = vulkan_context.get_device();
+  auto& physical_device = vulkan_context.mutable_physical_device();
+  auto& device = vulkan_context.mutable_device();
   auto vk_device = device.get_vulkan_logical_device();
 
   if (m_depth_view) {
@@ -351,10 +453,10 @@ void swap_chain::initialize_depth_buffer() {
       VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
 
   vkCmdPipelineBarrier(
-      device.get_command_pool().get_current_compute_command_buffer(),
+      device.get_command_pool().get_current_graphics_command_buffer(),
       srcStageMask, destStageMask, VK_FALSE, 0, nullptr, 0, nullptr, 1,
       &imageMemoryBarrier);
-  device.get_command_pool().flush_compute_command_buffer();
+  device.get_command_pool().flush_graphics_command_buffer();
 
   // Setting up the view
   VkImageViewCreateInfo depthStencilView{
@@ -369,7 +471,7 @@ void swap_chain::initialize_depth_buffer() {
 void swap_chain::initialize_queue_elements() {
   context& vulkan_context =
       layer_abstraction_factory::instance().get_vulkan_context();
-  auto& device = vulkan_context.get_device();
+  auto& device = vulkan_context.mutable_device();
   auto vk_device = device.get_vulkan_logical_device();
 
   uint32_t image_count = 0;
@@ -391,7 +493,7 @@ void swap_chain::initialize_queue_elements() {
 void swap_chain::create_image_for_each_queue_element() {
   context& vulkan_context =
       layer_abstraction_factory::instance().get_vulkan_context();
-  auto& device = vulkan_context.get_device();
+  auto& device = vulkan_context.mutable_device();
   auto vk_device = device.get_vulkan_logical_device();
 
   std::uint32_t image_count = m_queue_elements.size();
@@ -409,7 +511,7 @@ void swap_chain::create_image_for_each_queue_element() {
     VkImageViewCreateInfo colorAttachmentView = {};
     colorAttachmentView.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
     colorAttachmentView.pNext = VK_NULL_HANDLE;
-    colorAttachmentView.format = m_color_format;
+    colorAttachmentView.format = m_colour_format;
     colorAttachmentView.image = image;
     colorAttachmentView.components = {
         VK_COMPONENT_SWIZZLE_R, VK_COMPONENT_SWIZZLE_G, VK_COMPONENT_SWIZZLE_B,
@@ -443,6 +545,8 @@ void swap_chain::create_image_barrier_for_each_queue_element() {
     range.layerCount = VK_REMAINING_ARRAY_LAYERS;
 
     VkImageMemoryBarrier& memory_barrier = queue_element.m_barrier;
+    memset(&memory_barrier, 0, sizeof(VkImageMemoryBarrier));
+
     memory_barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
     memory_barrier.dstAccessMask = 0;
     memory_barrier.srcAccessMask = 0;
@@ -456,7 +560,7 @@ void swap_chain::create_image_barrier_for_each_queue_element() {
 void swap_chain::create_command_buffer_for_each_queue_element() {
   context& vulkan_context =
       layer_abstraction_factory::instance().get_vulkan_context();
-  auto& device = vulkan_context.get_device();
+  auto& device = vulkan_context.mutable_device();
   auto vk_device = device.get_vulkan_logical_device();
 
   VkCommandPoolCreateInfo poolCreateInfo{
@@ -469,6 +573,7 @@ void swap_chain::create_command_buffer_for_each_queue_element() {
       VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
   commandBufferAllocateInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
   commandBufferAllocateInfo.commandBufferCount = m_queue_elements.size();
+  commandBufferAllocateInfo.commandPool = m_command_pool;
 
   std::vector<VkCommandBuffer> command_buffers(m_queue_elements.size());
 
@@ -483,7 +588,7 @@ void swap_chain::create_command_buffer_for_each_queue_element() {
 void swap_chain::create_semaphores_for_each_queue_element() {
   context& vulkan_context =
       layer_abstraction_factory::instance().get_vulkan_context();
-  auto& device = vulkan_context.get_device();
+  auto& device = vulkan_context.mutable_device();
   auto vk_device = device.get_vulkan_logical_device();
 
   VkSemaphoreCreateInfo semaphoreCreateInfo{};
@@ -510,7 +615,7 @@ void swap_chain::create_semaphores_for_each_queue_element() {
 void swap_chain::create_fence_for_each_queue_element() {
   context& vulkan_context =
       layer_abstraction_factory::instance().get_vulkan_context();
-  auto& device = vulkan_context.get_device();
+  auto& device = vulkan_context.mutable_device();
   auto vk_device = device.get_vulkan_logical_device();
 
   // Create Synchronization Primitives
@@ -526,7 +631,7 @@ void swap_chain::create_fence_for_each_queue_element() {
 void swap_chain::create_frame_buffer_for_each_queue_element() {
   context& vulkan_context =
       layer_abstraction_factory::instance().get_vulkan_context();
-  auto& device = vulkan_context.get_device();
+  auto& device = vulkan_context.mutable_device();
   auto vk_device = device.get_vulkan_logical_device();
 
   std::array<VkImageView, 2> attachments{};
@@ -557,7 +662,7 @@ void swap_chain::create_frame_buffer_for_each_queue_element() {
 void swap_chain::update_barriers() const {
   context& vulkan_context =
       layer_abstraction_factory::instance().get_vulkan_context();
-  auto& device = vulkan_context.get_device();
+  auto& device = vulkan_context.mutable_device();
   command_pool& pool = device.get_command_pool();
   auto command_buffer = pool.get_current_compute_command_buffer();
 
@@ -573,10 +678,24 @@ void swap_chain::update_barriers() const {
 void swap_chain::wait_idle() const {
   context& vulkan_context =
       layer_abstraction_factory::instance().get_vulkan_context();
-  auto& device = vulkan_context.get_device();
+  auto& device = vulkan_context.mutable_device();
   auto vk_device = device.get_vulkan_logical_device();
 
   VK_CHECK_RESULT(vkDeviceWaitIdle(vk_device));
+}
+
+void swap_chain::wait_element_to_rendered(size_t element_idx) {
+  context& vulkan_context =
+      layer_abstraction_factory::instance().get_vulkan_context();
+  auto& device = vulkan_context.mutable_device();
+  auto vk_device = device.get_vulkan_logical_device();
+
+  VkResult result;
+  do {
+    result =
+        vkWaitForFences(vk_device, 1, &m_queue_elements[element_idx].m_fence,
+                        VK_TRUE, 1'000'000);
+  } while (result == VK_TIMEOUT);
 }
 
 }  // namespace wunder::vulkan

@@ -29,7 +29,7 @@ device::~device() { destroy(); }
 void device::initialize() {
   auto& physical_device = layer_abstraction_factory::instance()
                              .get_vulkan_context()
-                             .get_physical_device();
+                             .mutable_physical_device();
   create_extensions_list();
   create_logical_device();
 
@@ -96,7 +96,7 @@ void device::create_logical_device() {
   // need to request the swapchain extension
   context& vulkan_context =
       layer_abstraction_factory::instance().get_vulkan_context();
-  auto& physical_device = vulkan_context.get_physical_device();
+  auto& physical_device = vulkan_context.mutable_physical_device();
   auto& physical_device_info = physical_device.mutable_device_info();
 
   add_supported_extensions(physical_device, m_requested_extensions,
@@ -137,7 +137,7 @@ void device::append_used_device_features(
                                                    // append extensions
   context& vulkan_context =
       layer_abstraction_factory::instance().get_vulkan_context();
-  const auto& physical_device = vulkan_context.get_physical_device();
+  const auto& physical_device = vulkan_context.mutable_physical_device();
 
   if (!used_features.empty()) {
     // build up chain of all used extension features

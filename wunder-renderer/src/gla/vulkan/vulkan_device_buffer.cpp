@@ -25,8 +25,8 @@ device_buffer<base_buffer_type>::device_buffer(
     : buffer<base_buffer_type>(std::move(descriptor_build_data)) {
   context& vulkan_context =
       layer_abstraction_factory::instance().get_vulkan_context();
-  auto& allocator = vulkan_context.get_resource_allocator();
-  auto& device = vulkan_context.get_device();
+  auto& allocator = vulkan_context.mutable_resource_allocator();
+  auto& device = vulkan_context.mutable_device();
 
   auto [staging_buffer, staging_buffer_allocation] =
       allocate_cpu_staging_buffer(data_size);
@@ -68,7 +68,7 @@ template <typename base_buffer_type>
 void device_buffer<base_buffer_type>::update_data(void* data, size_t data_size) /*override*/ {
   context& vulkan_context =
       layer_abstraction_factory::instance().get_vulkan_context();
-  auto& device = vulkan_context.get_device();
+  auto& device = vulkan_context.mutable_device();
 
   auto graphics_queue = device.get_command_pool().get_current_graphics_command_buffer();
 
@@ -94,7 +94,7 @@ std::pair<VkBuffer, VmaAllocation> device_buffer<base_buffer_type>::allocate_cpu
     size_t data_size) {
   context& vulkan_context =
       layer_abstraction_factory::instance().get_vulkan_context();
-  auto& allocator = vulkan_context.get_resource_allocator();
+  auto& allocator = vulkan_context.mutable_resource_allocator();
 
   VkBuffer staging_buffer;
   VmaAllocation staging_buffer_allocation;
@@ -115,7 +115,7 @@ void device_buffer<base_buffer_type>::allocate_device_buffer(size_t data_size,
                                            VkBufferUsageFlags usage_flags) {
   context& vulkan_context =
       layer_abstraction_factory::instance().get_vulkan_context();
-  auto& allocator = vulkan_context.get_resource_allocator();
+  auto& allocator = vulkan_context.mutable_resource_allocator();
 
   VkBufferCreateInfo vertex_buffer_create_info = {};
   vertex_buffer_create_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;

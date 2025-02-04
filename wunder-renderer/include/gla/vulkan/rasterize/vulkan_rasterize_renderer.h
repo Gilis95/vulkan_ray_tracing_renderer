@@ -26,8 +26,7 @@ class rasterize_renderer : public base_renderer {
 
   storage_texture& get_output_image();
  public:
-  void begin_frame();
-  void end_frame();
+  void draw_frame();
  private:
   void create_descriptor_manager(const shader& shader);
 
@@ -39,8 +38,6 @@ class rasterize_renderer : public base_renderer {
 
   Tonemapper m_tonemapper;
 
-  unique_ptr<swap_chain> m_swap_chain;
-  unique_ptr<descriptor_set_manager> m_descriptor_set_manager;
   unique_ptr<rasterize_pipeline> m_pipeline;
 
   unique_ptr<storage_texture> m_output_image;

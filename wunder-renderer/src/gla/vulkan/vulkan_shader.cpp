@@ -256,7 +256,7 @@ shader::compile_shader(std::ifstream& spirv_istream,
 void shader::initialize(const std::vector<std::uint32_t>& debug_spirv) {
   AssertReturnIf(debug_spirv.empty());
   auto& device =
-      layer_abstraction_factory::instance().get_vulkan_context().get_device();
+      layer_abstraction_factory::instance().get_vulkan_context().mutable_device();
 
   VkShaderModuleCreateInfo moduleCreateInfo{};
 
@@ -365,7 +365,7 @@ void shader::initialize_descriptor_set_layout() {
   }
 
   auto& device =
-      layer_abstraction_factory::instance().get_vulkan_context().get_device();
+      layer_abstraction_factory::instance().get_vulkan_context().mutable_device();
   VkDevice vulkan_logical_device = device.get_vulkan_logical_device();
 
   for (auto& [set_identifier, layout_bindings] : per_set_layout_bindings) {

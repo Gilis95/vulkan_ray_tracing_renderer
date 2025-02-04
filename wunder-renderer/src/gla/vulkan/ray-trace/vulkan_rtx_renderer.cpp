@@ -9,6 +9,7 @@
 #include "event/scene_events.h"
 #include "gla/renderer_capabilities .h"
 #include "gla/vulkan/rasterize/vulkan_rasterize_renderer.h"
+#include "gla/vulkan/rasterize/vulkan_swap_chain.h"
 #include "gla/vulkan/scene/vulkan_scene.h"
 #include "gla/vulkan/vulkan_command_pool.h"
 #include "gla/vulkan/vulkan_context.h"
@@ -58,32 +59,25 @@ vector_map<VkShaderStageFlagBits, std::vector<shader_to_compile>>
 rtx_renderer::get_shaders_for_compilation() {
   vector_map<VkShaderStageFlagBits, std::vector<shader_to_compile>>
       shaders_to_compile;
-  shaders_to_compile[VkShaderStageFlagBits::VK_SHADER_STAGE_RAYGEN_BIT_KHR] =
-      std::vector<shader_to_compile>(
-          std::initializer_list<shader_to_compile>{shader_to_compile{
-              .m_shader_path =
-                  "wunder-renderer/resources/shaders/pathtrace.rgen",
-              .m_on_successful_compile =
-                  std::bind(&rtx_renderer::create_descriptor_manager, this,
-                            std::placeholders::_1),
-              .m_optional = false}});
-  shaders_to_compile[VkShaderStageFlagBits::VK_SHADER_STAGE_ANY_HIT_BIT_KHR] =
-      std::vector<shader_to_compile>(
-          std::initializer_list<shader_to_compile>{shader_to_compile{
-              .m_shader_path =
-                  "wunder-renderer/resources/shaders/pathtrace.rahit",
-              .m_on_successful_compile = nullptr,
-              .m_optional = false}});
-  shaders_to_compile
-      [VkShaderStageFlagBits::VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR] =
-          std::vector<shader_to_compile>(
-              std::initializer_list<shader_to_compile>{shader_to_compile{
-                  .m_shader_path =
-                      "wunder-renderer/resources/shaders/pathtrace.rchit",
-                  .m_on_successful_compile = nullptr,
-                  .m_optional = false}});
-  shaders_to_compile[VkShaderStageFlagBits::VK_SHADER_STAGE_MISS_BIT_KHR] =
-      std::vector<shader_to_compile>(std::initializer_list<shader_to_compile>{
+  shaders_to_compile[VK_SHADER_STAGE_RAYGEN_BIT_KHR] =
+      std::vector(std::initializer_list{shader_to_compile{
+          .m_shader_path = "wunder-renderer/resources/shaders/pathtrace.rgen",
+          .m_on_successful_compile =
+              std::bind(&rtx_renderer::create_descriptor_manager, this,
+                        std::placeholders::_1),
+          .m_optional = false}});
+  shaders_to_compile[VK_SHADER_STAGE_ANY_HIT_BIT_KHR] =
+      std::vector(std::initializer_list{shader_to_compile{
+          .m_shader_path = "wunder-renderer/resources/shaders/pathtrace.rahit",
+          .m_on_successful_compile = nullptr,
+          .m_optional = false}});
+  shaders_to_compile[VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR] =
+      std::vector(std::initializer_list{shader_to_compile{
+          .m_shader_path = "wunder-renderer/resources/shaders/pathtrace.rchit",
+          .m_on_successful_compile = nullptr,
+          .m_optional = false}});
+  shaders_to_compile[VK_SHADER_STAGE_MISS_BIT_KHR] =
+      std::vector(std::initializer_list{
           shader_to_compile{
               .m_shader_path =
                   "wunder-renderer/resources/shaders/pathtrace.rmiss",
@@ -107,14 +101,16 @@ void rtx_renderer::create_descriptor_manager(const shader &shader) {
 void rtx_renderer::update(time_unit dt) /*override*/
 {
   ReturnUnless(m_have_active_scene);
-  command_pool &command_pool = layer_abstraction_factory::instance()
-                                   .get_vulkan_context()
-                                   .get_device()
-                                   .get_command_pool();
-  auto graphic_command_buffer =
-      command_pool.get_current_graphics_command_buffer();
+  auto &vulkan_context =
+      layer_abstraction_factory::instance().get_vulkan_context();
+  auto &swap_chain = vulkan_context.mutable_swap_chain();
 
-  m_rasterize_renderer->begin_frame();
+
+  AssertReturnUnless(swap_chain.acquire().has_value(), );
+
+  swap_chain.begin_command_buffer();
+  auto graphic_command_buffer =
+    swap_chain.get_current_command_buffer();
 
   m_rtx_pipeline->bind();
   m_descriptor_set_manager->bind(*m_rtx_pipeline);
@@ -145,8 +141,11 @@ void rtx_renderer::update(time_unit dt) /*override*/
                     m_renderer_properties.m_height, 3);
   ++m_state->frame;
 
-  m_rasterize_renderer->end_frame();
-  command_pool.flush_graphics_command_buffer();
+  swap_chain.begin_render_pass();
+  m_rasterize_renderer->draw_frame();
+  swap_chain.end_render_pass();
+
+  swap_chain.flush_current_command_buffer();
 }
 
 void rtx_renderer::on_event(

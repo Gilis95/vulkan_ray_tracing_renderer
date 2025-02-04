@@ -7,27 +7,25 @@
 #include <entry_point.h>
 #include <event/asset_events.h>
 #include <event/scene_events.h>
-#include <event/event_handler.hpp>
 #include <gla/renderer_properties.h>
 #include <scene/scene_manager.h>
 #include <window/window_properties.h>
 
+#include <event/event_handler.hpp>
 #include <utility>
 
 namespace wunder {
 
 wunder_application::wunder_application(application_properties&& properties)
     : application(std::move(properties)),
-      event_handler<wunder::event::scene_loaded>()
-{}
+      event_handler<wunder::event::scene_loaded>() {}
 
 wunder_application::~wunder_application() /*override*/ = default;
 
 void wunder_application::initialize_internal() {
   asset_manager& asset_manager = project::instance().get_asset_manager();
   asset_manager.import_environment_map("wunder-renderer/resources/std_env.hdr");
-  asset_manager.import_asset(
-      "wunder-sandbox/resources/cube.gltf");
+  asset_manager.import_asset("wunder-sandbox/resources/cube.gltf");
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -38,8 +36,10 @@ application* create_application() {
 
   auto app_properties = application_properties{
       "wunder", "123",
-      window_properties{"Wunder Application", 1280, 720, window_type::glfw},
-      renderer_properties{.m_driver = driver::Vulkan,
+      window_properties{"Wunder Application", 1920, 1080, window_type::glfw},
+      renderer_properties{.m_width = 1920,
+                          .m_height = 1080,
+                          .m_driver = driver::Vulkan,
                           .m_renderer = renderer_type::RAY_TRACE,
                           .m_gpu_to_use = gpu_to_use::Dedicated,
                           .m_enable_validation = true}};

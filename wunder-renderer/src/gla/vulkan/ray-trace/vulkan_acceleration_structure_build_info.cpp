@@ -67,7 +67,7 @@ void acceleration_structure_build_info::create_build_info(
 void acceleration_structure_build_info::calculate_build_size() {
   context& vulkan_context =
       layer_abstraction_factory::instance().get_vulkan_context();
-  auto& device = vulkan_context.get_device();
+  auto& device = vulkan_context.mutable_device();
 
   std::memset(&m_build_sizes_info, 0, sizeof m_build_sizes_info);
   m_build_sizes_info.sType =

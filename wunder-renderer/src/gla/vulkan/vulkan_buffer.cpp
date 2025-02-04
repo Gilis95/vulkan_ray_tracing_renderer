@@ -39,7 +39,7 @@ buffer<base_buffer_type>::~buffer() {
   ReturnIf(m_vk_buffer == VK_NULL_HANDLE);
   context& vulkan_context =
       layer_abstraction_factory::instance().get_vulkan_context();
-  auto& allocator = vulkan_context.get_resource_allocator();
+  auto& allocator = vulkan_context.mutable_resource_allocator();
   allocator.destroy_buffer(m_vk_buffer, m_allocation);
 }
 
@@ -61,7 +61,7 @@ template <typename base_buffer_type>
 [[nodiscard]] VkDeviceAddress buffer<base_buffer_type>::get_address() const {
   context& vulkan_context =
       layer_abstraction_factory::instance().get_vulkan_context();
-  auto& device = vulkan_context.get_device();
+  auto& device = vulkan_context.mutable_device();
   VkBufferDeviceAddressInfo info;
   std::memset(&info, 0, sizeof(VkBufferDeviceAddressInfo));
 

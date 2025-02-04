@@ -60,10 +60,13 @@ void application::run() {
   auto &window = window_factory::instance().get_window();
   auto &gla = vulkan::layer_abstraction_factory::instance();
   auto &renderers = gla.get_renderers();
-  auto& service_factory = service_factory::instance();
+  auto &service_factory = service_factory::instance();
 
   time_unit frame_end = time_unit::from_current_time_in_miliseconds();
+  std::uint64_t frame_number = 0;
   while (m_is_running) {
+    WUNDER_WARN("Frame {0}", frame_number++);
+
     time_unit frame_start = time_unit::from_current_time_in_miliseconds();
     time_unit frame_duration = frame_start - frame_end;
 
@@ -79,7 +82,8 @@ void application::run() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void application::on_event(const wunder::event::window_close_event &) /*override*/
+void application::on_event(
+    const wunder::event::window_close_event &) /*override*/
 {
   m_is_running = false;
 }

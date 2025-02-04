@@ -79,7 +79,7 @@ namespace wunder::vulkan {
 vulkan_image_info::~vulkan_image_info() {
   auto& vulkan_context =
       layer_abstraction_factory::instance().get_vulkan_context();
-  auto& allocator = vulkan_context.get_resource_allocator();
+  auto& allocator = vulkan_context.mutable_resource_allocator();
 
   allocator.destroy_image(m_image, m_memory_alloc);
 }
@@ -134,7 +134,7 @@ template <typename base_texture>
 void texture<base_texture>::try_create_sampler() {
   auto& vulkan_context =
       layer_abstraction_factory::instance().get_vulkan_context();
-  auto& device = vulkan_context.get_device();
+  auto& device = vulkan_context.mutable_device();
   auto vulkan_logical_device = device.get_vulkan_logical_device();
 
   VkSamplerCreateInfo sampler_create_info{};
@@ -144,6 +144,8 @@ void texture<base_texture>::try_create_sampler() {
 
   VK_CHECK_RESULT(vkCreateSampler(vulkan_logical_device, &sampler_create_info,
                                   nullptr, &(m_image_info->m_sampler)));
+
+  base_texture::m_descriptor.sampler = m_image_info->m_sampler;
 };
 
 template <typename base_texture>
@@ -151,7 +153,7 @@ void texture<base_texture>::try_create_sampler(const texture_asset& asset,
                                                const std::string& name) {
   auto& vulkan_context =
       layer_abstraction_factory::instance().get_vulkan_context();
-  auto& device = vulkan_context.get_device();
+  auto& device = vulkan_context.mutable_device();
   auto vulkan_logical_device = device.get_vulkan_logical_device();
 
   ReturnUnless(asset.m_sampler.has_value());
@@ -194,7 +196,7 @@ void texture<base_texture>::create_image_view(
     VkFormat image_format) {  // Create a default image view
   auto& vulkan_context =
       layer_abstraction_factory::instance().get_vulkan_context();
-  auto& device = vulkan_context.get_device();
+  auto& device = vulkan_context.mutable_device();
   auto vulkan_logical_device = device.get_vulkan_logical_device();
 
   VkImageViewCreateInfo image_view_create_info = {};
@@ -230,9 +232,9 @@ void texture<base_texture>::allocate_image(const std::string& name,
                                            std::uint32_t height) {
   auto& vulkan_context =
       layer_abstraction_factory::instance().get_vulkan_context();
-  auto& device = vulkan_context.get_device();
+  auto& device = vulkan_context.mutable_device();
   auto vulkan_logical_device = device.get_vulkan_logical_device();
-  auto& allocator = vulkan_context.get_resource_allocator();
+  auto& allocator = vulkan_context.mutable_resource_allocator();
 
   VmaMemoryUsage memoryUsage = VMA_MEMORY_USAGE_GPU_ONLY;
 
@@ -247,7 +249,9 @@ void texture<base_texture>::allocate_image(const std::string& name,
   image_create_info.arrayLayers = 1;
   image_create_info.samples = VK_SAMPLE_COUNT_1_BIT;
   image_create_info.tiling = VK_IMAGE_TILING_OPTIMAL;
-  image_create_info.usage = base_texture::s_usage;
+  image_create_info.usage = base_texture::s_usage |
+                            VK_IMAGE_USAGE_TRANSFER_SRC_BIT |
+                            VK_IMAGE_USAGE_TRANSFER_DST_BIT;
 
   m_image_info->m_memory_alloc =
       allocator.allocate_image(image_create_info, memoryUsage,
@@ -261,7 +265,7 @@ template <typename base_texture>
 void texture<base_texture>::bind_texture(VkImageLayout target_layout) {
   auto& vulkan_context =
       layer_abstraction_factory::instance().get_vulkan_context();
-  auto& device = vulkan_context.get_device();
+  auto& device = vulkan_context.mutable_device();
   auto& command_pool = device.get_command_pool();
   VkCommandBuffer command_buffer =
       command_pool.get_current_compute_command_buffer();
@@ -281,9 +285,9 @@ void texture<base_texture>::bind_texture_data(const texture_asset& asset,
 
   auto& vulkan_context =
       layer_abstraction_factory::instance().get_vulkan_context();
-  auto& device = vulkan_context.get_device();
+  auto& device = vulkan_context.mutable_device();
   auto& command_pool = device.get_command_pool();
-  auto& allocator = vulkan_context.get_resource_allocator();
+  auto& allocator = vulkan_context.mutable_resource_allocator();
 
   VkMemoryAllocateInfo memAllocInfo{};
   memset(&memAllocInfo, 0, sizeof(VkMemoryAllocateInfo));

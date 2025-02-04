@@ -59,7 +59,6 @@ class rtx_renderer : public renderer_api,
   const renderer_properties& m_renderer_properties;
   bool m_have_active_scene;
 
-  unique_ptr<descriptor_set_manager> m_descriptor_set_manager;
   unique_ptr<rtx_pipeline> m_rtx_pipeline;
   unique_ptr<shader_binding_table> m_shader_binding_table;
   unique_ptr<RtxState> m_state;

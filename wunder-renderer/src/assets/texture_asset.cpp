@@ -29,7 +29,7 @@ size_t texture_data::size() const {
 void texture_data::copy_to(VmaAllocation& stagingBufferAllocation) const {
   auto& vulkan_context =
       vulkan::layer_abstraction_factory::instance().get_vulkan_context();
-  auto& allocator = vulkan_context.get_resource_allocator();
+  auto& allocator = vulkan_context.mutable_resource_allocator();
 
   return std::visit(
       overloaded{[&stagingBufferAllocation,

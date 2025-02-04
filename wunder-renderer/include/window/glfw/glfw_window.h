@@ -4,6 +4,7 @@
 #include <utility>
 
 #include "window/window.h"
+#include <glad/vulkan.h>
 
 struct GLFWwindow;
 
@@ -28,6 +29,7 @@ class glfw_window : public window {
   void fill_vulkan_extensions(
       wunder::vulkan::vulkan_extensions& out_extensions) const override;
 
+  VkSurfaceKHR create_vulkan_surface() const override;
  private:
   GLFWwindow* m_window;
   void init_input_event_listeners();

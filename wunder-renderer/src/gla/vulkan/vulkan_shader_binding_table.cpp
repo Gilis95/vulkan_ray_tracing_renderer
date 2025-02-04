@@ -24,7 +24,7 @@ constexpr integral align_up(integral x, size_t a) noexcept {
 shader_binding_table::shader_binding_table() noexcept {
   auto& vulkan_context =
       layer_abstraction_factory::instance().get_vulkan_context();
-  auto& physical_device = vulkan_context.get_physical_device();
+  auto& physical_device = vulkan_context.mutable_physical_device();
 
   VkPhysicalDeviceProperties2 device_properties{
       VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2};
@@ -91,7 +91,7 @@ shader_binding_table::create_shader_stages_handles(
 
   auto& vulkan_context =
       layer_abstraction_factory::instance().get_vulkan_context();
-  auto& device = vulkan_context.get_device();
+  auto& device = vulkan_context.mutable_device();
 
   // written in the SBT
   uint32_t sbt_size =
@@ -161,7 +161,7 @@ void shader_binding_table::create_sbt_buffer(
     const std::array<std::vector<uint8_t>, 4>& shader_stages_handles) {
   auto& vulkan_context =
       layer_abstraction_factory::instance().get_vulkan_context();
-  auto& device = vulkan_context.get_device();
+  auto& device = vulkan_context.mutable_device();
 
   for (uint32_t i = 0; i < 4; ++i) {
     auto& shader_stage_handles = shader_stages_handles[i];

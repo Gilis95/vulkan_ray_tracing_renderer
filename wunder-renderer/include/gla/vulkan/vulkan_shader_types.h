@@ -94,7 +94,9 @@ struct separate_samplers : public base {};
 struct storage_image : public base {
   VkDescriptorImageInfo m_descriptor;
 
-  static const VkImageUsageFlagBits s_usage = VK_IMAGE_USAGE_STORAGE_BIT;
+  static const VkImageUsageFlagBits s_usage = static_cast<VkImageUsageFlagBits>(
+      VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT |
+      VK_IMAGE_USAGE_STORAGE_BIT);
 };
 
 struct acceleration_structure : public base {

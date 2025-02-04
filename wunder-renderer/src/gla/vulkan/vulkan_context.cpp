@@ -1,6 +1,3 @@
-//
-// Created by christian on 8/9/24.
-//
 #include "gla/vulkan/vulkan_context.h"
 
 #include "core/wunder_logger.h"
@@ -13,6 +10,8 @@
 #include "gla/vulkan/vulkan_macros.h"
 #include "gla/vulkan/vulkan_memory_allocator.h"
 #include "gla/vulkan/vulkan_physical_device.h"
+#include "gla/vulkan/rasterize/vulkan_render_pass.h"
+#include "gla/vulkan/rasterize/vulkan_swap_chain.h"
 #include "window/window_factory.h"
 
 namespace wunder::vulkan {
@@ -50,10 +49,10 @@ void context::init(const wunder::renderer_properties &properties) {
       m_logical_device->get_vulkan_logical_device()));
 
   create_allocator();
+  create_swap_chain(properties);
 }
 
-void context::create_vulkan_instance(
-    const renderer_properties &properties) {
+void context::create_vulkan_instance(const renderer_properties &properties) {
   m_vulkan = std::make_unique<instance>();
   m_vulkan->init(properties);
 }
@@ -89,21 +88,28 @@ void context::create_allocator() {
   m_resource_allocator->initialize();
 }
 
+void context::create_swap_chain(const renderer_properties &properties) {
+  m_swap_chain =
+      make_unique<swap_chain>(properties.m_width, properties.m_height);
+  m_swap_chain->initialize();
+}
+
 const renderer_capabilities &context::get_capabilities() const {
   static renderer_capabilities s_empty;
   return m_renderer_capabilities ? *m_renderer_capabilities : s_empty;
 }
 
-instance &context::get_vulkan() { return *m_vulkan; }
+instance &context::mutable_vulkan() { return *m_vulkan; }
 
-physical_device &context::get_physical_device() {
-  return *m_physical_device;
-}
+physical_device &context::mutable_physical_device() { return *m_physical_device; }
 
-device &context::get_device() { return *m_logical_device; }
+device &context::mutable_device() { return *m_logical_device; }
 
-memory_allocator &context::get_resource_allocator() {
+swap_chain& context::mutable_swap_chain(){return *m_swap_chain;}
+
+
+memory_allocator &context::mutable_resource_allocator() {
   return *m_resource_allocator;
 }
 
-}  // namespace wunder
+}  // namespace wunder::vulkan

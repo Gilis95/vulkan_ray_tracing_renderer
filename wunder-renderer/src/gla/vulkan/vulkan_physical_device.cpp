@@ -31,7 +31,7 @@ VkResult physical_device::select_gpu() {
   auto& vulkan =
       layer_abstraction_factory::instance()
                     .get_vulkan_context()
-                    .get_vulkan();
+                    .mutable_vulkan();
 
   uint32_t physical_device_count = 0;
   VK_CHECK_RESULT(vkEnumeratePhysicalDevices(vulkan.get_instance(),
