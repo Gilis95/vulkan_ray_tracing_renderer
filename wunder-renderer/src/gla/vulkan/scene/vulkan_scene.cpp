@@ -8,10 +8,11 @@
 #include "core/vector_map.h"
 #include "core/wunder_macros.h"
 #include "gla/vulkan/ray-trace/vulkan_bottom_level_acceleration_structure_build_info.h"
+#include "gla/vulkan/ray-trace/vulkan_rtx_renderer.h"
 #include "gla/vulkan/ray-trace/vulkan_top_level_acceleration_structure.h"
 #include "gla/vulkan/ray-trace/vulkan_top_level_acceleration_structure_build_info.h"
-#include "gla/vulkan/ray-trace/vulkan_rtx_renderer.h"
 #include "gla/vulkan/scene/vulkan_environment_helper.h"
+#include "gla/vulkan/scene/vulkan_lights_helper.h"
 #include "gla/vulkan/scene/vulkan_materials_helper.h"
 #include "gla/vulkan/scene/vulkan_mesh.h"
 #include "gla/vulkan/scene/vulkan_mesh_scene_node.h"
@@ -36,6 +37,9 @@ void scene::load_scene(scene_asset& asset) {
       asset.filter_nodes<mesh_component, transform_component>();
   AssertReturnIf(mesh_entities.empty(), );  // nothing to render
 
+  auto light_entities =
+        asset.filter_nodes<light_component, transform_component>();
+
   auto mesh_assets = meshes_helper::extract_mesh_assets(mesh_entities);
   auto material_assets = materials_helper::extract_material_assets(mesh_assets);
   auto texture_assets =
@@ -44,6 +48,7 @@ void scene::load_scene(scene_asset& asset) {
   m_bound_textures = textures_helper::create_texture_buffers(texture_assets);
   m_material_buffer =
       materials_helper::create_material_buffer(material_assets, texture_assets);
+  m_light_buffer = lights_helper::create_light_buffer(light_entities);
 
   meshes_helper::create_mesh_scene_nodes(mesh_assets, material_assets,
                                          mesh_entities, m_mesh_nodes);
@@ -69,6 +74,7 @@ void scene::add_descriptor_to(rtx_renderer& renderer) {
   }
 
   m_material_buffer->add_descriptor_to(renderer);
+  m_light_buffer->add_descriptor_to(renderer);
   m_mesh_instance_data_buffer->add_descriptor_to(renderer);
   m_acceleration_structure->add_descriptor_to(renderer);
   m_sun_and_sky_properties_buffer->add_descriptor_to(renderer);

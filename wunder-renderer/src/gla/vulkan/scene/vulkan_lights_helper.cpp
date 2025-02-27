@@ -49,8 +49,14 @@ assets<light_asset> lights_helper::extract_scene_light_data(
     out_transformations[light_handle] = maybe_transform_component->get();
   }
 
-  return asset_manager.find_assets<light_asset>(light_asset_handles.begin(),
+  auto result = asset_manager.find_assets<light_asset>(light_asset_handles.begin(),
                                                 light_asset_handles.end());
+  if (result.empty()) {
+    result.emplace_back(asset_handle::invalid(), get_default_light_asset());
+    out_transformations.emplace_back(asset_handle::invalid(), transform_component{});
+  }
+
+  return std::move(result);
 }
 
 std::vector<Light> lights_helper::create_host_light_array(
@@ -105,5 +111,11 @@ void lights_helper::map_host_light_specific_data(Light& host_light,
                         }},
              light.specific_data);
 }
+
+light_asset& lights_helper::get_default_light_asset() {
+  static light_asset res{};
+  return res;
+}
+
 
 }  // namespace wunder::vulkan

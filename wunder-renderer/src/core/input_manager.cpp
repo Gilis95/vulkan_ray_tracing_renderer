@@ -25,7 +25,7 @@ bool input_manager::is_key_in_state(wunder::input_key_code key_code,
   auto key_data_it = m_key_data.find(key_code);
   ReturnIf(key_data_it == m_key_data.end(), false);
 
-  return key_data_it->second.m_state == state;
+  return (key_data_it->second.m_state & state) > key_state::none;
 }
 
 void input_manager::on_event(

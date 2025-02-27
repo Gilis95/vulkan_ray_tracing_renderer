@@ -170,8 +170,8 @@ unique_ptr<storage_buffer> meshes_helper::create_mesh_instances_buffer(
     vulkan_mesh& mesh = *mesh_node.m_mesh;
 
     instances.emplace_back(InstanceData{
-        .vertexAddress = mesh.m_idx,
-        .indexAddress = mesh.m_idx,
+        .vertexAddress = mesh.m_vertex_buffer->get_address(),
+        .indexAddress = mesh.m_index_buffer->get_address(),
         .materialIndex = static_cast<int>(
             mesh.m_material_idx)  // most probably will never overflow
     });

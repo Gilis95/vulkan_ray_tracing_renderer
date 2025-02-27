@@ -22,7 +22,19 @@ rasterize_renderer::rasterize_renderer(
       m_render_region{.offset = {.x = 0, .y = 0},
                       .extent = {.width = m_renderer_properties.m_width,
                                  .height = m_renderer_properties.m_height}},
-      m_tonemapper{} {}
+      m_tonemapper{
+        .brightness = 1.0f,
+        .contrast = 1.0f,
+        .saturation = 1.0f,
+        .vignette = 0.0f,
+        .avgLum = 1.0f,
+        .zoom = 1.0f,
+        .renderingRatio = {1.34, 1.03},
+        .autoExposure = 0,
+        .Ywhite = 0.5f,
+        .key = 0.5f,
+        .dither = 1
+      } {}
 
 rasterize_renderer::~rasterize_renderer() = default;
 

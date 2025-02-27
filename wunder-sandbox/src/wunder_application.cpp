@@ -36,13 +36,13 @@ application* create_application() {
 
   auto app_properties = application_properties{
       "wunder", "123",
-      window_properties{"Wunder Application", 1920, 1080, window_type::glfw},
-      renderer_properties{.m_width = 1920,
-                          .m_height = 1080,
+      window_properties{"Wunder Application", 1500, 750, window_type::glfw},
+      renderer_properties{.m_width = 1500,
+                          .m_height = 750,
                           .m_driver = driver::Vulkan,
                           .m_renderer = renderer_type::RAY_TRACE,
                           .m_gpu_to_use = gpu_to_use::Dedicated,
-                          .m_enable_validation = true}};
+                          .m_enable_validation = false}};
 
   return new wunder_application(std::move(app_properties));
 }

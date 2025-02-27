@@ -2,6 +2,7 @@
 
 #include <cstring>
 
+#include "gla/vulkan/rasterize/vulkan_swap_chain.h"
 #include "gla/vulkan/vulkan_command_pool.h"
 #include "gla/vulkan/vulkan_context.h"
 #include "gla/vulkan/vulkan_device.h"
@@ -68,9 +69,8 @@ template <typename base_buffer_type>
 void device_buffer<base_buffer_type>::update_data(void* data, size_t data_size) /*override*/ {
   context& vulkan_context =
       layer_abstraction_factory::instance().get_vulkan_context();
-  auto& device = vulkan_context.mutable_device();
-
-  auto graphics_queue = device.get_command_pool().get_current_graphics_command_buffer();
+  auto& swap_chain = vulkan_context.mutable_swap_chain();
+  auto graphics_queue= swap_chain.get_current_command_buffer();
 
   // Schedule the host-to-device upload. (hostUBO is copied into the cmd
   // buffer so it is okay to deallocate when the function returns).

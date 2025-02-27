@@ -10,10 +10,9 @@ namespace wunder {
 asset_serialization_result_codes environment_map_serializer::import_asset(
     input_data input, asset_storage& out_storage) {
   AssertReturnUnless(input.m_pixels_ptr,
-                     asset_serialization_result_codes::error)
+                     asset_serialization_result_codes::error);
 
-      std::vector<float>
-          pixels;
+  std::vector<float> pixels;
   int32_t texture_elements_count =
       input.m_width * input.m_height * input.m_components;
   pixels.resize(texture_elements_count);

@@ -108,7 +108,7 @@ texture<base_texture>::texture(descriptor_build_data build_data,
       m_image_info(std::make_shared<vulkan_image_info>()) {
   std::string name = generate_next_texture_name();
 
-  VkFormat image_format = VK_FORMAT_R8G8B8A8_UNORM;
+  VkFormat image_format = VK_FORMAT_R32G32B32A32_SFLOAT;
   VkImageLayout target_layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
   allocate_image(name, image_format, asset.m_width, asset.m_height);
@@ -178,7 +178,8 @@ void texture<base_texture>::try_create_sampler(const texture_asset& asset,
   sampler_create_info.mipLodBias = 0.0f;
   sampler_create_info.minLod = 0.0f;
   sampler_create_info.maxLod = 100.0f;
-  sampler_create_info.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
+  sampler_create_info.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_BLACK;
+  sampler_create_info.unnormalizedCoordinates = VK_FALSE;
 
   VK_CHECK_RESULT(vkCreateSampler(vulkan_logical_device, &sampler_create_info,
                                   nullptr, &(m_image_info->m_sampler)));

@@ -30,12 +30,13 @@
 #include "event/event_handler.hpp"
 #include "event/input_events.h"
 #include "event/scene_events.h"
+#include "gla/vulkan/rasterize/vulkan_swap_chain.h"
+#include "gla/vulkan/ray-trace/vulkan_rtx_renderer.h"
 #include "gla/vulkan/vulkan_command_pool.h"
 #include "gla/vulkan/vulkan_context.h"
 #include "gla/vulkan/vulkan_device.h"
 #include "gla/vulkan/vulkan_device_buffer.h"
 #include "gla/vulkan/vulkan_layer_abstraction_factory.h"
-#include "gla/vulkan/ray-trace/vulkan_rtx_renderer.h"
 #include "resources/shaders/host_device.h"
 #include "scene/scene_manager.h"
 
@@ -629,9 +630,8 @@ void camera::update_camera_buffer() {
 
   vulkan::context& vulkan_context =
       vulkan::layer_abstraction_factory::instance().get_vulkan_context();
-  auto& device = vulkan_context.mutable_device();
-  auto graphics_queue =
-      device.get_command_pool().get_current_graphics_command_buffer();
+  auto& device = vulkan_context.mutable_swap_chain();
+  auto graphics_queue= device.get_current_command_buffer();
 
   // Ensure that the modified UBO is not visible to previous frames.
   VkBufferMemoryBarrier beforeBarrier{VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER};
@@ -664,6 +664,7 @@ SceneCamera camera::create_host_camera() {
   glm::vec3 eye, center, up;
   get_lookat(eye, center, up);
   camera.focalDist = glm::length(center - eye);
+  camera.nbLights = 1;
   return camera;
 }
 }  // namespace wunder

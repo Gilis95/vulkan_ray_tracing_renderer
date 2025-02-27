@@ -5,8 +5,10 @@
 #include "time_unit.h"
 
 namespace wunder {
+struct application_properties;
 class camera;
 class input_manager;
+
 class service_factory final {
  private:
   service_factory();

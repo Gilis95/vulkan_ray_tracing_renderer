@@ -47,7 +47,6 @@ void application::initialize() {
       m_properties->m_renderer_properties);
   project::instance().initialize();
   service_factory::instance().initialize();
-
   initialize_internal();
 }
 
@@ -65,13 +64,12 @@ void application::run() {
   time_unit frame_end = time_unit::from_current_time_in_miliseconds();
   std::uint64_t frame_number = 0;
   while (m_is_running) {
-    WUNDER_WARN("Frame {0}", frame_number++);
+    // WUNDER_WARN("Frame {0}", frame_number++);
 
     time_unit frame_start = time_unit::from_current_time_in_miliseconds();
     time_unit frame_duration = frame_start - frame_end;
 
     window.update(frame_duration);
-    service_factory.update(frame_duration);
     for (auto &[_, renderer] : renderers) {
       renderer->update(frame_duration);
     }

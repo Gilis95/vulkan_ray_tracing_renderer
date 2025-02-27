@@ -37,6 +37,7 @@ class scene : public non_copyable {
  private:
   std::vector<unique_ptr<sampled_texture>> m_bound_textures;
   unique_ptr<storage_buffer> m_material_buffer;
+  unique_ptr<storage_buffer> m_light_buffer;
   unique_ptr<storage_buffer> m_mesh_instance_data_buffer;
 
   unique_ptr<uniform_buffer> m_sun_and_sky_properties_buffer;

@@ -133,7 +133,7 @@ VkResult instance::extract_supported_layers(
 
 void instance::log_supported_layers(
     const std::vector<VkLayerProperties> &supported_layers) {
-  WUNDER_TRACE_TAG("Renderer", "Vulkan Instance Layers. Count {0}:",
+  WUNDER_TRACE_TAG("Renderer", "Supported Vulkan Instance Layers. Count {0}:",
                    supported_layers.size());
 
   for (const VkLayerProperties &layer : supported_layers) {

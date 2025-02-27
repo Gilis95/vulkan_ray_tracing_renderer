@@ -110,7 +110,8 @@ std::optional<std::uint32_t> swap_chain::acquire() {
         m_queue_elements[next_image_idx].m_semaphore_entry.read_semaphore;
 
     VkResult result;
-    // other option would be having an amount of semaphores with 1 greater than a swap chain elements
+    // other option would be having an amount of semaphores with 1 greater than
+    // a swap chain elements
     wait_element_to_rendered(next_image_idx);
     result = vkAcquireNextImageKHR(vk_device, m_swap_chain, 10000, semaphore,
                                    (VkFence)VK_NULL_HANDLE,
@@ -411,15 +412,7 @@ void swap_chain::initialize_depth_buffer() {
   // Create the depth image
   vkCreateImage(vk_device, &depthStencilCreateInfo, nullptr, &m_depth_image);
 
-#ifndef NDEBUG
-  std::string name = std::string("AppBaseDepth");
-  VkDebugUtilsObjectNameInfoEXT nameInfo{
-      VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT};
-  nameInfo.objectHandle = (uint64_t)m_depth_image;
-  nameInfo.objectType = VK_OBJECT_TYPE_IMAGE;
-  nameInfo.pObjectName = R"(AppBase)";
-  vkSetDebugUtilsObjectNameEXT(vk_device, &nameInfo);
-#endif  // !NDEBUG
+  set_debug_utils_object_name(vk_device, "depth image", m_depth_image);
 
   // Allocate the memory
   VkMemoryRequirements memory_requirements;

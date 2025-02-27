@@ -46,6 +46,12 @@ void rtx_renderer::init_internal(const renderer_properties &properties) {
 
   m_state = std::make_unique<RtxState>();
   m_state->maxDepth = 3;
+  m_state->maxSamples = 1;
+  m_state->fireflyClampThreshold = 32.51f;
+  m_state->hdrMultiplier = 1.f;
+  m_state->size = {1500,750};
+  m_state->minHeatmap = 0;
+  m_state->maxHeatmap = 65000;
 
   initialize_shaders();
 
@@ -101,16 +107,17 @@ void rtx_renderer::create_descriptor_manager(const shader &shader) {
 void rtx_renderer::update(time_unit dt) /*override*/
 {
   ReturnUnless(m_have_active_scene);
+
   auto &vulkan_context =
       layer_abstraction_factory::instance().get_vulkan_context();
   auto &swap_chain = vulkan_context.mutable_swap_chain();
 
-
   AssertReturnUnless(swap_chain.acquire().has_value(), );
 
   swap_chain.begin_command_buffer();
-  auto graphic_command_buffer =
-    swap_chain.get_current_command_buffer();
+  auto graphic_command_buffer = swap_chain.get_current_command_buffer();
+
+  service_factory::instance().update(dt);
 
   m_rtx_pipeline->bind();
   m_descriptor_set_manager->bind(*m_rtx_pipeline);
@@ -138,7 +145,7 @@ void rtx_renderer::update(time_unit dt) /*override*/
   vkCmdTraceRaysKHR(graphic_command_buffer, &raygen_address, &miss_address,
                     &hit_address, &callable_address,
                     m_renderer_properties.m_width,
-                    m_renderer_properties.m_height, 3);
+                    m_renderer_properties.m_height, 1);
   ++m_state->frame;
 
   swap_chain.begin_render_pass();
@@ -146,10 +153,15 @@ void rtx_renderer::update(time_unit dt) /*override*/
   swap_chain.end_render_pass();
 
   swap_chain.flush_current_command_buffer();
+
+  ++m_state->frame;
 }
 
 void rtx_renderer::on_event(
     const wunder::event::scene_activated &scene_activated_event) {
+  service_factory::instance().get_camera().set_window_size(
+      m_renderer_properties.m_width, m_renderer_properties.m_height);
+
   auto api_scene = project::instance().get_scene_manager().mutable_api_scene(
       scene_activated_event.m_id);
   AssertReturnUnless(api_scene.has_value());

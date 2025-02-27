@@ -30,7 +30,7 @@ class lights_helper {
                                 mat4 mat);
   static void map_host_light_specific_data(Light& host_light,
                                            const light_asset& light);
-
+static light_asset& get_default_light_asset();
 };
 }  // namespace wunder::vulkan
 

@@ -180,6 +180,12 @@ inline static void set_debug_utils_object_name(VkDevice device,
 
 inline static void set_debug_utils_object_name(VkDevice device,
                                                const std::string& name,
+                                               VkImage handle) {
+  set_debug_utils_object_name(device, VK_OBJECT_TYPE_IMAGE, name, handle);
+}
+
+inline static void set_debug_utils_object_name(VkDevice device,
+                                               const std::string& name,
                                                VkImageView handle) {
   set_debug_utils_object_name(device, VK_OBJECT_TYPE_IMAGE_VIEW, name, handle);
 }
