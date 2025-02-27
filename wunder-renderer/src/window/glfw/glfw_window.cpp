@@ -108,7 +108,7 @@ void glfw_window::init_input_event_listeners() {
         break;
       }
       case GLFW_RELEASE: {
-        wunder::event::keyboard::pressed release_event(
+        wunder::event::keyboard::released release_event(
             static_cast<wunder::keyboard::key_code>(key));
         event_controller::on_event(release_event);
 

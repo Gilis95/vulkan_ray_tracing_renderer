@@ -25,6 +25,7 @@ std::unordered_map<wunder::mipmap_mode_type, VkSamplerMipmapMode> s_mip_map{
     {wunder::mipmap_mode_type::LINEAR,
      VK_SAMPLER_MIPMAP_MODE_LINEAR}  // LINEAR_MIPMAP_LINEAR
 };
+
 std::unordered_map<wunder::address_mode_type, VkSamplerAddressMode>
     s_address_mode{
         {wunder::address_mode_type::CLAMP_TO_EDGE,
@@ -57,6 +58,22 @@ std::unordered_map<VkImageLayout, VkAccessFlags> s_layout_to_access_flags{
      VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT},
     {VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_ACCESS_SHADER_READ_BIT},
 };
+
+std::unordered_map<wunder::border_colour, VkBorderColor>
+    s_border_colour_map{
+        {wunder::border_colour::FLOAT_TRANSPARENT_BLACK,
+         VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK},
+        {wunder::border_colour::INT_TRANSPARENT_BLACK,
+         VK_BORDER_COLOR_INT_TRANSPARENT_BLACK},
+        {wunder::border_colour::FLOAT_OPAQUE_BLACK,
+         VK_BORDER_COLOR_FLOAT_OPAQUE_BLACK},
+        {wunder::border_colour::INT_OPAQUE_BLACK,
+         VK_BORDER_COLOR_INT_OPAQUE_BLACK},
+        {wunder::border_colour::FLOAT_OPAQUE_WHITE,
+         VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE},
+        {wunder::border_colour::INT_OPAQUE_WHITE,
+         VK_BORDER_COLOR_INT_OPAQUE_WHITE},
+    };
 
 VkPipelineStageFlags pipeline_stage_for_layout(VkImageLayout layout) {
   auto pipeline_stage_it = s_layout_to_pipeline_stage.find(layout);
@@ -162,7 +179,7 @@ void texture<base_texture>::try_create_sampler(const texture_asset& asset,
 
   VkSamplerCreateInfo sampler_create_info = {};
   sampler_create_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-  sampler_create_info.maxAnisotropy = 1.0f;
+  sampler_create_info.maxAnisotropy = 0.0f;
 
   sampler_create_info.addressModeU =
       s_address_mode[model_sampler.m_address_mode_u];
@@ -177,8 +194,8 @@ void texture<base_texture>::try_create_sampler(const texture_asset& asset,
 
   sampler_create_info.mipLodBias = 0.0f;
   sampler_create_info.minLod = 0.0f;
-  sampler_create_info.maxLod = 100.0f;
-  sampler_create_info.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_BLACK;
+  sampler_create_info.maxLod = 0.0f;
+  sampler_create_info.borderColor = s_border_colour_map[model_sampler.m_border_colour];
   sampler_create_info.unnormalizedCoordinates = VK_FALSE;
 
   VK_CHECK_RESULT(vkCreateSampler(vulkan_logical_device, &sampler_create_info,

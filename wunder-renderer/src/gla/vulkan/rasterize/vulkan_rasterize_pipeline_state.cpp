@@ -13,7 +13,7 @@ vulkan_rasterize_pipeline_state::vulkan_rasterize_pipeline_state() {
   m_rasterization_state.depthClampEnable = {};
   m_rasterization_state.rasterizerDiscardEnable = {};
   set_value(m_rasterization_state.polygonMode, VK_POLYGON_MODE_FILL);
-  set_value(m_rasterization_state.cullMode, VK_CULL_MODE_BACK_BIT);
+  set_value(m_rasterization_state.cullMode, VK_CULL_MODE_NONE);
   set_value(m_rasterization_state.frontFace, VK_FRONT_FACE_COUNTER_CLOCKWISE);
 
   m_rasterization_state.depthBiasEnable = {};

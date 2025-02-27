@@ -17,6 +17,14 @@ enum class texture_filter_type { NEAREST, LINEAR };
 enum class mipmap_mode_type { NEAREST, LINEAR };
 
 enum class address_mode_type { CLAMP_TO_EDGE, MIRRORED_REPEAT, REPEAT };
+enum class border_colour {
+  FLOAT_TRANSPARENT_BLACK,
+  INT_TRANSPARENT_BLACK,
+  FLOAT_OPAQUE_BLACK,
+  INT_OPAQUE_BLACK,
+  FLOAT_OPAQUE_WHITE,
+  INT_OPAQUE_WHITE,
+};
 
 struct texture_sampler {
   texture_filter_type m_mag_filter = texture_filter_type::LINEAR;
@@ -24,6 +32,7 @@ struct texture_sampler {
   mipmap_mode_type m_mipmap_mode = mipmap_mode_type::LINEAR;
   address_mode_type m_address_mode_u = address_mode_type::CLAMP_TO_EDGE;
   address_mode_type m_address_mode_v = address_mode_type::CLAMP_TO_EDGE;
+  border_colour m_border_colour = border_colour::FLOAT_TRANSPARENT_BLACK;
 };
 
 struct texture_data {

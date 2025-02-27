@@ -1,23 +1,3 @@
-/*
- * Copyright (c) 2018-2024, NVIDIA CORPORATION.  All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- * SPDX-FileCopyrightText: Copyright (c) 2018-2024, NVIDIA CORPORATION.
- * SPDX-License-Identifier: Apache-2.0
- */
-//--------------------------------------------------------------------
-
 #ifndef WUNDER_CAMERA_H
 #define WUNDER_CAMERA_H
 
@@ -25,10 +5,8 @@
 #include <functional>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include <string>
 #include <unordered_map>
 
-#include "core/input.h"
 #include "core/time_unit.h"
 #include "core/wunder_memory.h"
 #include "event/event_handler.h"
@@ -162,9 +140,7 @@ class camera : private event_handler<wunder::event::mouse::move>,
   // this one is animated: new position, key movement
   void update_camera_position_smoothly();
   // Update the internal matrix.
-  void update_view_matrix() {
-    m_view_matrix = glm::lookAt(m_current.eye, m_current.ctr, m_current.up);
-  }
+  void update_view_matrix();
 
  private:
   // Main function which is called to apply a camera motion.

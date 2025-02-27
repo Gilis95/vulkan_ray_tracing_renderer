@@ -1,23 +1,3 @@
-/*
- * Copyright (c) 2018-2024, NVIDIA CORPORATION.  All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- * SPDX-FileCopyrightText: Copyright (c) 2018-2024, NVIDIA CORPORATION.
- * SPDX-License-Identifier: Apache-2.0
- */
-//--------------------------------------------------------------------
-
 #include "camera/camera.h"
 
 #include <chrono>
@@ -30,13 +10,11 @@
 #include "event/event_handler.hpp"
 #include "event/input_events.h"
 #include "event/scene_events.h"
+#include "event/camera_events.h"
 #include "gla/vulkan/rasterize/vulkan_swap_chain.h"
 #include "gla/vulkan/ray-trace/vulkan_rtx_renderer.h"
-#include "gla/vulkan/vulkan_command_pool.h"
-#include "gla/vulkan/vulkan_context.h"
 #include "gla/vulkan/vulkan_device.h"
 #include "gla/vulkan/vulkan_device_buffer.h"
-#include "gla/vulkan/vulkan_layer_abstraction_factory.h"
 #include "resources/shaders/host_device.h"
 #include "scene/scene_manager.h"
 
@@ -51,12 +29,12 @@ camera::camera()
       event_handler<wunder::event::mouse::scroll>(),
       m_action_fns(
           {{camera::actions::orbit,
-            [this](float dy, float dx) { orbit(dx, dy, false); }},
+            [this](float dx, float dy) { orbit(dx, dy, false); }},
            {camera::actions::dolly,
-            [this](float dy, float dx) { dolly(dx, dy); }},
+            [this](float dx, float dy) { dolly(dx, dy); }},
            {camera::actions::pan, [this](float dy, float dx) { pan(dx, dy); }},
            {camera::actions::look_around,
-            [this](float dy, float dx) { orbit(dx, dy, true); }}}) {
+            [this](float dx, float dy) { orbit(dx, dy, true); }}}) {
   update_view_matrix();
   SceneCamera camera = create_host_camera();
 
@@ -317,6 +295,11 @@ void camera::update_camera_position_smoothly() {
   m_current.fov = glm::mix(m_snapshot.fov, m_goal.fov, t);
 
   update_view_matrix();
+}
+/////////////////////////////////////////////////////////////////////////////////////////
+void camera::update_view_matrix() {
+  m_view_matrix = glm::lookAt(m_current.eye, m_current.ctr, m_current.up);
+  event_controller::on_event(event::camera_moved{});
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -625,26 +608,9 @@ void camera::dolly(float dx, float dy) {
     m_current.ctr += z;
   }
 }
+
 void camera::update_camera_buffer() {
   SceneCamera camera = create_host_camera();
-
-  vulkan::context& vulkan_context =
-      vulkan::layer_abstraction_factory::instance().get_vulkan_context();
-  auto& device = vulkan_context.mutable_swap_chain();
-  auto graphics_queue= device.get_current_command_buffer();
-
-  // Ensure that the modified UBO is not visible to previous frames.
-  VkBufferMemoryBarrier beforeBarrier{VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER};
-  beforeBarrier.srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
-  beforeBarrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-  beforeBarrier.buffer = m_camera_buffer->get_buffer();
-  beforeBarrier.size = sizeof(camera);
-  vkCmdPipelineBarrier(graphics_queue,
-                       VK_PIPELINE_STAGE_VERTEX_SHADER_BIT |
-                           VK_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR,
-                       VK_PIPELINE_STAGE_TRANSFER_BIT,
-                       VK_DEPENDENCY_DEVICE_GROUP_BIT, 0, nullptr, 1,
-                       &beforeBarrier, 0, nullptr);
 
   m_camera_buffer->update_data(&camera, sizeof(SceneCamera));
 }

@@ -1,9 +1,10 @@
 #include "assets/texture_asset.h"
 
+#include <stb_image_write.h>
+
 #include "core/wunder_macros.h"
 #include "gla/vulkan/vulkan_context.h"
 #include "gla/vulkan/vulkan_layer_abstraction_factory.h"
-
 #include "gla/vulkan/vulkan_memory_allocator.h"
 
 namespace wunder {
@@ -37,16 +38,13 @@ void texture_data::copy_to(VmaAllocation& stagingBufferAllocation) const {
                    auto* dest_data =
                        allocator.map_memory<uint8_t>(stagingBufferAllocation);
                    memcpy(dest_data, pixels.data(), pixels.size());
-
-                   return;
                  },
                  [&stagingBufferAllocation,
                   &allocator](const std::vector<float>& pixels) {
                    auto* dest_data =
                        allocator.map_memory<float_t>(stagingBufferAllocation);
-                   memcpy(dest_data, pixels.data(), pixels.size());
-
-                   return;
+                   memcpy(dest_data, pixels.data(),
+                          pixels.size() * sizeof(float));
                  }},
       m_data);
 }

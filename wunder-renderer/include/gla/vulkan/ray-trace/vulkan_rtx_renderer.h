@@ -19,6 +19,7 @@ struct RtxState;
 
 namespace wunder::event {
 struct scene_activated;
+struct camera_moved;
 }
 
 namespace wunder::vulkan {
@@ -32,6 +33,7 @@ class rasterize_renderer;
 class rtx_renderer : public renderer_api,
                      public base_renderer,
                  public event_handler<wunder::event::scene_activated>,
+                 public event_handler<wunder::event::camera_moved>,
                  public non_copyable {
  public:
   explicit rtx_renderer(const renderer_properties&);
@@ -52,8 +54,9 @@ class rtx_renderer : public renderer_api,
 
   void create_descriptor_manager(const shader& shader);
 
- public:
+ private:
   void on_event(const wunder::event::scene_activated&) override;
+  void on_event(const wunder::event::camera_moved&) override;
 
  private:
   const renderer_properties& m_renderer_properties;

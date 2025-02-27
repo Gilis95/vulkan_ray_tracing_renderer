@@ -72,6 +72,21 @@ void device_buffer<base_buffer_type>::update_data(void* data, size_t data_size) 
   auto& swap_chain = vulkan_context.mutable_swap_chain();
   auto graphics_queue= swap_chain.get_current_command_buffer();
 
+
+  // Ensure that the modified UBO is not visible to previous frames.
+  VkBufferMemoryBarrier beforeBarrier{VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER};
+  beforeBarrier.srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
+  beforeBarrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+  beforeBarrier.buffer = buffer<base_buffer_type>::m_vk_buffer;
+  beforeBarrier.size = data_size;
+  vkCmdPipelineBarrier(graphics_queue,
+                       VK_PIPELINE_STAGE_VERTEX_SHADER_BIT |
+                           VK_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR,
+                       VK_PIPELINE_STAGE_TRANSFER_BIT,
+                       VK_DEPENDENCY_DEVICE_GROUP_BIT, 0, nullptr, 1,
+                       &beforeBarrier, 0, nullptr);
+
+
   // Schedule the host-to-device upload. (hostUBO is copied into the cmd
   // buffer so it is okay to deallocate when the function returns).
   vkCmdUpdateBuffer(graphics_queue, buffer<base_buffer_type>::m_vk_buffer, 0, data_size, data);

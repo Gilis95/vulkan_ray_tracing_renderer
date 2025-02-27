@@ -177,6 +177,10 @@ void rtx_renderer::on_event(
   m_have_active_scene = true;
 }
 
+void rtx_renderer::on_event(const wunder::event::camera_moved&) /*override*/ {
+ m_state->frame = 0;
+}
+
 const renderer_capabilities &rtx_renderer::get_capabilities() const /*override*/
 {
   static renderer_capabilities s_empty;

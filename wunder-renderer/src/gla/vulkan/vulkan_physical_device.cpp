@@ -28,10 +28,9 @@ void physical_device::initialize() {
 }
 
 VkResult physical_device::select_gpu() {
-  auto& vulkan =
-      layer_abstraction_factory::instance()
-                    .get_vulkan_context()
-                    .mutable_vulkan();
+  auto& vulkan = layer_abstraction_factory::instance()
+                     .get_vulkan_context()
+                     .mutable_vulkan();
 
   uint32_t physical_device_count = 0;
   VK_CHECK_RESULT(vkEnumeratePhysicalDevices(vulkan.get_instance(),
@@ -151,13 +150,12 @@ void physical_device::select_queue_family() {
 VkFormat physical_device::find_depth_format() const {
   // Since all depth formats may be optional, we need to find a suitable depth
   // format to use Start with the highest precision packed format
-  std::vector<VkFormat> depth_formats = {
-      VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D32_SFLOAT,
-      VK_FORMAT_D24_UNORM_S8_UINT, VK_FORMAT_D16_UNORM_S8_UINT,
-      VK_FORMAT_D16_UNORM};
+  std::vector<VkFormat> depth_formats = {VK_FORMAT_D24_UNORM_S8_UINT,
+                                         VK_FORMAT_D32_SFLOAT_S8_UINT,
+                                         VK_FORMAT_D16_UNORM_S8_UINT};
 
   for (auto& format : depth_formats) {
-    VkFormatProperties format_props;
+    VkFormatProperties format_props{VK_STRUCTURE_TYPE_FORMAT_PROPERTIES_2};
     vkGetPhysicalDeviceFormatProperties(m_physical_device, format,
                                         &format_props);
     // Format must support depth stencil attachment for optimal tiling
@@ -174,7 +172,8 @@ bool physical_device::is_extension_supported(
          m_supported_extensions.end();
 }
 
-physical_device::queue_family_indices physical_device::get_queue_family_indices(int flags) const {
+physical_device::queue_family_indices physical_device::get_queue_family_indices(
+    int flags) const {
   queue_family_indices indices;
 
   // Dedicated queue for compute
@@ -247,4 +246,4 @@ uint32_t physical_device::get_memory_type_index(
   return UINT32_MAX;
 }
 
-}  // namespace wunder
+}  // namespace wunder::vulkan
