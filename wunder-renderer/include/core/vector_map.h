@@ -17,7 +17,9 @@ template <std::equality_comparable key_t, typename value_t>
 class vector_map : public std::vector<std::pair<key_t, value_t>> {
  private:
   using base_type = std::vector<std::pair<key_t, value_t>>;
-
+public:
+  using base_type::begin;
+  using base_type::end;
  public:
   [[nodiscard]] base_type::iterator find(const key_t& key) {
     return std::find_if(base_type::begin(), base_type::end(),

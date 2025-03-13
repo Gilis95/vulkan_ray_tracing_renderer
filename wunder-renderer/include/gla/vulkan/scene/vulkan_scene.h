@@ -9,17 +9,17 @@
 
 #include "core/non_copyable.h"
 #include "core/wunder_memory.h"
+#include "gla/vulkan/scene/vulkan_environment.h"
 #include "gla/vulkan/vulkan_buffer_fwd.h"
 #include "gla/vulkan/vulkan_texture_fwd.h"
-
 
 namespace wunder {
 class scene_asset;
 
 namespace vulkan {
+class descriptor_set_manager;
 class vulkan_mesh_scene_node;
 class top_level_acceleration_structure;
-class rtx_renderer;
 
 class scene : public non_copyable {
  public:
@@ -32,7 +32,14 @@ class scene : public non_copyable {
 
  public:
   void load_scene(scene_asset& asset);
-  void add_descriptor_to(rtx_renderer& renderer);
+  void collect_descriptors(descriptor_set_manager& target);
+
+  const vulkan_environment& get_environment_texture() const {
+    return m_environment_textures;
+  }
+
+  [[nodiscard]] std::uint64_t get_lights_count() const { return m_lights_count; };
+
 
  private:
   std::vector<unique_ptr<sampled_texture>> m_bound_textures;
@@ -41,10 +48,12 @@ class scene : public non_copyable {
   unique_ptr<storage_buffer> m_mesh_instance_data_buffer;
 
   unique_ptr<uniform_buffer> m_sun_and_sky_properties_buffer;
-  unique_ptr<sampled_texture> m_environment_textures;
+  vulkan_environment m_environment_textures;
 
   std::vector<vulkan_mesh_scene_node> m_mesh_nodes;
   unique_ptr<top_level_acceleration_structure> m_acceleration_structure;
+
+  std::uint64_t m_lights_count;
 };
 }  // namespace vulkan
 }  // namespace wunder

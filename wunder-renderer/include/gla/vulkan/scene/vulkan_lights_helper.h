@@ -17,7 +17,9 @@ namespace wunder::vulkan {
 class lights_helper {
  public:
   [[nodiscard]] static unique_ptr<storage_buffer> create_light_buffer(
-      const std::vector<ref<scene_node>>& light_nodes);
+      const std::vector<ref<scene_node>>& light_nodes,
+      std::uint64_t& out_lights_count);
+
  private:
   [[nodiscard]] static assets<light_asset> extract_scene_light_data(
       const std::vector<ref<scene_node>>& light_nodes,
@@ -30,7 +32,7 @@ class lights_helper {
                                 mat4 mat);
   static void map_host_light_specific_data(Light& host_light,
                                            const light_asset& light);
-static light_asset& get_default_light_asset();
+  static light_asset& get_default_light_asset();
 };
 }  // namespace wunder::vulkan
 

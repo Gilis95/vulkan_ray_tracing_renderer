@@ -18,13 +18,13 @@ void service_factory::initialize() {
    * in event manager
    **/
 
-  m_camera = make_unique<camera>();
   m_input_manager = make_unique<input_manager>();
+  m_camera = make_unique<camera>();
 }
 
 void service_factory::update(time_unit dt){
-  m_input_manager->update(dt);
   m_camera->update(dt);
+  m_input_manager->update(dt);
 }
 
 

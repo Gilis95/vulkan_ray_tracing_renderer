@@ -3,6 +3,7 @@
 #include <cstring>
 
 #include "core/wunder_macros.h"
+#include "gla/vulkan/descriptors/vulkan_descriptor_set_manager.h"
 #include "gla/vulkan/ray-trace/vulkan_acceleration_structure_build_info.h"
 #include "gla/vulkan/vulkan_buffer.h"
 #include "gla/vulkan/vulkan_command_pool.h"
@@ -104,7 +105,7 @@ void acceleration_structure::build_acceleration_structure(
   command_pool.flush_compute_command_buffer();
 }
 
-void acceleration_structure::add_descriptor_to(base_renderer& renderer) {}
+void acceleration_structure::add_descriptor_to(descriptor_set_manager& target) {}
 
 VkDeviceAddress acceleration_structure::get_address() {
   ReturnIf(vkGetAccelerationStructureDeviceAddressKHR == nullptr, 0);

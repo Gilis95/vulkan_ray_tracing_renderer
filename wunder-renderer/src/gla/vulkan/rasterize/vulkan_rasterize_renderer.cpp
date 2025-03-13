@@ -1,14 +1,11 @@
 #include "gla/vulkan/rasterize/vulkan_rasterize_renderer.h"
 
-#include "core/wunder_macros.h"
 #include "gla/renderer_properties.h"
+#include "gla/vulkan/descriptors/vulkan_descriptor_set_manager.h"
 #include "gla/vulkan/rasterize/vulkan_rasterize_pipeline.h"
 #include "gla/vulkan/rasterize/vulkan_render_pass.h"
 #include "gla/vulkan/rasterize/vulkan_swap_chain.h"
-#include "gla/vulkan/vulkan_command_pool.h"
 #include "gla/vulkan/vulkan_context.h"
-#include "gla/vulkan/vulkan_descriptor_set_manager.h"
-#include "gla/vulkan/vulkan_device.h"
 #include "gla/vulkan/vulkan_layer_abstraction_factory.h"
 #include "gla/vulkan/vulkan_shader.h"
 #include "gla/vulkan/vulkan_texture.h"
@@ -18,38 +15,37 @@ namespace wunder::vulkan {
 rasterize_renderer::rasterize_renderer(
     const renderer_properties& renderer_properties)
     : m_renderer_properties(renderer_properties),
-      m_pipeline(make_unique<rasterize_pipeline>()),
       m_render_region{.offset = {.x = 0, .y = 0},
                       .extent = {.width = m_renderer_properties.m_width,
                                  .height = m_renderer_properties.m_height}},
-      m_tonemapper{
-        .brightness = 1.0f,
-        .contrast = 1.0f,
-        .saturation = 1.0f,
-        .vignette = 0.0f,
-        .avgLum = 1.0f,
-        .zoom = 1.0f,
-        .renderingRatio = {1.34, 1.03},
-        .autoExposure = 0,
-        .Ywhite = 0.5f,
-        .key = 0.5f,
-        .dither = 1
-      } {}
+      m_tonemapper{.brightness = 1.0f,
+                   .contrast = 1.0f,
+                   .saturation = 1.0f,
+                   .vignette = 0.0f,
+                   .avgLum = 1.0f,
+                   .zoom = 1.0f,
+                   .renderingRatio = {1.34, 1.03},
+                   .autoExposure = 0,
+                   .Ywhite = 0.5f,
+                   .key = 0.5f,
+                   .dither = 1} {
+  m_output_image.reset(new storage_texture(
+    {.m_enabled = true, .m_descriptor_name = "rtxGeneratedImage"},
+    VK_FORMAT_R32G32B32A32_SFLOAT, m_renderer_properties.m_width,
+    m_renderer_properties.m_height));
+  m_input_image.reset(new sampled_texture(*m_output_image));
+}
 
 rasterize_renderer::~rasterize_renderer() = default;
 
 void rasterize_renderer::initialize() {
-  m_output_image.reset(new storage_texture(
-      {.m_enabled = true, .m_descriptor_name = "rtxGeneratedImage"},
-      VK_FORMAT_R32G32B32A32_SFLOAT, m_renderer_properties.m_width,
-      m_renderer_properties.m_height));
-  m_input_image.reset(new sampled_texture(*m_output_image));
-
   initialize_shaders();
-  m_pipeline->initialize_pipeline(m_shaders);
 
-  m_input_image->add_descriptor_to(*this);
-  m_descriptor_set_manager->bake();
+  m_input_image->add_descriptor_to(*m_descriptor_set_manager);
+  m_descriptor_set_manager->build();
+
+  m_pipeline = std::move(
+      rasterize_pipeline::create(*m_descriptor_set_manager, m_shaders));
 }
 
 storage_texture& rasterize_renderer::get_output_image() {
@@ -57,10 +53,8 @@ storage_texture& rasterize_renderer::get_output_image() {
 }
 
 void rasterize_renderer::create_descriptor_manager(const shader& shader) {
-  m_descriptor_set_manager.reset(new descriptor_set_manager());
-  m_descriptor_set_manager->initialize(shader);
-
-  m_pipeline->initialize_pipeline_layout(shader);
+  m_descriptor_set_manager.reset(
+      new descriptor_set_manager(shader.get_shader_reflection_data()));
 }
 
 vector_map<VkShaderStageFlagBits, std::vector<shader_to_compile>>
@@ -105,10 +99,9 @@ void rasterize_renderer::draw_frame() {
       {m_render_region.extent.width, m_render_region.extent.height}};
 
   auto graphic_command_buffer = layer_abstraction_factory::instance()
-                                      .get_vulkan_context()
-                                      .mutable_swap_chain()
-                                      .get_current_command_buffer();
-
+                                    .get_vulkan_context()
+                                    .mutable_swap_chain()
+                                    .get_current_command_buffer();
 
   vkCmdSetViewport(graphic_command_buffer, 0, 1, &viewport);
   vkCmdSetScissor(graphic_command_buffer, 0, 1, &scissor);

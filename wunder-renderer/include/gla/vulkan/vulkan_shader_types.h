@@ -1,7 +1,3 @@
-//
-// Created by christian on 8/12/24.
-//
-
 #ifndef WUNDER_VULKAN_SHADER_TYPES_H
 #define WUNDER_VULKAN_SHADER_TYPES_H
 
@@ -14,12 +10,11 @@
 #include <vector>
 
 namespace wunder::vulkan {
+class descriptor_set_manager;
 using vulkan_resource_identifier = std::string;
 
 using vulkan_descriptor_set_identifier = std::uint32_t;
 using vulkan_descriptor_set_bind_identifier = std::uint32_t;
-
-class base_renderer;
 
 namespace shader_resource {
 
@@ -68,7 +63,7 @@ const auto downcast = [](const auto& x) -> const base& { return x; };
 
 namespace instance {
 struct base {
-  virtual void add_descriptor_to(base_renderer& renderer) = 0;
+  virtual void add_descriptor_to(descriptor_set_manager& target) = 0;
 };
 
 struct uniform_buffer : public base {
@@ -127,6 +122,7 @@ struct vulkan_descriptor_binding {
   void emplace_resource(const shader_resource::instance::element& resource);
   void clear_resources();
 
+  [[nodiscard]] size_t size() const;
  private:
   void initialize_if_empty(
       shader_resource::instance::resource_list default_value,

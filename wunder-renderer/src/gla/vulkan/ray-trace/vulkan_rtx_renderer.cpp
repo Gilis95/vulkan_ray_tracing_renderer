@@ -8,12 +8,11 @@
 #include "event/event_handler.hpp"
 #include "event/scene_events.h"
 #include "gla/renderer_capabilities .h"
+#include "gla/vulkan/descriptors/vulkan_descriptor_set_manager.h"
 #include "gla/vulkan/rasterize/vulkan_rasterize_renderer.h"
 #include "gla/vulkan/rasterize/vulkan_swap_chain.h"
 #include "gla/vulkan/scene/vulkan_scene.h"
-#include "gla/vulkan/vulkan_command_pool.h"
 #include "gla/vulkan/vulkan_context.h"
-#include "gla/vulkan/vulkan_descriptor_set_manager.h"
 #include "gla/vulkan/vulkan_device.h"
 #include "gla/vulkan/vulkan_layer_abstraction_factory.h"
 #include "gla/vulkan/vulkan_shader.h"
@@ -40,25 +39,17 @@ rtx_renderer::~rtx_renderer() {
 }
 
 void rtx_renderer::init_internal(const renderer_properties &properties) {
-  m_rtx_pipeline = std::make_unique<rtx_pipeline>();
-  m_shader_binding_table = std::make_unique<shader_binding_table>();
-  m_rasterize_renderer = std::make_unique<rasterize_renderer>(properties);
-
   m_state = std::make_unique<RtxState>();
   m_state->maxDepth = 3;
   m_state->maxSamples = 1;
-  m_state->fireflyClampThreshold = 32.51f;
+  m_state->fireflyClampThreshold = 0.f;
   m_state->hdrMultiplier = 1.f;
-  m_state->size = {1500,750};
+  m_state->size = {properties.m_width, properties.m_height};
   m_state->minHeatmap = 0;
   m_state->maxHeatmap = 65000;
+  m_state->pbrMode = 1;
 
   initialize_shaders();
-
-  m_rtx_pipeline->initialize_pipeline(m_shaders);
-  m_shader_binding_table->initialize(*m_rtx_pipeline);
-
-  m_rasterize_renderer->initialize();
 }
 
 vector_map<VkShaderStageFlagBits, std::vector<shader_to_compile>>
@@ -98,10 +89,8 @@ rtx_renderer::get_shaders_for_compilation() {
 }
 
 void rtx_renderer::create_descriptor_manager(const shader &shader) {
-  m_descriptor_set_manager = std::make_unique<descriptor_set_manager>();
-  m_descriptor_set_manager->initialize(shader);
-
-  m_rtx_pipeline->initialize_pipeline_layout(shader);
+  m_descriptor_set_manager = std::make_unique<descriptor_set_manager>(
+      shader.get_shader_reflection_data());
 }
 
 void rtx_renderer::update(time_unit dt) /*override*/
@@ -159,26 +148,49 @@ void rtx_renderer::update(time_unit dt) /*override*/
 
 void rtx_renderer::on_event(
     const wunder::event::scene_activated &scene_activated_event) {
-  service_factory::instance().get_camera().set_window_size(
-      m_renderer_properties.m_width, m_renderer_properties.m_height);
-
+  // validation that scene has been normaly loaded
   auto api_scene = project::instance().get_scene_manager().mutable_api_scene(
       scene_activated_event.m_id);
   AssertReturnUnless(api_scene.has_value());
+  auto &scene = api_scene->get();
+  const auto &environment_texture = scene.get_environment_texture();
+  AssertReturnUnless(environment_texture.m_acceleration_data.m_buffer);
+  AssertReturnUnless(environment_texture.m_image);
+
+  auto &camera = service_factory::instance().get_camera();
+
+  camera.set_window_size(m_renderer_properties.m_width,
+                         m_renderer_properties.m_height);
 
   m_descriptor_set_manager->clear_resources();
 
-  api_scene->get().add_descriptor_to(*this);
-  service_factory::instance().get_camera().bind(*this);
-  m_rasterize_renderer->get_output_image().add_descriptor_to(*this);
+  m_rasterize_renderer =
+      std::make_unique<rasterize_renderer>(m_renderer_properties);
 
-  m_descriptor_set_manager->bake();
+  scene.collect_descriptors(*m_descriptor_set_manager);
+  camera.collect_descriptors(*m_descriptor_set_manager);
+  m_rasterize_renderer->get_output_image().add_descriptor_to(
+      *m_descriptor_set_manager);
 
+  AssertReturnIf(m_descriptor_set_manager->build() !=
+                     descriptor_set_manager::build_error_code::SUCCESS, );
+
+  m_rtx_pipeline =
+      std::move(rtx_pipeline::create(*m_descriptor_set_manager, m_shaders));
+  AssertReturnUnless(m_rtx_pipeline);
+
+  m_shader_binding_table = shader_binding_table::create(*m_rtx_pipeline);
+
+
+  m_rasterize_renderer->initialize();
+  m_state->frame = 0;
+  m_state->fireflyClampThreshold =
+      environment_texture.m_acceleration_data.m_integral;
   m_have_active_scene = true;
 }
 
-void rtx_renderer::on_event(const wunder::event::camera_moved&) /*override*/ {
- m_state->frame = 0;
+void rtx_renderer::on_event(const wunder::event::camera_moved &) /*override*/ {
+  m_state->frame = 0;
 }
 
 const renderer_capabilities &rtx_renderer::get_capabilities() const /*override*/

@@ -26,7 +26,7 @@ class acceleration_structure
   acceleration_structure& operator=(acceleration_structure&&) noexcept;
 
  public:
-  void add_descriptor_to(base_renderer& renderer) override;
+  void add_descriptor_to(descriptor_set_manager& target) override;
   VkDeviceAddress get_address();
 
  protected:

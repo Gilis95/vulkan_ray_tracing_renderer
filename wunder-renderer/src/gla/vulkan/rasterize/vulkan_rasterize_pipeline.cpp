@@ -13,6 +13,19 @@ rasterize_pipeline::rasterize_pipeline() noexcept
       m_pipeline_create_info(),
       m_pipeline_cache(VK_NULL_HANDLE) {}
 
+std::unique_ptr<rasterize_pipeline> rasterize_pipeline::create(
+    const descriptor_set_manager& descriptor_set_manager,
+    const vector_map<VkShaderStageFlagBits, std::vector<unique_ptr<shader>>>&
+        shaders) {
+  unique_ptr<rasterize_pipeline> pipeline;
+  pipeline.reset(new rasterize_pipeline());
+
+  pipeline->initialize_pipeline_layout(descriptor_set_manager);
+  pipeline->initialize_pipeline(shaders);
+
+  return std::move(pipeline);
+}
+
 [[nodiscard]] VkPushConstantRange rasterize_pipeline::get_push_constant_range()
     const {
   return VkPushConstantRange{VK_SHADER_STAGE_FRAGMENT_BIT, 0,
@@ -29,8 +42,7 @@ void rasterize_pipeline::initialize_pipeline(
   device& device = vulkan_context.mutable_device();
   render_pass& renderPass = swap_chain.mutable_render_pass();
 
-  std::vector<VkPipelineShaderStageCreateInfo> stages =
-      get_shader_stage_create_info(shaders_of_types);
+  create_shader_stage_create_info(shaders_of_types);
 
   memset(&m_pipeline_create_info, 0, sizeof(VkGraphicsPipelineCreateInfo));
 
@@ -40,14 +52,13 @@ void rasterize_pipeline::initialize_pipeline(
 
   m_pipeline_create_info.layout = m_vulkan_pipeline_layout;
   m_pipeline_create_info.renderPass = renderPass.get_vulkan_render_pass();
-  m_pipeline_create_info.stageCount =
-      static_cast<uint32_t>(stages.size());  // Stages are shaders
-  m_pipeline_create_info.pStages = stages.data();
+  m_pipeline_create_info.stageCount = static_cast<uint32_t>(
+      m_shader_stage_create_infos.size());  // Stages are shaders
+  m_pipeline_create_info.pStages = m_shader_stage_create_infos.data();
 
-  vkCreateGraphicsPipelines(
-      device.get_vulkan_logical_device(), m_pipeline_cache, 1,
-      &m_pipeline_create_info, nullptr,
-      &m_vulkan_pipeline);
+  vkCreateGraphicsPipelines(device.get_vulkan_logical_device(),
+                            m_pipeline_cache, 1, &m_pipeline_create_info,
+                            nullptr, &m_vulkan_pipeline);
 }
 
 }  // namespace wunder::vulkan

@@ -20,17 +20,20 @@ class shader_binding_table {
  public:
   enum shader_stage_type { raygen, miss, hit, callable };
 
- public:
+ private:
   shader_binding_table() noexcept;
+
+ public:
   ~shader_binding_table();
 
+  static unique_ptr<shader_binding_table> create(const rtx_pipeline& pipeline);
  public:
-  void initialize(const rtx_pipeline& pipeline);
-
   VkStridedDeviceAddressRegionKHR get_stage_address(
       shader_stage_type type) const;
 
  private:
+  void initialize(const rtx_pipeline& pipeline);
+
   void initialize_shader_indices(const rtx_pipeline& pipeline);
 
   std::array<std::vector<uint8_t>, 4> create_shader_stages_handles(
@@ -53,7 +56,7 @@ class shader_binding_table {
 
   std::array<unique_ptr<storage_buffer>, 4>
       m_shader_group_buffers;  // buffer resembles handler to shader in group
-                                 // + data given to sbt
+                               // + data given to sbt
 
   VkPhysicalDeviceRayTracingPipelinePropertiesKHR m_vulkan_pipeline_properties{
       VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_PROPERTIES_KHR};

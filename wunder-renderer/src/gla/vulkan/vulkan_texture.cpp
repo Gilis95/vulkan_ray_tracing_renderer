@@ -1,9 +1,9 @@
 #include "gla/vulkan/vulkan_texture.h"
 
 #include "core/vector_map.h"
+#include "gla/vulkan/descriptors/vulkan_descriptor_set_manager.h"
 #include "gla/vulkan/vulkan_command_pool.h"
 #include "gla/vulkan/vulkan_context.h"
-#include "gla/vulkan/vulkan_descriptor_set_manager.h"
 #include "gla/vulkan/vulkan_device.h"
 #include "gla/vulkan/vulkan_layer_abstraction_factory.h"
 #include "gla/vulkan/vulkan_macros.h"
@@ -59,21 +59,18 @@ std::unordered_map<VkImageLayout, VkAccessFlags> s_layout_to_access_flags{
     {VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_ACCESS_SHADER_READ_BIT},
 };
 
-std::unordered_map<wunder::border_colour, VkBorderColor>
-    s_border_colour_map{
-        {wunder::border_colour::FLOAT_TRANSPARENT_BLACK,
-         VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK},
-        {wunder::border_colour::INT_TRANSPARENT_BLACK,
-         VK_BORDER_COLOR_INT_TRANSPARENT_BLACK},
-        {wunder::border_colour::FLOAT_OPAQUE_BLACK,
-         VK_BORDER_COLOR_FLOAT_OPAQUE_BLACK},
-        {wunder::border_colour::INT_OPAQUE_BLACK,
-         VK_BORDER_COLOR_INT_OPAQUE_BLACK},
-        {wunder::border_colour::FLOAT_OPAQUE_WHITE,
-         VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE},
-        {wunder::border_colour::INT_OPAQUE_WHITE,
-         VK_BORDER_COLOR_INT_OPAQUE_WHITE},
-    };
+std::unordered_map<wunder::border_colour, VkBorderColor> s_border_colour_map{
+    {wunder::border_colour::FLOAT_TRANSPARENT_BLACK,
+     VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK},
+    {wunder::border_colour::INT_TRANSPARENT_BLACK,
+     VK_BORDER_COLOR_INT_TRANSPARENT_BLACK},
+    {wunder::border_colour::FLOAT_OPAQUE_BLACK,
+     VK_BORDER_COLOR_FLOAT_OPAQUE_BLACK},
+    {wunder::border_colour::INT_OPAQUE_BLACK, VK_BORDER_COLOR_INT_OPAQUE_BLACK},
+    {wunder::border_colour::FLOAT_OPAQUE_WHITE,
+     VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE},
+    {wunder::border_colour::INT_OPAQUE_WHITE, VK_BORDER_COLOR_INT_OPAQUE_WHITE},
+};
 
 VkPipelineStageFlags pipeline_stage_for_layout(VkImageLayout layout) {
   auto pipeline_stage_it = s_layout_to_pipeline_stage.find(layout);
@@ -125,7 +122,7 @@ texture<base_texture>::texture(descriptor_build_data build_data,
       m_image_info(std::make_shared<vulkan_image_info>()) {
   std::string name = generate_next_texture_name();
 
-  VkFormat image_format = VK_FORMAT_R32G32B32A32_SFLOAT;
+  VkFormat image_format = asset.m_texture_data.get_image_format();
   VkImageLayout target_layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
   allocate_image(name, image_format, asset.m_width, asset.m_height);
@@ -140,11 +137,9 @@ template <typename base_texture>
 texture<base_texture>::~texture() = default;
 
 template <typename base_texture>
-void texture<base_texture>::add_descriptor_to(base_renderer& renderer) {
+void texture<base_texture>::add_descriptor_to(descriptor_set_manager& target) {
   ReturnUnless(m_descriptor_build_data.m_enabled);
-  auto& descriptor_manager = renderer.mutable_descriptor_set_manager();
-  descriptor_manager.add_resource(m_descriptor_build_data.m_descriptor_name,
-                                  *this);
+  target.add_resource(m_descriptor_build_data.m_descriptor_name, *this);
 }
 
 template <typename base_texture>
@@ -173,29 +168,20 @@ void texture<base_texture>::try_create_sampler(const texture_asset& asset,
   auto& device = vulkan_context.mutable_device();
   auto vulkan_logical_device = device.get_vulkan_logical_device();
 
-  ReturnUnless(asset.m_sampler.has_value());
-
-  auto& model_sampler = asset.m_sampler.value();
 
   VkSamplerCreateInfo sampler_create_info = {};
   sampler_create_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
   sampler_create_info.maxAnisotropy = 0.0f;
+  if (!fill_sampler_create_info_from(asset, sampler_create_info)) {
+    sampler_create_info.minFilter  = VK_FILTER_LINEAR;
+    sampler_create_info.magFilter  = VK_FILTER_LINEAR;
+  }
 
-  sampler_create_info.addressModeU =
-      s_address_mode[model_sampler.m_address_mode_u];
-  sampler_create_info.addressModeV =
-      s_address_mode[model_sampler.m_address_mode_v];
-
-  sampler_create_info.magFilter = s_filters[model_sampler.m_mag_filter];
-  sampler_create_info.minFilter = s_filters[model_sampler.m_min_filter];
-
-  // TODO::
   sampler_create_info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
 
   sampler_create_info.mipLodBias = 0.0f;
   sampler_create_info.minLod = 0.0f;
   sampler_create_info.maxLod = 0.0f;
-  sampler_create_info.borderColor = s_border_colour_map[model_sampler.m_border_colour];
   sampler_create_info.unnormalizedCoordinates = VK_FALSE;
 
   VK_CHECK_RESULT(vkCreateSampler(vulkan_logical_device, &sampler_create_info,
@@ -206,6 +192,27 @@ void texture<base_texture>::try_create_sampler(const texture_asset& asset,
   set_debug_utils_object_name(vulkan_logical_device, VK_OBJECT_TYPE_SAMPLER,
                               std::format("{} default sampler", name),
                               m_image_info->m_sampler);
+}
+
+template <typename base_texture>
+bool texture<base_texture>::fill_sampler_create_info_from(
+    const texture_asset& asset, VkSamplerCreateInfo& out_sampler_create_info) {
+  ReturnUnless(asset.m_sampler.has_value(), false);
+
+  auto& model_sampler = asset.m_sampler.value();
+
+  out_sampler_create_info.addressModeU =
+      s_address_mode[model_sampler.m_address_mode_u];
+  out_sampler_create_info.addressModeV =
+      s_address_mode[model_sampler.m_address_mode_v];
+
+  out_sampler_create_info.magFilter = s_filters[model_sampler.m_mag_filter];
+  out_sampler_create_info.minFilter = s_filters[model_sampler.m_min_filter];
+
+  out_sampler_create_info.borderColor =
+      s_border_colour_map[model_sampler.m_border_colour];
+
+  return true;
 }
 
 template <typename base_texture>

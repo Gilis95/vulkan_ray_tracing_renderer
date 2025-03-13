@@ -84,7 +84,7 @@ void context::select_logical_device() {
 }
 
 void context::create_allocator() {
-  m_resource_allocator = make_unique<memory_allocator>();
+  m_resource_allocator = make_unique<memory_allocator>("Allocator");
   m_resource_allocator->initialize();
 }
 

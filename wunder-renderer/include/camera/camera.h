@@ -15,11 +15,12 @@
 
 namespace wunder {
 namespace vulkan {
-
-class rtx_renderer;
+class descriptor_set_manager;
 }
+
 namespace event {
 struct scene_activated;
+
 namespace mouse {
 struct move;
 struct scroll;
@@ -89,7 +90,8 @@ class camera : private event_handler<wunder::event::mouse::move>,
   void fit(const glm::vec3& boxMin, const glm::vec3& boxMax,
            bool instantFit = true, bool tight = false, float aspect = 1.0f);
 
-  void bind(wunder::vulkan::rtx_renderer& renderer);
+  void collect_descriptors(vulkan::descriptor_set_manager& target);
+
  public:
   // field of view in degrees
   float get_fov() { return m_current.fov; }
@@ -163,6 +165,10 @@ class camera : private event_handler<wunder::event::mouse::move>,
                            glm::vec3& p2);
   void find_bezier_points();
 
+ private:
+  void update_camera_buffer();
+  SceneCamera create_host_camera();
+
  protected:
   glm::mat4 m_view_matrix = glm::mat4(1);
 
@@ -186,12 +192,13 @@ class camera : private event_handler<wunder::event::mouse::move>,
   glm::vec2 m_clip_planes = glm::vec2(0.001f, 100000000.f);
 
   modes m_mode;
-  std::unordered_map<camera::actions, std::function<void(float dx, float dy)>>
-      m_action_fns;
+
+  std::uint64_t m_lights_count = 0;
 
   unique_ptr<vulkan::uniform_buffer> m_camera_buffer;
-  void update_camera_buffer();
-  SceneCamera create_host_camera();
+
+  std::unordered_map<camera::actions, std::function<void(float dx, float dy)>>
+      m_action_fns;
 };
 
 }  // namespace wunder

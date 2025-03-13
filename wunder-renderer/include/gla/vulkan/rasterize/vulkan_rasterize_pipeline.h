@@ -9,21 +9,29 @@
 #include "gla/vulkan/vulkan_base_pipeline.h"
 
 namespace wunder::vulkan {
-  class render_pass;
+class render_pass;
 }
 
 namespace wunder::vulkan {
 
 class rasterize_pipeline : public base_pipeline {
- public:
+ private:
   rasterize_pipeline() noexcept;
+
+ public:
+  static std::unique_ptr<rasterize_pipeline> create(
+      const descriptor_set_manager& descriptor_set_manager,
+      const vector_map<VkShaderStageFlagBits, std::vector<unique_ptr<shader>>>&
+          shaders);
 
  public:
   [[nodiscard]] VkPushConstantRange get_push_constant_range() const override;
 
-  void initialize_pipeline(const vector_map<VkShaderStageFlagBits,
-                                            std::vector<unique_ptr<shader>>>&
-                               shaders_of_types);
+ private:
+  void initialize_pipeline(
+      const vector_map<VkShaderStageFlagBits, std::vector<unique_ptr<shader>>>&
+          shaders_of_types);
+
  private:
   VkGraphicsPipelineCreateInfo m_pipeline_create_info;
   VkPipelineCache m_pipeline_cache;

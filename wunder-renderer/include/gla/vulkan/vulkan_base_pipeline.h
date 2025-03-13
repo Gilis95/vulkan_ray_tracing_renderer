@@ -8,6 +8,7 @@
 #include "core/vector_map.h"
 #include "core/wunder_memory.h"
 namespace wunder::vulkan {
+class descriptor_set_manager;
 class shader;
 
 class base_pipeline {
@@ -29,12 +30,13 @@ class base_pipeline {
  public:
   void bind();
 
- public:
-  void initialize_pipeline_layout(const shader& descriptor_declaring_shader);
+ protected:
+  void initialize_pipeline_layout(
+      const descriptor_set_manager& descriptor_declaring_shader);
 
  protected:
   [[nodiscard]] virtual VkPushConstantRange get_push_constant_range() const = 0;
-  std::vector<VkPipelineShaderStageCreateInfo> get_shader_stage_create_info(
+  void create_shader_stage_create_info(
       const vector_map<VkShaderStageFlagBits, std::vector<unique_ptr<shader>>>&
           shaders_of_types);
 
@@ -42,6 +44,9 @@ class base_pipeline {
   VkPipeline m_vulkan_pipeline = VK_NULL_HANDLE;
   VkPipelineLayout m_vulkan_pipeline_layout = VK_NULL_HANDLE;
   VkPipelineBindPoint m_bind_point;
+
+  std::vector<VkPipelineShaderStageCreateInfo>
+      m_shader_stage_create_infos;
 };
 
 }  // namespace wunder::vulkan

@@ -4,7 +4,7 @@
 
 #include "core/wunder_macros.h"
 #include "gla/vulkan/vulkan_context.h"
-#include "gla/vulkan/vulkan_descriptor_set_manager.h"
+#include "gla/vulkan/descriptors/vulkan_descriptor_set_manager.h"
 #include "gla/vulkan/vulkan_device.h"
 #include "gla/vulkan/vulkan_layer_abstraction_factory.h"
 #include "gla/vulkan/vulkan_memory_allocator.h"
@@ -48,12 +48,11 @@ void buffer<base_buffer_type>::update_data(void* data, size_t data_size) {}
 
 template <typename base_buffer_type>
 void buffer<base_buffer_type>::add_descriptor_to(
-    base_renderer& renderer) /*override*/
+    descriptor_set_manager& target) /*override*/
 {
   ReturnUnless(m_descriptor_build_data.m_enabled);
 
-  auto& descriptor_manager = renderer.mutable_descriptor_set_manager();
-  descriptor_manager.add_resource(m_descriptor_build_data.m_descriptor_name,
+  target.add_resource(m_descriptor_build_data.m_descriptor_name,
                                   *this);
 }
 

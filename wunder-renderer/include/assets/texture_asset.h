@@ -11,6 +11,10 @@
 #include <vector>
 
 namespace wunder {
+struct environment_texture_asset;
+namespace vulkan {
+struct vulkan_environment;
+}
 
 enum class texture_filter_type { NEAREST, LINEAR };
 
@@ -44,6 +48,7 @@ struct texture_data {
   bool is_empty() const;
   size_t size() const;
   void copy_to(VmaAllocation& stagingBufferAllocation) const;
+  VkFormat get_image_format() const;
 };
 
 struct texture_asset {

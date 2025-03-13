@@ -48,7 +48,7 @@ void scene::load_scene(scene_asset& asset) {
   m_bound_textures = textures_helper::create_texture_buffers(texture_assets);
   m_material_buffer =
       materials_helper::create_material_buffer(material_assets, texture_assets);
-  m_light_buffer = lights_helper::create_light_buffer(light_entities);
+  m_light_buffer = lights_helper::create_light_buffer(light_entities, m_lights_count);
 
   meshes_helper::create_mesh_scene_nodes(mesh_assets, material_assets,
                                          mesh_entities, m_mesh_nodes);
@@ -64,21 +64,21 @@ void scene::load_scene(scene_asset& asset) {
 
   m_sun_and_sky_properties_buffer =
       vulkan_environment_helper::create_sky_and_sun_properties();
-  m_environment_textures =
-      vulkan_environment_helper::create_environment_texture();
+  m_environment_textures = std::move(
+      vulkan_environment_helper::create_environment_texture());
 }
 
-void scene::add_descriptor_to(rtx_renderer& renderer) {
+void scene::collect_descriptors(descriptor_set_manager& target) {
   for (auto& texture : m_bound_textures) {
-    texture->add_descriptor_to(renderer);
+    texture->add_descriptor_to(target);
   }
 
-  m_material_buffer->add_descriptor_to(renderer);
-  m_light_buffer->add_descriptor_to(renderer);
-  m_mesh_instance_data_buffer->add_descriptor_to(renderer);
-  m_acceleration_structure->add_descriptor_to(renderer);
-  m_sun_and_sky_properties_buffer->add_descriptor_to(renderer);
-  m_environment_textures->add_descriptor_to(renderer);
+  m_material_buffer->add_descriptor_to(target);
+  m_light_buffer->add_descriptor_to(target);
+  m_mesh_instance_data_buffer->add_descriptor_to(target);
+  m_acceleration_structure->add_descriptor_to(target);
+  m_sun_and_sky_properties_buffer->add_descriptor_to(target);
+  m_environment_textures.add_descriptor_to(target);
 }
 
 }  // namespace wunder::vulkan

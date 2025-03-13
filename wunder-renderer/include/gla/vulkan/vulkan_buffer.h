@@ -8,6 +8,7 @@
 #include "gla/vulkan/vulkan_shader_types.h"
 
 namespace wunder::vulkan {
+class descriptor_set_manager;
 class rtx_renderer;
 
 template <typename base_buffer_type>
@@ -24,7 +25,7 @@ class buffer : public non_copyable, public base_buffer_type {
   virtual void update_data(void* data, size_t data_size);
 
  public:
-  void add_descriptor_to(base_renderer& renderer) override;
+  void add_descriptor_to(descriptor_set_manager& renderer) override;
 
   [[nodiscard]] VkBuffer get_buffer() const { return m_vk_buffer; };
   [[nodiscard]] VkDeviceAddress get_address() const;

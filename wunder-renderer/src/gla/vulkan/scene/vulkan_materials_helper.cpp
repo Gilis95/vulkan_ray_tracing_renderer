@@ -33,15 +33,18 @@ assets<material_asset> materials_helper::extract_material_assets(
   }
 
   assets<material_asset> result;
-  result.reserve(material_ids.size() + 1);
-  result.emplace_back(std::make_pair(asset_handle::invalid(),
-                                     std::ref(get_default_material())));
+  result.reserve(material_ids.size());
 
-  if (!material_ids.empty()) {
+  if (material_ids.empty()) {
+    result.emplace_back(std::make_pair(asset_handle::invalid(),
+                                       std::ref(get_default_material())));
+  }
+  else {
     auto found_assets = asset_manager.find_assets<material_asset>(
         material_ids.begin(), material_ids.end());
     std::move(found_assets.begin(), found_assets.end(),
               std::back_inserter(result));
+
   }
 
   return result;

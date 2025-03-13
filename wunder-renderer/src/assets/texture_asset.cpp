@@ -27,6 +27,18 @@ size_t texture_data::size() const {
                     m_data);
 }
 
+VkFormat  texture_data::get_image_format() const {
+  return std::visit(overloaded{[](const std::vector<unsigned char>& pixels) {
+                                 return VK_FORMAT_R8G8B8A8_UNORM;
+                               },
+                               [](const std::vector<float>& pixels) {
+                                 return VK_FORMAT_R32G32B32A32_SFLOAT;
+                               }},
+                    m_data);
+
+}
+
+
 void texture_data::copy_to(VmaAllocation& stagingBufferAllocation) const {
   auto& vulkan_context =
       vulkan::layer_abstraction_factory::instance().get_vulkan_context();
@@ -37,7 +49,7 @@ void texture_data::copy_to(VmaAllocation& stagingBufferAllocation) const {
                   &allocator](const std::vector<unsigned char>& pixels) {
                    auto* dest_data =
                        allocator.map_memory<uint8_t>(stagingBufferAllocation);
-                   memcpy(dest_data, pixels.data(), pixels.size());
+                   memcpy(dest_data, pixels.data(), pixels.size() * sizeof(unsigned char));
                  },
                  [&stagingBufferAllocation,
                   &allocator](const std::vector<float>& pixels) {
@@ -48,4 +60,5 @@ void texture_data::copy_to(VmaAllocation& stagingBufferAllocation) const {
                  }},
       m_data);
 }
+
 }  // namespace wunder

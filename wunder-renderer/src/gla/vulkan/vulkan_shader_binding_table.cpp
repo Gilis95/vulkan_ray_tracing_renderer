@@ -35,6 +35,16 @@ shader_binding_table::shader_binding_table() noexcept {
 
 shader_binding_table::~shader_binding_table() = default;
 
+unique_ptr<shader_binding_table> shader_binding_table::create(
+    const rtx_pipeline& pipeline) {
+  unique_ptr<shader_binding_table> shader_binding_table;
+  shader_binding_table.reset(new wunder::vulkan::shader_binding_table());
+
+  shader_binding_table->initialize(pipeline);
+
+  return std::move(shader_binding_table);
+}
+
 void shader_binding_table::initialize(const rtx_pipeline& pipeline) {
   initialize_shader_indices(pipeline);
   std::array<std::vector<uint8_t>, 4> shader_stages_handles =
@@ -50,7 +60,8 @@ VkStridedDeviceAddressRegionKHR shader_binding_table::get_stage_address(
       .size = 0};
 }
 
-void shader_binding_table::initialize_shader_indices(const rtx_pipeline& pipeline) {
+void shader_binding_table::initialize_shader_indices(
+    const rtx_pipeline& pipeline) {
   for (auto& i : m_shader_handles_indeces) i = {};
 
   const auto& info = pipeline.get_pipeline_create_info();
@@ -62,15 +73,21 @@ void shader_binding_table::initialize_shader_indices(const rtx_pipeline& pipelin
       uint32_t genShader = info.pGroups[i].generalShader;
       AssertContinueUnless(genShader < info.stageCount);
 
-      if (info.pStages[genShader].stage & VK_SHADER_STAGE_RAYGEN_BIT_KHR) {
+      const VkPipelineShaderStageCreateInfo&
+          vk_pipeline_shader_stage_create_info = info.pStages[genShader];
+
+      if (vk_pipeline_shader_stage_create_info.stage &
+          VK_SHADER_STAGE_RAYGEN_BIT_KHR) {
         m_shader_handles_indeces[shader_stage_type::raygen].push_back(i);
         continue;
       }
-      if (info.pStages[genShader].stage & VK_SHADER_STAGE_MISS_BIT_KHR) {
+      if (vk_pipeline_shader_stage_create_info.stage &
+          VK_SHADER_STAGE_MISS_BIT_KHR) {
         m_shader_handles_indeces[shader_stage_type::miss].push_back(i);
         continue;
       }
-      if (info.pStages[genShader].stage & VK_SHADER_STAGE_CALLABLE_BIT_KHR) {
+      if (vk_pipeline_shader_stage_create_info.stage &
+          VK_SHADER_STAGE_CALLABLE_BIT_KHR) {
         m_shader_handles_indeces[shader_stage_type::callable].push_back(i);
         continue;
       }
@@ -83,7 +100,7 @@ void shader_binding_table::initialize_shader_indices(const rtx_pipeline& pipelin
 std::array<std::vector<uint8_t>, 4>
 shader_binding_table::create_shader_stages_handles(
     const rtx_pipeline& pipeline) {  // Fetch all the shader handles used in
-                                 // the pipeline, so that they can be
+                                     // the pipeline, so that they can be
 
   // Get the total number of groups and handle index position
   const auto& pipeline_create_info = pipeline.get_pipeline_create_info();
@@ -165,11 +182,12 @@ void shader_binding_table::create_sbt_buffer(
 
   for (uint32_t i = 0; i < 4; ++i) {
     auto& shader_stage_handles = shader_stages_handles[i];
-    ContinueIf(shader_stage_handles.empty());
-    m_shader_group_buffers[i] = std::make_unique<storage_device_buffer>(descriptor_build_data{.m_enabled = false}, shader_stage_handles.data(),
-                      shader_stage_handles.size() * sizeof(uint8_t),
-                      VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT |
-                          VK_BUFFER_USAGE_SHADER_BINDING_TABLE_BIT_KHR);
+    AssertContinueIf(shader_stage_handles.empty());
+    m_shader_group_buffers[i] = std::make_unique<storage_device_buffer>(
+        descriptor_build_data{.m_enabled = false}, shader_stage_handles.data(),
+        shader_stage_handles.size() * sizeof(uint8_t),
+        VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT |
+            VK_BUFFER_USAGE_SHADER_BINDING_TABLE_BIT_KHR);
 
     set_debug_utils_object_name(device.get_vulkan_logical_device(),
                                 std::format("shader_binding_table:{}", i),

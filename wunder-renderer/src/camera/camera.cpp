@@ -7,12 +7,13 @@
 #include "core/input_manager.h"
 #include "core/project.h"
 #include "core/services_factory.h"
+#include "event/camera_events.h"
 #include "event/event_handler.hpp"
 #include "event/input_events.h"
 #include "event/scene_events.h"
-#include "event/camera_events.h"
 #include "gla/vulkan/rasterize/vulkan_swap_chain.h"
 #include "gla/vulkan/ray-trace/vulkan_rtx_renderer.h"
+#include "gla/vulkan/scene/vulkan_scene.h"
 #include "gla/vulkan/vulkan_device.h"
 #include "gla/vulkan/vulkan_device_buffer.h"
 #include "resources/shaders/host_device.h"
@@ -46,9 +47,9 @@ camera::camera()
 camera::~camera() = default;
 
 void camera::update(time_unit dt) {
-  update_movement(dt);
   update_camera_position_smoothly();
   update_camera_buffer();
+  update_movement(dt);
 }
 
 void camera::update_movement(time_unit dt) {
@@ -74,7 +75,7 @@ void camera::update_movement(time_unit dt) {
 
   ReturnIf(is_control_pressed || is_alt_pressed || is_shift_pressed);
 
-  auto factor = static_cast<float>(dt.m_miliseconds);
+  auto factor = static_cast<float>(dt.m_miliseconds * 3);
   m_camera_position_difference = {0, 0, 0};
 
   if (input_manager.is_key_in_state(wunder::keyboard::key_code::w,
@@ -248,8 +249,8 @@ void camera::fit(const glm::vec3& boxMin, const glm::vec3& boxMax,
   set_lookat(newEye, boxCenter, m_current.up, instantFit);
 }
 
-void camera::bind(wunder::vulkan::rtx_renderer& renderer) {
-  m_camera_buffer->add_descriptor_to(renderer);
+void camera::collect_descriptors(vulkan::descriptor_set_manager& target) {
+  m_camera_buffer->add_descriptor_to(target);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -328,8 +329,8 @@ void camera::rotate(glm::vec2 new_position, actions action) {
 //
 void camera::move(float dx, float dy, camera::actions action) {
   auto d = glm::normalize(m_current.ctr - m_current.eye);
-  dx *= m_speed * 2.f;
-  dy *= m_speed * 2.f;
+  dx *= m_speed;
+  dy *= m_speed;
 
   glm::vec3 key_vec;
   if (action == actions::dolly) {
@@ -442,11 +443,17 @@ void camera::on_event(const wunder::event::mouse::scroll& event) /*override*/
 
 void camera::on_event(
     const wunder::event::scene_activated& event) /*override*/ {
-  auto api_scene =
+  auto scene_asset =
       project::instance().get_scene_manager().get_scene_asset(event.m_id);
+  AssertReturnUnless(scene_asset);
+
+  auto api_scene =
+      project::instance().get_scene_manager().mutable_api_scene(event.m_id);
   AssertReturnUnless(api_scene);
 
-  const aabb& scene_aabb = api_scene->get().get_aabb();
+  m_lights_count = api_scene->get().get_lights_count();
+
+  const aabb& scene_aabb = scene_asset->get().get_aabb();
   fit(scene_aabb.m_min, scene_aabb.m_max);
 }
 
@@ -630,7 +637,7 @@ SceneCamera camera::create_host_camera() {
   glm::vec3 eye, center, up;
   get_lookat(eye, center, up);
   camera.focalDist = glm::length(center - eye);
-  camera.nbLights = 1;
+  camera.nbLights = m_lights_count;
   return camera;
 }
 }  // namespace wunder

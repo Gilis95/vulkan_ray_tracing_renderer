@@ -11,8 +11,9 @@
 #include "assets/asset_types.h"
 #include "core/vector_map.h"
 namespace tinygltf {
+class TinyGLTF;
 class Model;
-}
+}  // namespace tinygltf
 namespace wunder {
 class asset_manager {
  public:
@@ -41,7 +42,14 @@ class asset_manager {
   asset_serialization_result_codes load_gltf_file(tinygltf::Model& gltf_model);
 
  private:
+  unique_ptr<tinygltf::TinyGLTF> m_gltf;
+
   asset_storage m_asset_storage;
+  std::unordered_map<
+      std::string,
+      std::function<bool(tinygltf::Model*, std::string*, std::string*,
+                         const std::string&, unsigned int)>>
+      m_load_fns;
 };
 
 template <typename asset_type>

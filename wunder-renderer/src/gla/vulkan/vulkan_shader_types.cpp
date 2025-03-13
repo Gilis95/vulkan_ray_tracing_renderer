@@ -1,5 +1,6 @@
-#include "core/wunder_macros.h"
 #include "gla/vulkan/vulkan_shader_types.h"
+
+#include "core/wunder_macros.h"
 
 namespace wunder::vulkan {
 
@@ -104,6 +105,7 @@ void vulkan_descriptor_binding::emplace_resource(
           }},
       resource);
 }
+
 void vulkan_descriptor_binding::initialize_if_empty(
     shader_resource::instance::resource_list default_value,
     VkDescriptorType descriptor_type) {
@@ -112,6 +114,7 @@ void vulkan_descriptor_binding::initialize_if_empty(
   m_resources = std::move(default_value);
   m_descriptor_type = descriptor_type;
 }
+
 void vulkan_descriptor_binding::clear_resources() {
   // @formatter:off
   // clang-format off
@@ -134,6 +137,24 @@ void vulkan_descriptor_binding::clear_resources() {
   // @formatter:on
 
   m_descriptor_type = VK_DESCRIPTOR_TYPE_MAX_ENUM;
+}
+
+size_t vulkan_descriptor_binding::size() const {
+  return std::visit(
+      overloaded{
+          [](const std::vector<VkDescriptorImageInfo>& descriptors) {
+            return descriptors.size();
+          },
+          [](const std::vector<VkDescriptorBufferInfo>& descriptors) {
+            return descriptors.size();
+          },
+          [](const std::vector<VkBufferView>& descriptors) {
+            return descriptors.size();
+          },
+          [](const std::vector<VkAccelerationStructureKHR>& descriptors) {
+            return descriptors.size();
+          }},
+      m_resources);
 }
 
 void vulkan_descriptor_bindings::emplace_resource(

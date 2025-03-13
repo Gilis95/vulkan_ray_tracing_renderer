@@ -6,13 +6,13 @@
 
 #include "core/wunder_memory.h"
 #include "gla/vulkan/vulkan_shader_types.h"
-#include "vulkan_memory_allocator.h"
 
 namespace wunder {
 struct texture_asset;
 }
 
 namespace wunder::vulkan {
+class descriptor_set_manager;
 
 struct vulkan_image_info {
   ~vulkan_image_info();
@@ -38,7 +38,7 @@ class texture : public base_texture {
   ~texture();
 
  public:
-  void add_descriptor_to(base_renderer& renderer) override;
+  void add_descriptor_to(descriptor_set_manager& target) override;
 
  private:
   void allocate_image(const std::string& name, VkFormat image_format,
@@ -46,6 +46,8 @@ class texture : public base_texture {
   void create_image_view(const std::string& name, VkFormat image_format);
 
   void try_create_sampler();
+  bool fill_sampler_create_info_from(
+      const texture_asset& asset, VkSamplerCreateInfo& out_sampler_create_info);
   void try_create_sampler(const texture_asset& asset, const std::string& name);
 
   void bind_texture(VkImageLayout target_layout);
@@ -69,6 +71,7 @@ class texture : public base_texture {
   [[nodiscard]] const descriptor_build_data& get_descriptor_build_data() const {
     return m_descriptor_build_data;
   }
+
  private:
   std::shared_ptr<vulkan_image_info> m_image_info;
   VkDeviceSize m_gpu_allocation_size = 0;
@@ -81,7 +84,7 @@ texture<base_texture>::texture(const texture<other_base_texture>& other)
     : m_descriptor_build_data(other.get_descriptor_build_data()),
       m_image_info(other.get_image_info()),
       m_gpu_allocation_size(other.get_gpu_allocation_size()) {
-  base_texture::m_descriptor=other.m_descriptor;
+  base_texture::m_descriptor = other.m_descriptor;
 }
 
 }  // namespace wunder::vulkan

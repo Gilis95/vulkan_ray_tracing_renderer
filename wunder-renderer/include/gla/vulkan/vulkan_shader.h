@@ -43,28 +43,20 @@ class shader : public non_copyable {
   const vulkan_shader_reflection_data& get_shader_reflection_data() const {
     return m_reflection_data;
   }
-  std::expected<VkDescriptorSetLayout, shader_operation_output_code>
-  get_vulkan_descriptor_set_layout(vulkan_descriptor_set_identifier set) const;
 
   VkShaderModule get_vulkan_shader_module() const { return m_shader_module; }
 
   VkPipelineShaderStageCreateInfo get_shader_stage_info() const;
 
-  const std::vector<VkDescriptorSetLayout>& get_descriptor_set_layout() const {
-    return m_descriptor_set_layout;
-  }
-
  private:
   void initialize_reflection_data(
       const std::vector<std::uint32_t>& debug_spirv);
-  void initialize_descriptor_set_layout();
 
  private:
   std::string m_shader_name;
   vulkan_shader_reflection_data m_reflection_data;
 
   const VkShaderStageFlagBits m_vulkan_shader_type;
-  std::vector<VkDescriptorSetLayout> m_descriptor_set_layout;
   VkShaderModule m_shader_module = VK_NULL_HANDLE;
 };
 }  // namespace wunder::vulkan

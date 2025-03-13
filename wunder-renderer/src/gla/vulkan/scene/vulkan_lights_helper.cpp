@@ -13,7 +13,8 @@ using host_light_type = Light;
 using host_light_array = std::vector<host_light_type>;
 
 unique_ptr<storage_buffer> lights_helper::create_light_buffer(
-    const std::vector<ref<scene_node>>& light_nodes) {
+    const std::vector<ref<scene_node>>& light_nodes,
+    std::uint64_t& out_lights_count) {
   vector_map<asset_handle, transform_component> transformations;
 
   assets<light_asset> light_assets =
@@ -22,9 +23,10 @@ unique_ptr<storage_buffer> lights_helper::create_light_buffer(
   host_light_array host_lights =
       create_host_light_array(transformations, light_assets);
 
+  out_lights_count = host_lights.size();
+
   return std::make_unique<storage_device_buffer>(
-      descriptor_build_data{.m_enabled = true,
-                                    .m_descriptor_name = "_Lights"},
+      descriptor_build_data{.m_enabled = true, .m_descriptor_name = "_Lights"},
       host_lights.data(),
       host_lights.size() * sizeof(host_light_array ::value_type),
       VK_BUFFER_USAGE_STORAGE_BUFFER_BIT);
@@ -49,11 +51,12 @@ assets<light_asset> lights_helper::extract_scene_light_data(
     out_transformations[light_handle] = maybe_transform_component->get();
   }
 
-  auto result = asset_manager.find_assets<light_asset>(light_asset_handles.begin(),
-                                                light_asset_handles.end());
+  auto result = asset_manager.find_assets<light_asset>(
+      light_asset_handles.begin(), light_asset_handles.end());
   if (result.empty()) {
     result.emplace_back(asset_handle::invalid(), get_default_light_asset());
-    out_transformations.emplace_back(asset_handle::invalid(), transform_component{});
+    out_transformations.emplace_back(asset_handle::invalid(),
+                                     transform_component{});
   }
 
   return std::move(result);
@@ -71,7 +74,7 @@ std::vector<Light> lights_helper::create_host_light_array(
 
     auto model_matrix = glm::identity<glm::mat4>();
 
-    if(transformation_it != transformations.end()){
+    if (transformation_it != transformations.end()) {
       model_matrix = transformation_it->second.m_world_matrix;
     }
 
@@ -116,6 +119,5 @@ light_asset& lights_helper::get_default_light_asset() {
   static light_asset res{};
   return res;
 }
-
 
 }  // namespace wunder::vulkan

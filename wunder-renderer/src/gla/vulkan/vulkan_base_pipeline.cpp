@@ -1,7 +1,8 @@
 #include "gla/vulkan/vulkan_base_pipeline.h"
 
+#include "gla/vulkan/descriptors/vulkan_descriptor_set_manager.h"
 #include "gla/vulkan/rasterize/vulkan_swap_chain.h"
-#include "gla/vulkan/vulkan_command_pool.h"
+#include "gla/vulkan/descriptors/vulkan_descriptor_set_manager.h"
 #include "gla/vulkan/vulkan_context.h"
 #include "gla/vulkan/vulkan_device.h"
 #include "gla/vulkan/vulkan_layer_abstraction_factory.h"
@@ -12,7 +13,7 @@ base_pipeline::base_pipeline(VkPipelineBindPoint bind_point)
     : m_bind_point(bind_point) {}
 
 void base_pipeline::initialize_pipeline_layout(
-    const shader& descriptor_declaring_shader) {
+    const descriptor_set_manager& descriptor_declaring_shader) {
   auto& device = layer_abstraction_factory::instance()
                      .get_vulkan_context()
                      .mutable_device();
@@ -38,19 +39,15 @@ void base_pipeline::initialize_pipeline_layout(
                          &m_vulkan_pipeline_layout);
 }
 
-std::vector<VkPipelineShaderStageCreateInfo>
-base_pipeline::get_shader_stage_create_info(
+void base_pipeline::create_shader_stage_create_info(
     const vector_map<VkShaderStageFlagBits, std::vector<unique_ptr<shader>>>&
         shaders_of_types) {
-  std::vector<VkPipelineShaderStageCreateInfo> stages;
 
   for (auto& [shader_type, shaders] : shaders_of_types) {
     for (auto& shader : shaders) {
-      stages.push_back(shader->get_shader_stage_info());
+      m_shader_stage_create_infos .push_back(shader->get_shader_stage_info());
     }
   }
-
-  return stages;
 }
 
 void base_pipeline::bind() {

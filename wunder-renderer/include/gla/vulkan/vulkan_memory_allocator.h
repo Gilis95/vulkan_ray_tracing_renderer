@@ -45,7 +45,7 @@ class memory_allocator : public non_copyable{
   VmaAllocator& get_vma_allocator();
 
  private:
-  std::string m_Tag;
+  std::string m_tag;
   VmaAllocator m_resource_allocator;
 };
 

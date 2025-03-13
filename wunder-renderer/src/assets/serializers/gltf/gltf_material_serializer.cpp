@@ -9,7 +9,11 @@
 namespace wunder {
 static asset_handle find_texture_or_default(
     const std::unordered_map<std::uint32_t, asset_handle>& textures_map,
-    uint32_t idx) {
+    int32_t idx) {
+  if (idx < 0) {
+    return asset_handle::invalid();
+  }
+
   auto texture_handle_it = textures_map.find(idx);
   AssertReturnIf(texture_handle_it == textures_map.end(),
                  asset_handle::invalid());
@@ -67,6 +71,8 @@ material_asset gltf_material_importer::process_material(
   mat.m_normal_texture = normal_texture_handle;
   mat.m_normal_texture_scale =
       static_cast<float>(gltf_material.normalTexture.scale);
+
+  mat.m_uv_transform = glm::identity<glm::mat4>();
 
   // PbrMetallicRoughness
   mat.m_pbr_base_color_factor =
