@@ -14,13 +14,7 @@
 #include "include/gla/vulkan/ray-trace/vulkan_rtx_pipeline.h"
 
 namespace wunder::vulkan {
-namespace {
-template <typename integral>
-constexpr integral align_up(integral x, size_t a) noexcept {
-  return integral((x + (integral(a) - 1)) & ~integral(a - 1));
-}
 
-}  // namespace
 shader_binding_table::shader_binding_table() noexcept {
   auto& vulkan_context =
       layer_abstraction_factory::instance().get_vulkan_context();

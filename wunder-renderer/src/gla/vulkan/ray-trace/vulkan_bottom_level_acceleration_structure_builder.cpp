@@ -5,13 +5,23 @@
 
 #include "gla/vulkan/scene/vulkan_mesh.h"
 #include "gla/vulkan/vulkan_buffer.h"
+#include "gla/vulkan/vulkan_command_pool.h"
+#include "gla/vulkan/vulkan_context.h"
+#include "gla/vulkan/vulkan_device.h"
+#include "gla/vulkan/vulkan_layer_abstraction_factory.h"
 
 namespace wunder::vulkan {
 
 bottom_level_acceleration_structure_builder::
     bottom_level_acceleration_structure_builder(
         vector_map<asset_handle, shared_ptr<vulkan_mesh>>& mesh_instances)
-    : m_mesh_instances(mesh_instances) {}
+    : acceleration_structure_builder(layer_abstraction_factory::instance()
+                                         .get_vulkan_context()
+                                         .mutable_device()
+                                         .get_command_pool()
+                                         .get_current_compute_command_buffer()),
+      m_mesh_instances(mesh_instances),
+      m_min_alignment(128) {}
 
 void bottom_level_acceleration_structure_builder::build() {
   for (auto& [_, _vulkan_mesh] : m_mesh_instances) {
@@ -19,18 +29,24 @@ void bottom_level_acceleration_structure_builder::build() {
   }
 
   std::int32_t scratch_buffer_size = 0;
+
   scratch_buffer_size = std::accumulate(
       m_build_infos.begin(), m_build_infos.end(), scratch_buffer_size,
-      [](std::uint32_t current_accumulation,
-         const acceleration_structure_build_info& right) {
+      [min_alignment = m_min_alignment](
+          std::uint32_t current_accumulation,
+          const acceleration_structure_build_info& right) {
         return current_accumulation +
-               right.get_vulkan_as_build_sizes_info().accelerationStructureSize;
+               align_up(right.get_vulkan_as_build_sizes_info()
+                            .accelerationStructureSize,
+                        min_alignment);
       });
 
   create_scratch_buffer(scratch_buffer_size);
   build_info_set_scratch_buffer();
   create_acceleration_structures();
   build_acceleration_structure();
+
+  flush_commands();
 }
 
 void bottom_level_acceleration_structure_builder::
@@ -45,8 +61,9 @@ void bottom_level_acceleration_structure_builder::
     build_info.mutable_build_info().scratchData.deviceAddress =
         m_scratch_buffer->get_address() + scratch_buffer_offset;
 
-    scratch_buffer_offset +=
-        build_info.get_vulkan_as_build_sizes_info().accelerationStructureSize;
+    scratch_buffer_offset += align_up(
+        build_info.get_vulkan_as_build_sizes_info().accelerationStructureSize,
+        128);
   }
 }
 
@@ -64,5 +81,12 @@ void bottom_level_acceleration_structure_builder::
     build_info.mutable_build_info().dstAccelerationStructure =
         mesh_instance.m_blas.m_descriptor;
   }
+}
+
+void bottom_level_acceleration_structure_builder::flush_commands() {
+  auto& context = layer_abstraction_factory::instance().get_vulkan_context();
+  auto& device = context.mutable_device();
+
+  device.get_command_pool().flush_compute_command_buffer();
 }
 }  // namespace wunder::vulkan

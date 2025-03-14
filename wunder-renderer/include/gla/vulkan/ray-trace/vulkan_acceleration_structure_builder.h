@@ -9,10 +9,10 @@
 namespace wunder::vulkan {
 
 template <derived<acceleration_structure_build_info> build_info_type>
-class vulkan_acceleration_structure_builder {
+class acceleration_structure_builder {
  public:
-  vulkan_acceleration_structure_builder();
-  virtual ~vulkan_acceleration_structure_builder() = default;
+  acceleration_structure_builder(VkCommandBuffer command_buffer);
+  virtual ~acceleration_structure_builder() = default;
 
  protected:
   void create_scratch_buffer(std::uint32_t scratch_buffer_size);
@@ -22,6 +22,7 @@ class vulkan_acceleration_structure_builder {
 
  protected:
   unique_ptr<storage_buffer> m_scratch_buffer;
+  VkCommandBuffer m_command_buffer = VK_NULL_HANDLE;
 };
 }  // namespace wunder::vulkan
 #endif  // VULKAN_ACCELERATION_STRUCTURE_BUILDER_H

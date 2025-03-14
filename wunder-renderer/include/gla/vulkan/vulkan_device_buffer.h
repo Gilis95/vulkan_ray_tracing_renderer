@@ -7,6 +7,7 @@
 #include "gla/vulkan/vulkan_buffer.h"
 
 namespace wunder::vulkan {
+class command_pool;
 
 template <typename base_buffer_type>
 class device_buffer : public buffer<base_buffer_type> {
@@ -14,9 +15,15 @@ class device_buffer : public buffer<base_buffer_type> {
   device_buffer(
       descriptor_build_data descriptor_build_data,
       size_t data_size, VkBufferUsageFlags usage_flags);
+
   device_buffer(
       descriptor_build_data descriptor_build_data,
       const void* data, size_t data_size, VkBufferUsageFlags usage_flags);
+
+  device_buffer(VkCommandBuffer command_buffer,
+        descriptor_build_data descriptor_build_data,
+        const void* data, size_t data_size, VkBufferUsageFlags usage_flags);
+
 
   ~device_buffer() override;
 

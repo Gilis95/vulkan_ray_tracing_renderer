@@ -16,7 +16,7 @@ class acceleration_structure_build_info : public non_copyable {
       acceleration_structure_build_info&& other) noexcept;
 
  public:
-  virtual ~acceleration_structure_build_info();
+  ~acceleration_structure_build_info() override;
 
  public:
   [[nodiscard]]  VkAccelerationStructureBuildGeometryInfoKHR&

@@ -23,11 +23,29 @@ template <typename base_buffer_type>
 device_buffer<base_buffer_type>::device_buffer(
     descriptor_build_data descriptor_build_data, const void* data,
     size_t data_size, VkBufferUsageFlags usage_flags)
+    : device_buffer<base_buffer_type>(layer_abstraction_factory::instance()
+                                          .get_vulkan_context()
+                                          .mutable_device()
+                                          .get_command_pool()
+                                          .get_current_compute_command_buffer(),
+                                      std::move(descriptor_build_data), data,
+                                      data_size, usage_flags) {
+  auto& command_pool = layer_abstraction_factory::instance()
+                           .get_vulkan_context()
+                           .mutable_device()
+                           .get_command_pool();
+
+  command_pool.flush_compute_command_buffer();
+}
+
+template <typename base_buffer_type>
+device_buffer<base_buffer_type>::device_buffer(
+    VkCommandBuffer command_buffer, descriptor_build_data descriptor_build_data,
+    const void* data, size_t data_size, VkBufferUsageFlags usage_flags)
     : buffer<base_buffer_type>(std::move(descriptor_build_data)) {
   context& vulkan_context =
       layer_abstraction_factory::instance().get_vulkan_context();
   auto& allocator = vulkan_context.mutable_resource_allocator();
-  auto& device = vulkan_context.mutable_device();
 
   auto [staging_buffer, staging_buffer_allocation] =
       allocate_cpu_staging_buffer(data_size);
@@ -43,15 +61,10 @@ device_buffer<base_buffer_type>::device_buffer(
   }
 
   {  // copy host staging buffer to device
-    auto& vulkan_command_pool = device.get_command_pool();
-    VkCommandBuffer copyCmd =
-        vulkan_command_pool.get_current_compute_command_buffer();
-
     VkBufferCopy copyRegion = {};
     copyRegion.size = data_size;
-    vkCmdCopyBuffer(copyCmd, staging_buffer, buffer<base_buffer_type>::m_vk_buffer, 1, &copyRegion);
-
-    vulkan_command_pool.flush_compute_command_buffer();
+    vkCmdCopyBuffer(command_buffer, staging_buffer,
+                    buffer<base_buffer_type>::m_vk_buffer, 1, &copyRegion);
   }
 
   base_buffer_type::m_descriptor.buffer = buffer<base_buffer_type>::m_vk_buffer;
@@ -66,12 +79,12 @@ template <typename base_buffer_type>
 device_buffer<base_buffer_type>::~device_buffer() = default;
 
 template <typename base_buffer_type>
-void device_buffer<base_buffer_type>::update_data(void* data, size_t data_size) /*override*/ {
+void device_buffer<base_buffer_type>::update_data(
+    void* data, size_t data_size) /*override*/ {
   context& vulkan_context =
       layer_abstraction_factory::instance().get_vulkan_context();
   auto& swap_chain = vulkan_context.mutable_swap_chain();
-  auto graphics_queue= swap_chain.get_current_command_buffer();
-
+  auto graphics_queue = swap_chain.get_current_command_buffer();
 
   // Ensure that the modified UBO is not visible to previous frames.
   VkBufferMemoryBarrier beforeBarrier{VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER};
@@ -86,10 +99,10 @@ void device_buffer<base_buffer_type>::update_data(void* data, size_t data_size) 
                        VK_DEPENDENCY_DEVICE_GROUP_BIT, 0, nullptr, 1,
                        &beforeBarrier, 0, nullptr);
 
-
   // Schedule the host-to-device upload. (hostUBO is copied into the cmd
   // buffer so it is okay to deallocate when the function returns).
-  vkCmdUpdateBuffer(graphics_queue, buffer<base_buffer_type>::m_vk_buffer, 0, data_size, data);
+  vkCmdUpdateBuffer(graphics_queue, buffer<base_buffer_type>::m_vk_buffer, 0,
+                    data_size, data);
 
   // Making sure the updated UBO will be visible.
   VkBufferMemoryBarrier afterBarrier{VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER};
@@ -105,8 +118,8 @@ void device_buffer<base_buffer_type>::update_data(void* data, size_t data_size) 
 }
 
 template <typename base_buffer_type>
-std::pair<VkBuffer, VmaAllocation> device_buffer<base_buffer_type>::allocate_cpu_staging_buffer(
-    size_t data_size) {
+std::pair<VkBuffer, VmaAllocation>
+device_buffer<base_buffer_type>::allocate_cpu_staging_buffer(size_t data_size) {
   context& vulkan_context =
       layer_abstraction_factory::instance().get_vulkan_context();
   auto& allocator = vulkan_context.mutable_resource_allocator();
@@ -126,8 +139,8 @@ std::pair<VkBuffer, VmaAllocation> device_buffer<base_buffer_type>::allocate_cpu
 }
 
 template <typename base_buffer_type>
-void device_buffer<base_buffer_type>::allocate_device_buffer(size_t data_size,
-                                           VkBufferUsageFlags usage_flags) {
+void device_buffer<base_buffer_type>::allocate_device_buffer(
+    size_t data_size, VkBufferUsageFlags usage_flags) {
   context& vulkan_context =
       layer_abstraction_factory::instance().get_vulkan_context();
   auto& allocator = vulkan_context.mutable_resource_allocator();
@@ -139,9 +152,9 @@ void device_buffer<base_buffer_type>::allocate_device_buffer(size_t data_size,
       usage_flags | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
 
   buffer<base_buffer_type>::m_allocation = allocator.allocate_buffer(
-      vertex_buffer_create_info, VMA_MEMORY_USAGE_GPU_ONLY, buffer<base_buffer_type>::m_vk_buffer);
+      vertex_buffer_create_info, VMA_MEMORY_USAGE_GPU_ONLY,
+      buffer<base_buffer_type>::m_vk_buffer);
 }
-
 
 template class device_buffer<
     wunder::vulkan::shader_resource::instance::storage_buffers>;

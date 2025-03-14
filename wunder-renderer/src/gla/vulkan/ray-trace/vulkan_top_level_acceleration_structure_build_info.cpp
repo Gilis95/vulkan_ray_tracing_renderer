@@ -23,7 +23,9 @@ namespace wunder::vulkan {
 
 top_level_acceleration_structure_build_info::
     top_level_acceleration_structure_build_info(
-        const std::vector<vulkan_mesh_scene_node>& mesh_nodes) {
+        VkCommandBuffer command_buffer,
+        const std::vector<vulkan_mesh_scene_node>& mesh_nodes)
+    : m_command_buffer(command_buffer) {
   auto acceleration_structures_instances =
       create_acceleration_structure_instances(mesh_nodes);
   create_acceleration_structures_buffer(acceleration_structures_instances);
@@ -37,6 +39,26 @@ top_level_acceleration_structure_build_info::
   create_build_info(build_flags);
   calculate_build_size();
 }
+
+top_level_acceleration_structure_build_info::
+    top_level_acceleration_structure_build_info(
+        top_level_acceleration_structure_build_info&& other) noexcept
+    : acceleration_structure_build_info(std::move(other)) {
+  std::swap(m_acceleration_structures_buffers,
+            other.m_acceleration_structures_buffers);
+}
+
+top_level_acceleration_structure_build_info&
+top_level_acceleration_structure_build_info::operator=(
+    top_level_acceleration_structure_build_info&& other) noexcept {
+  std::swap(m_acceleration_structures_buffers,
+            other.m_acceleration_structures_buffers);
+  acceleration_structure_build_info::operator=(std::move(other));
+  return *this;
+}
+
+top_level_acceleration_structure_build_info::
+    ~top_level_acceleration_structure_build_info() = default;
 
 std::vector<VkAccelerationStructureInstanceKHR>
 top_level_acceleration_structure_build_info::
@@ -62,12 +84,12 @@ bool top_level_acceleration_structure_build_info::
   VkGeometryInstanceFlagsKHR flags{};
 
   // Always opaque, no need to use anyhit (faster)
-  if(mesh_node.m_mesh->m_is_opaque) {
+  if (mesh_node.m_mesh->m_is_opaque) {
     flags |= VK_GEOMETRY_INSTANCE_FORCE_OPAQUE_BIT_KHR;
   }
 
   // Need to skip the cull flag in traceray_rtx for double sided materials
-  if(mesh_node.m_mesh->m_is_double_sided) {
+  if (mesh_node.m_mesh->m_is_double_sided) {
     flags |= VK_GEOMETRY_INSTANCE_TRIANGLE_FACING_CULL_DISABLE_BIT_KHR;
   }
 
@@ -98,7 +120,8 @@ void top_level_acceleration_structure_build_info::
       VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR);
 
   m_acceleration_structures_buffers = std::make_unique<storage_device_buffer>(
-      descriptor_build_data{.m_enabled = false}, data, size, flags);
+      m_command_buffer, descriptor_build_data{.m_enabled = false}, data, size,
+      flags);
 }
 
 void top_level_acceleration_structure_build_info::create_geometry_data(

@@ -1,15 +1,9 @@
 include(FetchContent)
 
 FetchContent_Declare(
-        EnTT
-        GIT_REPOSITORY https://github.com/skypjack/entt.git
-        GIT_TAG v3.7.1
-)
-
-FetchContent_Declare(
         glad
-        GIT_REPOSITORY https://github.com/Gilis95/glad
-        GIT_TAG origin/glad2
+        GIT_REPOSITORY https://github.com/Dav1dde/glad.git
+        GIT_TAG v2.0.8
         SOURCE_SUBDIR cmake
 )
 
@@ -47,7 +41,7 @@ set(TINYGLTF_BUILD_LOADER_EXAMPLE OFF CACHE INTERNAL "" FORCE)
 set(TINYGLTF_HEADER_ONLY ON CACHE INTERNAL "" FORCE)
 set(TINYGLTF_INSTALL OFF CACHE INTERNAL "" FORCE)
 
-FetchContent_MakeAvailable(EnTT glad glfw glm spdlog tracy tinygltf)
+FetchContent_MakeAvailable(glad glfw glm spdlog tracy tinygltf)
 
 include(cmake/FetchShadercDependency.cmake)
 include(cmake/FetchSPIRVCrossDependency.cmake)

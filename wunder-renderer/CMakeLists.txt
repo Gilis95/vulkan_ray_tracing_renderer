@@ -18,7 +18,50 @@ option(WANDER_ENGINE_INSTALL "Generate installation target" OFF)
 include(cmake/Variables.cmake)
 include(cmake/Files.cmake)
 
-glad_add_library(Vulkan REPRODUCIBLE LOADER API vulkan=1.3)
+glad_add_library(Vulkan REPRODUCIBLE LOADER API vulkan=1.3 EXTENSIONS
+        #Nvidia
+        VK_NV_ray_tracing_validation,
+        VK_NV_glsl_shader,
+        VK_NV_device_diagnostics_config,
+        VK_NV_device_diagnostic_checkpoints,
+        #Nvidia
+        #Embedded
+        VK_KHR_device_group,
+        VK_KHR_dedicated_allocation,
+        VK_KHR_ray_tracing_pipeline,
+        VK_KHR_swapchain,
+        VK_KHR_display,
+        VK_KHR_display_swapchain,
+        VK_KHR_map_memory2,
+        VK_KHR_get_memory_requirements2,
+        VK_KHR_bind_memory2,
+        VK_KHR_get_physical_device_properties2,
+        VK_KHR_buffer_device_address,
+        VK_KHR_maintenance1,
+        VK_KHR_maintenance2,
+        VK_KHR_maintenance3,
+        VK_KHR_maintenance4,
+        VK_KHR_maintenance5,
+        VK_KHR_maintenance6,
+        VK_KHR_maintenance7,
+        VK_KHR_acceleration_structure,
+        VK_KHR_surface,
+        VK_KHR_deferred_host_operations,
+        VK_KHR_shader_clock,
+        #Embedded
+        VK_EXT_validation_features,
+        VK_EXT_validation_flags,
+        VK_EXT_validation_cache,
+        VK_EXT_debug_utils,
+        VK_EXT_debug_marker,
+        VK_EXT_debug_report,
+        VK_EXT_buffer_device_address,
+        VK_EXT_opacity_micromap,
+        VK_EXT_global_priority,
+        VK_EXT_image_drm_format_modifier,
+        VK_EXT_full_screen_exclusive,
+        VK_EXT_pipeline_creation_cache_control
+)
 
 ################################################################################################
 add_library(wunder-renderer STATIC ${WUNDER_RENDERER_HEADERS} ${WUNDER_RENDERER_SOURCES})
@@ -29,7 +72,6 @@ target_include_directories(wunder-renderer PUBLIC
 )
 
 target_link_libraries(wunder-renderer PUBLIC
-        EnTT
         Vulkan
         tinygltf
         glfw

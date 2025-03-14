@@ -7,11 +7,12 @@ namespace wunder::vulkan {
 class top_level_acceleration_structure;
 
 class top_level_acceleration_structure_builder final
-    : protected vulkan_acceleration_structure_builder<
+    : protected acceleration_structure_builder<
           top_level_acceleration_structure_build_info> {
  public:
   explicit top_level_acceleration_structure_builder(
       top_level_acceleration_structure& acceleration_structure,
+      std::vector<top_level_acceleration_structure_build_info>& build_infos,
       const std::vector<vulkan_mesh_scene_node>& mesh_nodes);
 
  public:
@@ -23,6 +24,7 @@ class top_level_acceleration_structure_builder final
 
   void wait_until_instances_buffer_is_available() const;
 
+  void flush_commands();
  protected:
   const std::vector<top_level_acceleration_structure_build_info>&
   get_build_infos() const override {
@@ -32,7 +34,7 @@ class top_level_acceleration_structure_builder final
  private:
   top_level_acceleration_structure& m_acceleration_structure;
   const std::vector<vulkan_mesh_scene_node>& mesh_nodes;
-  std::vector<top_level_acceleration_structure_build_info> m_build_infos;
+  std::vector<top_level_acceleration_structure_build_info>& m_build_infos;
 };
 }  // namespace wunder::vulkan
 

@@ -89,6 +89,14 @@ void device::create_extensions_list() {
       {.m_name = VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME,
        .m_optional = false,
        .m_feature_struct = &ray_tracing_pipeline_features_khr});
+
+  static VkPhysicalDeviceRayTracingValidationFeaturesNV validationFeatures =
+    {.sType=VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_VALIDATION_FEATURES_NV,.rayTracingValidation = true};
+  m_requested_extensions.push_back(
+      {.m_name = VK_NV_RAY_TRACING_VALIDATION_EXTENSION_NAME,
+        .m_optional = false,
+        .m_feature_struct = &validationFeatures});
+
 }
 
 void device::create_logical_device() {

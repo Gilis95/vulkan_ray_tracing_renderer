@@ -17,6 +17,7 @@ namespace wunder {
 class scene_asset;
 
 namespace vulkan {
+class top_level_acceleration_structure_build_info;
 class descriptor_set_manager;
 class vulkan_mesh_scene_node;
 class top_level_acceleration_structure;
@@ -52,6 +53,7 @@ class scene : public non_copyable {
 
   std::vector<vulkan_mesh_scene_node> m_mesh_nodes;
   unique_ptr<top_level_acceleration_structure> m_acceleration_structure;
+  std::vector<top_level_acceleration_structure_build_info> m_acceleration_structure_build_info;
 
   std::uint64_t m_lights_count;
 };

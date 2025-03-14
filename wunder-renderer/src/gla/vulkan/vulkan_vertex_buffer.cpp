@@ -8,10 +8,13 @@
 #include "resources/shaders/host_device.h"
 
 namespace wunder::vulkan {
-unique_ptr<storage_buffer> vertex_buffer::create(const mesh_asset& asset) {
-  std::vector<VertexAttributes> vertecies{};
+unique_ptr<storage_buffer> vertex_buffer::create(VkCommandBuffer command_buffer,
+                                                 const mesh_asset& asset)
+
+{
+  std::vector<VertexAttributes> vertices{};
   for (auto& vertex : asset.m_verticies) {
-    VertexAttributes device_vertex{};
+    VertexAttributes& device_vertex = vertices.emplace_back();
     device_vertex.position = vertex.m_position;
     device_vertex.normal = compress_unit_vec(vertex.m_normal);
     device_vertex.tangent =
@@ -31,13 +34,11 @@ unique_ptr<storage_buffer> vertex_buffer::create(const mesh_asset& asset) {
       value &= ~1;  // clear bit, H == -1
     }
     device_vertex.texcoord.y = uintBitsToFloat(value);
-
-    vertecies.push_back(std::move(device_vertex));
   }
 
   return std::make_unique<storage_device_buffer>(
-      descriptor_build_data{.m_enabled = false},
-      vertecies.data(), vertecies.size() * sizeof(VertexAttributes),
+      command_buffer, descriptor_build_data{.m_enabled = false},
+      vertices.data(), vertices.size() * sizeof(VertexAttributes),
       VK_BUFFER_USAGE_STORAGE_BUFFER_BIT |
           VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT |
           VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR);

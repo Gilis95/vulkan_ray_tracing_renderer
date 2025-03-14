@@ -10,7 +10,7 @@
 
 namespace wunder::vulkan {
 top_level_acceleration_structure::top_level_acceleration_structure()
-    : acceleration_structure(){};
+    = default;
 
 void top_level_acceleration_structure::create(
     const top_level_acceleration_structure_build_info& build_info) {

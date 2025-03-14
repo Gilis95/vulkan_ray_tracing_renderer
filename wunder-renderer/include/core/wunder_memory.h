@@ -44,6 +44,11 @@ using optional_const_ref = std::optional<std::reference_wrapper<const T>>;
 template <typename T>
 using optional_ref = std::optional<std::reference_wrapper<T>>;
 
+template <typename integral>
+constexpr integral align_up(integral x, size_t a) noexcept {
+  return integral((x + (integral(a) - 1)) & ~integral(a - 1));
+}
+
 }  // namespace wunder
 
 #endif

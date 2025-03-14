@@ -33,8 +33,9 @@ command_pool::command_pool() {
 }
 
 command_pool::~command_pool() {
-  auto& logical_device =
-      layer_abstraction_factory::instance().get_vulkan_context().mutable_device();
+  auto& logical_device = layer_abstraction_factory::instance()
+                             .get_vulkan_context()
+                             .mutable_device();
 
   auto vulkanDevice = logical_device.get_vulkan_logical_device();
 
@@ -57,8 +58,9 @@ VkCommandBuffer command_pool::get_current_compute_command_buffer() {
 }
 
 void command_pool::flush_graphics_command_buffer() {
-  auto& logical_device =
-      layer_abstraction_factory::instance().get_vulkan_context().mutable_device();
+  auto& logical_device = layer_abstraction_factory::instance()
+                             .get_vulkan_context()
+                             .mutable_device();
 
   flush_command_buffer(m_current_graphics_command_buffer,
                        m_graphics_command_pool,
@@ -66,8 +68,9 @@ void command_pool::flush_graphics_command_buffer() {
 }
 
 void command_pool::flush_compute_command_buffer() {
-  auto& logical_device =
-      layer_abstraction_factory::instance().get_vulkan_context().mutable_device();
+  auto& logical_device = layer_abstraction_factory::instance()
+                             .get_vulkan_context()
+                             .mutable_device();
 
   flush_command_buffer(m_current_compute_command_buffer, m_compute_command_pool,
                        logical_device.get_compute_queue());
@@ -76,13 +79,11 @@ void command_pool::flush_compute_command_buffer() {
 void command_pool::flush_command_buffer(VkCommandBuffer& command_buffer,
                                         VkCommandPool source_pool,
                                         VkQueue queue) {
-  auto& logical_device =
-      layer_abstraction_factory::instance().get_vulkan_context().mutable_device();
+  auto& logical_device = layer_abstraction_factory::instance()
+                             .get_vulkan_context()
+                             .mutable_device();
 
   auto vulkan_logical_device = logical_device.get_vulkan_logical_device();
-
-  const uint64_t DEFAULT_FENCE_TIMEOUT =
-      std::numeric_limits<std::uint64_t>::max();
 
   AssertReturnIf(command_buffer == VK_NULL_HANDLE);
   AssertReturnIf(vkEndCommandBuffer(command_buffer) != VkResult::VK_SUCCESS);
@@ -92,25 +93,14 @@ void command_pool::flush_command_buffer(VkCommandBuffer& command_buffer,
   submit_info.commandBufferCount = 1;
   submit_info.pCommandBuffers = &command_buffer;
 
-  // Create fence to ensure that the command buffer has finished executing
-  VkFenceCreateInfo fenceCreateInfo = {};
-  fenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-  fenceCreateInfo.flags = 0;
-  VkFence fence;
-  AssertReturnIf(vkCreateFence(vulkan_logical_device, &fenceCreateInfo, nullptr,
-                               &fence) != VkResult::VK_SUCCESS);
-
   {
     // Submit to the queue
-    AssertReturnIf(vkQueueSubmit(queue, 1, &submit_info, fence) !=
-                   VkResult::VK_SUCCESS);
+    VK_CHECK_RESULT(vkQueueSubmit(queue, 1, &submit_info, VK_NULL_HANDLE));
   }
-  // Wait for the fence to signal that command buffer has finished executing
-  AssertReturnIf(vkWaitForFences(vulkan_logical_device, 1, &fence, VK_TRUE,
-                                 DEFAULT_FENCE_TIMEOUT) !=
-                 VkResult::VK_SUCCESS);
 
-  vkDestroyFence(vulkan_logical_device, fence, nullptr);
+  // Wait for the fence to signal that command buffer has finished executing
+  VK_CHECK_RESULT(vkQueueWaitIdle(queue));
+
   vkFreeCommandBuffers(vulkan_logical_device, source_pool, 1, &command_buffer);
 
   command_buffer = VK_NULL_HANDLE;
@@ -129,8 +119,9 @@ VkCommandBuffer command_pool::allocate_command_buffer(
     bool begin, VkCommandPool& out_pool, VkCommandBuffer& out_buffer) {
   AssertReturnUnless(out_buffer == VK_NULL_HANDLE, out_buffer);
 
-  auto& logical_device =
-      layer_abstraction_factory::instance().get_vulkan_context().mutable_device();
+  auto& logical_device = layer_abstraction_factory::instance()
+                             .get_vulkan_context()
+                             .mutable_device();
 
   auto vulkan_logical_device = logical_device.get_vulkan_logical_device();
 

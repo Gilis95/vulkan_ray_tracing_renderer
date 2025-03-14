@@ -14,8 +14,12 @@
 #include "gla/vulkan/ray-trace/vulkan_top_level_acceleration_structure_build_info.h"
 #include "gla/vulkan/scene/vulkan_mesh.h"
 #include "gla/vulkan/scene/vulkan_mesh_scene_node.h"
+#include "gla/vulkan/vulkan_command_pool.h"
+#include "gla/vulkan/vulkan_context.h"
+#include "gla/vulkan/vulkan_device.h"
 #include "gla/vulkan/vulkan_device_buffer.h"
 #include "gla/vulkan/vulkan_index_buffer.h"
+#include "gla/vulkan/vulkan_layer_abstraction_factory.h"
 #include "gla/vulkan/vulkan_vertex_buffer.h"
 
 namespace wunder::vulkan {
@@ -91,10 +95,19 @@ void meshes_helper::create_index_and_vertex_buffer(
     const assets<material_asset>& materials,
     vector_map<asset_handle, shared_ptr<vulkan_mesh>>& out_mesh_instances) {
   std::uint32_t i = 0;
-  for (const auto& [mesh_id, mesh_asset] : mesh_entities) {
+  out_mesh_instances.reserve(mesh_entities.size());
+
+  auto& command_pool = layer_abstraction_factory::instance()
+                           .get_vulkan_context()
+                           .mutable_device()
+                           .get_command_pool();
+  auto command_buffer = command_pool.get_current_graphics_command_buffer();
+
+  for (const auto& [mesh_id, mesh_asset_ref] : mesh_entities) {
     auto& [id, _vulkan_mesh] = out_mesh_instances.emplace_back();
 
-    auto material_it = materials.find(mesh_asset.get().m_material_handle);
+    auto mesh_asset = mesh_asset_ref.get();
+    auto material_it = materials.find(mesh_asset.m_material_handle);
     long material_idx = material_it == materials.end()
                             ? 0
                             : std::distance(materials.begin(), material_it);
@@ -102,10 +115,11 @@ void meshes_helper::create_index_and_vertex_buffer(
 
     _vulkan_mesh = make_shared<vulkan_mesh>();
     _vulkan_mesh->m_vertex_buffer =
-        std::move(vertex_buffer::create(mesh_asset));
-    _vulkan_mesh->m_vertices_count = mesh_asset.get().m_verticies.size();
-    _vulkan_mesh->m_index_buffer = std::move(index_buffer::create(mesh_asset));
-    _vulkan_mesh->m_indices_count = mesh_asset.get().m_indecies.size();
+        std::move(vertex_buffer::create(command_buffer, mesh_asset));
+    _vulkan_mesh->m_vertices_count = mesh_asset.m_verticies.size();
+    _vulkan_mesh->m_index_buffer =
+        std::move(index_buffer::create(command_buffer, mesh_asset));
+    _vulkan_mesh->m_indices_count = mesh_asset.m_indecies.size();
     _vulkan_mesh->m_idx = i;
     _vulkan_mesh->m_material_idx = material_idx;
     _vulkan_mesh->m_is_opaque = material.m_alpha_mode == 0 ||
@@ -117,6 +131,8 @@ void meshes_helper::create_index_and_vertex_buffer(
 
     ++i;
   }
+
+  command_pool.flush_graphics_command_buffer();
 }
 
 unique_ptr<storage_buffer> meshes_helper::create_mesh_instances_buffer(

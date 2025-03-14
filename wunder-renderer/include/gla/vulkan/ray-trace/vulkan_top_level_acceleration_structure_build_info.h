@@ -17,7 +17,14 @@ class top_level_acceleration_structure_build_info
     : public acceleration_structure_build_info {
  public:
   top_level_acceleration_structure_build_info(
-      const std::vector<vulkan_mesh_scene_node>& mesh_nodes);
+      VkCommandBuffer command_buffer, const std::vector<vulkan_mesh_scene_node>& mesh_nodes);
+  ~top_level_acceleration_structure_build_info() override;
+
+
+  top_level_acceleration_structure_build_info(
+      top_level_acceleration_structure_build_info&& other) noexcept;
+  top_level_acceleration_structure_build_info& operator=(
+      top_level_acceleration_structure_build_info&& other) noexcept;
 
  public:
   [[nodiscard]] VkAccelerationStructureTypeKHR get_acceleration_structure_type()
@@ -41,6 +48,7 @@ class top_level_acceleration_structure_build_info
       std::uint32_t acceleration_structure_instances_count);
 
  private:
+  VkCommandBuffer m_command_buffer;
   unique_ptr<storage_buffer> m_acceleration_structures_buffers;
 };
 }  // namespace wunder::vulkan

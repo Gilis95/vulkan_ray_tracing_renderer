@@ -47,9 +47,10 @@ void scene::load_scene(scene_asset& asset) {
   auto texture_assets =
       textures_helper::extract_texture_assets(material_assets);
 
-  m_bound_textures = std::move( textures_helper::create_texture_buffers(texture_assets));
-  m_material_buffer =std::move(
-      materials_helper::create_material_buffer(material_assets, texture_assets));
+  m_bound_textures =
+      std::move(textures_helper::create_texture_buffers(texture_assets));
+  m_material_buffer = std::move(materials_helper::create_material_buffer(
+      material_assets, texture_assets));
   m_light_buffer = std::move(
       lights_helper::create_light_buffer(light_entities, m_lights_count));
 
@@ -62,8 +63,9 @@ void scene::load_scene(scene_asset& asset) {
   m_acceleration_structure =
       std::make_unique<top_level_acceleration_structure>();
   top_level_acceleration_structure_builder
-      top_level_acceleration_structure_builder(*m_acceleration_structure,
-                                               m_mesh_nodes);
+  top_level_acceleration_structure_builder(
+      *m_acceleration_structure,
+      m_acceleration_structure_build_info, m_mesh_nodes);
   top_level_acceleration_structure_builder.build();
 
   m_sun_and_sky_properties_buffer =

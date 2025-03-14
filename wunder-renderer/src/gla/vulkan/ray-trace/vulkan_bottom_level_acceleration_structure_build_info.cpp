@@ -43,7 +43,7 @@ bottom_level_acceleration_structure_build_info::
  * TODO:: implement procedural geometries, such as spheres
  */
 void bottom_level_acceleration_structure_build_info::create_geometry_data(
-    std::int32_t vertices_count, const storage_buffer& vertex_buffer,
+    std::uint32_t vertices_count, const storage_buffer& vertex_buffer,
     const storage_buffer& index_buffer) {  // Building part
   VkDeviceAddress vertexAddress = vertex_buffer.get_address();
   VkDeviceAddress indexAddress = index_buffer.get_address();

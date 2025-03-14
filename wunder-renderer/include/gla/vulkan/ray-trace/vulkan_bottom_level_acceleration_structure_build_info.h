@@ -16,7 +16,7 @@ class bottom_level_acceleration_structure_build_info
       const vulkan_mesh& vulkan_mesh);
 
  private:
-  void create_geometry_data(std::int32_t vertices_count,
+  void create_geometry_data(std::uint32_t vertices_count,
                             const storage_buffer& vertex_buffer,
                             const storage_buffer& index_buffer);
 
