@@ -7,16 +7,16 @@ namespace wunder {
 struct mesh_asset;
 
 namespace vulkan {
+struct vulkan_mesh;
 
 class bottom_level_acceleration_structure_build_info
     : public acceleration_structure_build_info {
  public:
   bottom_level_acceleration_structure_build_info(
-      const mesh_asset& mesh, const storage_buffer& vertex_buffer,
-      const storage_buffer& index_buffer);
+      const vulkan_mesh& vulkan_mesh);
 
  private:
-  void create_geometry_data(const mesh_asset& mesh,
+  void create_geometry_data(std::int32_t vertices_count,
                             const storage_buffer& vertex_buffer,
                             const storage_buffer& index_buffer);
 

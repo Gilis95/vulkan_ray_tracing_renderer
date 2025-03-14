@@ -62,12 +62,14 @@ bool top_level_acceleration_structure_build_info::
   VkGeometryInstanceFlagsKHR flags{};
 
   // Always opaque, no need to use anyhit (faster)
-  //  if(mat.alphaMode == 0 || (mat.baseColorFactor.w == 1.0f &&
-  //  mat.baseColorTexture == -1))
-  flags |= VK_GEOMETRY_INSTANCE_FORCE_OPAQUE_BIT_KHR;
+  if(mesh_node.m_mesh->m_is_opaque) {
+    flags |= VK_GEOMETRY_INSTANCE_FORCE_OPAQUE_BIT_KHR;
+  }
+
   // Need to skip the cull flag in traceray_rtx for double sided materials
-  //  if(mat.doubleSided == 1)
-  flags |= VK_GEOMETRY_INSTANCE_TRIANGLE_FACING_CULL_DISABLE_BIT_KHR;
+  if(mesh_node.m_mesh->m_is_double_sided) {
+    flags |= VK_GEOMETRY_INSTANCE_TRIANGLE_FACING_CULL_DISABLE_BIT_KHR;
+  }
 
   out_acceleration_structure_instance.transform =
       to_transform_matrix_khr(mesh_node.m_model_matrix);

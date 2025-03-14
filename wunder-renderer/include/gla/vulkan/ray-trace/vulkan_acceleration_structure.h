@@ -34,11 +34,6 @@ class acceleration_structure
       VkAccelerationStructureTypeKHR acceleration_structure_type,
       VkDeviceSize acceleration_structure_size);
 
-  void build_acceleration_structure(
-      const storage_buffer& scratch_buffer,
-      VkDeviceAddress scratch_buffer_offset,
-      const acceleration_structure_build_info& build_info) const;
-
  protected:
   unique_ptr<storage_buffer> m_acceleration_structure_buffer;
 };

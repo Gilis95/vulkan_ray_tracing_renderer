@@ -73,39 +73,8 @@ void acceleration_structure::create_acceleration_structure(
                                    &m_descriptor);
 }
 
-void acceleration_structure::build_acceleration_structure(
-    const storage_buffer& scratch_buffer, VkDeviceAddress scratch_buffer_offset,
-    const acceleration_structure_build_info& build_info) const {
-  context& vulkan_context =
-      layer_abstraction_factory::instance().get_vulkan_context();
-  auto& device = vulkan_context.mutable_device();
-  auto& command_pool = device.get_command_pool();
-
-  std::vector<VkAccelerationStructureBuildRangeInfoKHR> as_build_offset_info = {
-      build_info.get_vulkan_as_build_offset_info()};
-  VkAccelerationStructureBuildRangeInfoKHR* tmp = as_build_offset_info.data();
-
-  auto vulkan_build_info = build_info.get_build_info();
-  vulkan_build_info.dstAccelerationStructure = this->m_descriptor;
-  vulkan_build_info.scratchData.deviceAddress =
-      scratch_buffer.get_address() + scratch_buffer_offset;
-
-  auto command_buffer = command_pool.get_current_compute_command_buffer();
-  vkCmdBuildAccelerationStructuresKHR(command_buffer, 1, &vulkan_build_info,
-                                      &tmp);
-
-  VkMemoryBarrier barrier{VK_STRUCTURE_TYPE_MEMORY_BARRIER};
-  barrier.srcAccessMask = VK_ACCESS_ACCELERATION_STRUCTURE_WRITE_BIT_KHR;
-  barrier.dstAccessMask = VK_ACCESS_ACCELERATION_STRUCTURE_READ_BIT_KHR;
-  vkCmdPipelineBarrier(command_buffer,
-                       VK_PIPELINE_STAGE_ACCELERATION_STRUCTURE_BUILD_BIT_KHR,
-                       VK_PIPELINE_STAGE_ACCELERATION_STRUCTURE_BUILD_BIT_KHR,
-                       0, 1, &barrier, 0, nullptr, 0, nullptr);
-
-  command_pool.flush_compute_command_buffer();
+void acceleration_structure::add_descriptor_to(descriptor_set_manager& target) {
 }
-
-void acceleration_structure::add_descriptor_to(descriptor_set_manager& target) {}
 
 VkDeviceAddress acceleration_structure::get_address() {
   ReturnIf(vkGetAccelerationStructureDeviceAddressKHR == nullptr, 0);

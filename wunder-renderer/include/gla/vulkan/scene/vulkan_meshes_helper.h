@@ -22,36 +22,27 @@ struct vulkan_mesh;
 
 class meshes_helper {
  public:
-  static vector_map<asset_handle, std::reference_wrapper<const mesh_asset>>
+  [[nodiscard]] vector_map<asset_handle,
+                           std::reference_wrapper<const mesh_asset>>
   extract_mesh_assets(
       std::vector<std::reference_wrapper<scene_node>> meshe_scene_nodes);
 
-  [[nodiscard]] static asset_ids extract_mesh_ids(
-      std::vector<ref<scene_node>>& mesh_entities);
-
-  static void create_mesh_scene_nodes(
+  void create_mesh_scene_nodes(
       assets<mesh_asset>& mesh_entities,
       const assets<material_asset>& materials,
       const std::vector<ref<scene_node>>& mesh_scene_nodes,
       std::vector<vulkan_mesh_scene_node>& out_mesh_nodes);
 
-  static void prepare_blas_build_info(
-      const assets<mesh_asset>& mesh_entities,
-      const assets<material_asset>& materials,
-      vector_map<asset_handle, shared_ptr<vulkan_mesh>>& out_mesh_instances,
-      std::vector<bottom_level_acceleration_structure_build_info>&
-          out_build_infos);
-  static void build_blas(
-      const std::vector<bottom_level_acceleration_structure_build_info>&
-          build_infos,
-      vector_map<asset_handle, shared_ptr<vulkan_mesh>>& mesh_instances);
-
-  static void create_top_level_acceleration_structure(
-      const std::vector<vulkan_mesh_scene_node>& mesh_nodes,
-      top_level_acceleration_structure& out_acceleration_structure);
-
   [[nodiscard]] static unique_ptr<storage_buffer> create_mesh_instances_buffer(
       const std::vector<vulkan_mesh_scene_node>& mesh_nodes);
+ private:
+  [[nodiscard]] asset_ids extract_mesh_ids(
+      std::vector<ref<scene_node>>& mesh_entities);
+
+  void create_index_and_vertex_buffer(
+      const assets<mesh_asset>& mesh_entities,
+      const assets<material_asset>& materials,
+      vector_map<asset_handle, shared_ptr<vulkan_mesh>>& out_mesh_instances);
 
  private:
 };

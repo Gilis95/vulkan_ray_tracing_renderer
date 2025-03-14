@@ -22,9 +22,6 @@ context::~context() {
   if (m_renderer_capabilities.get()) {
     AssertLogUnless(m_renderer_capabilities.release());
   }
-  if (m_resource_allocator.get()) {
-    AssertLogUnless(m_resource_allocator.release());
-  }
   if (m_logical_device.get()) {
     AssertLogUnless(m_logical_device.release());
   }
@@ -34,6 +31,11 @@ context::~context() {
   if (m_vulkan.get()) {
     AssertLogUnless(m_vulkan.release());
   }
+
+  if (m_resource_allocator.get()) {
+    AssertLogUnless(m_resource_allocator.release());
+  }
+
 }
 
 void context::init(const wunder::renderer_properties &properties) {

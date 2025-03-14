@@ -178,6 +178,9 @@ inline double get_system_time() {
          1000.0;
 }
 
+template<class child_class_type, class parent_class_type>
+concept derived = std::is_base_of_v<parent_class_type, child_class_type>;
+
 }  // namespace wunder
 
 #endif

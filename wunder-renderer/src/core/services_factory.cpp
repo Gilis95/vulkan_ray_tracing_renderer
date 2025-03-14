@@ -22,6 +22,12 @@ void service_factory::initialize() {
   m_camera = make_unique<camera>();
 }
 
+void service_factory::shutdown() {
+  m_input_manager.release();
+  m_camera.release();
+}
+
+
 void service_factory::update(time_unit dt){
   m_camera->update(dt);
   m_input_manager->update(dt);

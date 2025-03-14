@@ -5,6 +5,7 @@
 
 #include <cstring>
 
+#include "gla/vulkan/scene/vulkan_mesh.h"
 #include "gla/vulkan/vulkan_buffer.h"
 #include "gla/vulkan/vulkan_context.h"
 #include "gla/vulkan/vulkan_device.h"
@@ -15,10 +16,14 @@
 namespace wunder::vulkan {
 bottom_level_acceleration_structure_build_info::
     bottom_level_acceleration_structure_build_info(
-        const mesh_asset& mesh, const storage_buffer& vertex_buffer,
-        const storage_buffer& index_buffer) {
+        const vulkan_mesh& vulkan_mesh) {
+  AssertReturnUnless(vulkan_mesh.m_vertex_buffer);
+  AssertReturnUnless(vulkan_mesh.m_index_buffer);
+
   clear_geometry_data();
-  create_geometry_data(mesh, vertex_buffer, index_buffer);
+  create_geometry_data(vulkan_mesh.m_vertices_count,
+                       *vulkan_mesh.m_vertex_buffer,
+                       *vulkan_mesh.m_index_buffer);
 
   std::uint32_t build_flags =
       VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR |
@@ -29,7 +34,7 @@ bottom_level_acceleration_structure_build_info::
    * positions. In our scenario positions are the beginning of VertexAttributes
    * structure, so we don't have to set any offset
    */
-  fill_range_info_data(mesh.m_indecies.size() / 3);
+  fill_range_info_data(vulkan_mesh.m_indices_count / 3);
   create_build_info(build_flags);
   calculate_build_size();
 }
@@ -39,7 +44,7 @@ bottom_level_acceleration_structure_build_info::
  * TODO:: implement procedural geometries, such as spheres
  */
 void bottom_level_acceleration_structure_build_info::create_geometry_data(
-    const mesh_asset& mesh, const storage_buffer& vertex_buffer,
+    std::int32_t vertices_count, const storage_buffer& vertex_buffer,
     const storage_buffer& index_buffer) {  // Building part
   VkDeviceAddress vertexAddress = vertex_buffer.get_address();
   VkDeviceAddress indexAddress = index_buffer.get_address();
@@ -61,7 +66,7 @@ void bottom_level_acceleration_structure_build_info::create_geometry_data(
   m_as_geometry.geometry.triangles.vertexStride = sizeof(VertexAttributes);
   m_as_geometry.geometry.triangles.indexType = VK_INDEX_TYPE_UINT32;
   m_as_geometry.geometry.triangles.indexData.deviceAddress = indexAddress;
-  m_as_geometry.geometry.triangles.maxVertex = mesh.m_verticies.size();
+  m_as_geometry.geometry.triangles.maxVertex = vertices_count;
 }
 
 }  // namespace wunder::vulkan

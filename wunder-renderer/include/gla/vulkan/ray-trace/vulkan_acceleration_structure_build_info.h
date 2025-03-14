@@ -19,6 +19,11 @@ class acceleration_structure_build_info : public non_copyable {
   virtual ~acceleration_structure_build_info();
 
  public:
+  [[nodiscard]]  VkAccelerationStructureBuildGeometryInfoKHR&
+    mutable_build_info()  {
+    return m_build_info;
+  }
+
   [[nodiscard]] const VkAccelerationStructureBuildGeometryInfoKHR&
   get_build_info() const {
     return m_build_info;

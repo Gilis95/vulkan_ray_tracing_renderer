@@ -11,6 +11,7 @@
 #include "gla/vulkan/ray-trace/vulkan_rtx_renderer.h"
 #include "gla/vulkan/ray-trace/vulkan_top_level_acceleration_structure.h"
 #include "gla/vulkan/ray-trace/vulkan_top_level_acceleration_structure_build_info.h"
+#include "gla/vulkan/ray-trace/vulkan_top_level_acceleration_structure_builder.h"
 #include "gla/vulkan/scene/vulkan_environment_helper.h"
 #include "gla/vulkan/scene/vulkan_lights_helper.h"
 #include "gla/vulkan/scene/vulkan_materials_helper.h"
@@ -38,9 +39,10 @@ void scene::load_scene(scene_asset& asset) {
   AssertReturnIf(mesh_entities.empty(), );  // nothing to render
 
   auto light_entities =
-        asset.filter_nodes<light_component, transform_component>();
+      asset.filter_nodes<light_component, transform_component>();
 
-  auto mesh_assets = meshes_helper::extract_mesh_assets(mesh_entities);
+  auto _mesh_helper = meshes_helper();
+  auto mesh_assets = _mesh_helper.extract_mesh_assets(mesh_entities);
   auto material_assets = materials_helper::extract_material_assets(mesh_assets);
   auto texture_assets =
       textures_helper::extract_texture_assets(material_assets);
@@ -48,24 +50,26 @@ void scene::load_scene(scene_asset& asset) {
   m_bound_textures = textures_helper::create_texture_buffers(texture_assets);
   m_material_buffer =
       materials_helper::create_material_buffer(material_assets, texture_assets);
-  m_light_buffer = lights_helper::create_light_buffer(light_entities, m_lights_count);
+  m_light_buffer =
+      lights_helper::create_light_buffer(light_entities, m_lights_count);
 
-  meshes_helper::create_mesh_scene_nodes(mesh_assets, material_assets,
-                                         mesh_entities, m_mesh_nodes);
+  _mesh_helper.create_mesh_scene_nodes(mesh_assets, material_assets,
+                                       mesh_entities, m_mesh_nodes);
   AssertReturnIf(m_mesh_nodes.empty());
   m_mesh_instance_data_buffer =
-      meshes_helper::create_mesh_instances_buffer(m_mesh_nodes);
+      _mesh_helper.create_mesh_instances_buffer(m_mesh_nodes);
 
   m_acceleration_structure =
       std::make_unique<top_level_acceleration_structure>();
-  meshes_helper::create_top_level_acceleration_structure(
-      m_mesh_nodes, *m_acceleration_structure);
-  //  auto& main_camera = camera_entities[0];  // TODO:: handle multiple cameras
+  top_level_acceleration_structure_builder
+      top_level_acceleration_structure_builder(*m_acceleration_structure,
+                                               m_mesh_nodes);
+  top_level_acceleration_structure_builder.build();
 
   m_sun_and_sky_properties_buffer =
       vulkan_environment_helper::create_sky_and_sun_properties();
-  m_environment_textures = std::move(
-      vulkan_environment_helper::create_environment_texture());
+  m_environment_textures =
+      std::move(vulkan_environment_helper::create_environment_texture());
 }
 
 void scene::collect_descriptors(descriptor_set_manager& target) {

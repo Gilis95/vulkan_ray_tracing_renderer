@@ -18,11 +18,13 @@ class service_factory final {
   static service_factory& instance();
 
   void initialize();
+  void shutdown();
  public:
   void update(time_unit dt);
  public:
   camera& get_camera();
   input_manager& get_input_manager();
+
 
  private:
   unique_ptr<camera> m_camera;

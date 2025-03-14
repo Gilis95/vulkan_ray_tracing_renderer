@@ -12,17 +12,17 @@ class top_level_acceleration_structure_build_info;
 class rtx_renderer;
 
 class top_level_acceleration_structure : public acceleration_structure {
+ private:
+  friend class top_level_acceleration_structure_builder;
+
  public:
   top_level_acceleration_structure();
 
  public:
   void add_descriptor_to(descriptor_set_manager& renderer) override;
 
-  void build(
-      storage_buffer& scratch_buffer,
-      const top_level_acceleration_structure_build_info& build_info);
  private:
-  void wait_until_instances_buffer_is_available() const;
+  void create(const top_level_acceleration_structure_build_info& build_info);
 };
 }  // namespace wunder::vulkan
 

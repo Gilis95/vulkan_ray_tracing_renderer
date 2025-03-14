@@ -25,8 +25,9 @@ application::application(application_properties &&properties)
 /////////////////////////////////////////////////////////////////////////////////////////
 application::~application() {
   project::instance().shutdown();
-  vulkan::layer_abstraction_factory::instance().shutdown();
+  service_factory::instance().shutdown();
   window_factory::instance().shutdown();
+  vulkan::layer_abstraction_factory::instance().shutdown();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
