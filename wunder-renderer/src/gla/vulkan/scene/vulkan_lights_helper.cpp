@@ -25,11 +25,11 @@ unique_ptr<storage_buffer> lights_helper::create_light_buffer(
 
   out_lights_count = host_lights.size();
 
-  return std::make_unique<storage_device_buffer>(
+  return std::move( std::make_unique<storage_device_buffer>(
       descriptor_build_data{.m_enabled = true, .m_descriptor_name = "_Lights"},
       host_lights.data(),
       host_lights.size() * sizeof(host_light_array ::value_type),
-      VK_BUFFER_USAGE_STORAGE_BUFFER_BIT);
+      VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
 }
 
 assets<light_asset> lights_helper::extract_scene_light_data(

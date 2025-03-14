@@ -181,7 +181,6 @@ void rtx_renderer::on_event(
 
   m_shader_binding_table = shader_binding_table::create(*m_rtx_pipeline);
 
-
   m_rasterize_renderer->initialize();
   m_state->frame = 0;
   m_state->fireflyClampThreshold =

@@ -47,11 +47,11 @@ void scene::load_scene(scene_asset& asset) {
   auto texture_assets =
       textures_helper::extract_texture_assets(material_assets);
 
-  m_bound_textures = textures_helper::create_texture_buffers(texture_assets);
-  m_material_buffer =
-      materials_helper::create_material_buffer(material_assets, texture_assets);
-  m_light_buffer =
-      lights_helper::create_light_buffer(light_entities, m_lights_count);
+  m_bound_textures = std::move( textures_helper::create_texture_buffers(texture_assets));
+  m_material_buffer =std::move(
+      materials_helper::create_material_buffer(material_assets, texture_assets));
+  m_light_buffer = std::move(
+      lights_helper::create_light_buffer(light_entities, m_lights_count));
 
   _mesh_helper.create_mesh_scene_nodes(mesh_assets, material_assets,
                                        mesh_entities, m_mesh_nodes);

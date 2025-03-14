@@ -26,8 +26,7 @@ bottom_level_acceleration_structure_build_info::
                        *vulkan_mesh.m_index_buffer);
 
   std::uint32_t build_flags =
-      VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR |
-      VK_BUILD_ACCELERATION_STRUCTURE_ALLOW_COMPACTION_BIT_KHR;
+      VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR;
 
   /**
    * Offset data, this will indicate to the GPU where it could find vertex

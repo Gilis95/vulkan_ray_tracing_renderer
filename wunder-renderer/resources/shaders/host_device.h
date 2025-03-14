@@ -142,40 +142,42 @@ struct GltfShadeMaterial {
   int pbrMetallicRoughnessTexture;  // 32 byte
   // 8
   int emissiveTexture;  // 36 byte
-  int _pad0;            // 40 byte
   // 10
-  vec3 emissiveFactor;  // 52 byte
-  int alphaMode;        // 56 byte
+  vec3 emissiveFactor;  // 48 byte
+  int alphaMode;        // 52 byte
   // 14
-  float alphaCutoff;         // 60 byte
-  int doubleSided;           // 64 byte
-  int normalTexture;         // 68 byte
-  float normalTextureScale;  // 72 byte
+  float alphaCutoff;         // 54 byte
+  int doubleSided;           // 60 byte
+  int normalTexture;         // 64 byte
+  float normalTextureScale;  // 68 byte
   // 18
-  mat4 uvTransform;  // 136 byte
+  mat4 uvTransform;  // 132 byte
   // 22
-  int unlit;  // 140 byte
+  int unlit;  // 136byte
 
-  float transmissionFactor;  // 144 byte
-  int transmissionTexture;   // 148 byte
+  float transmissionFactor;  // 140 byte
+  int transmissionTexture;   // 144 byte
 
-  float ior;  // 152 byte
+  float ior;  // 148 byte
   // 26
-  vec3 anisotropyDirection;  // 164 byte
-  float anisotropy;          // 168 byte
+  vec3 anisotropyDirection;  // 160 byte
+  float anisotropy;          // 164 byte
   // 30
-  vec3 attenuationColor;      // 180 byte
-  float thicknessFactor;      // 184 byte
-  int thicknessTexture;       // 188 byte
-  float attenuationDistance;  // 192 byte
+  vec3 attenuationColor;      // 176 byte
+  float thicknessFactor;      // 180 byte
+  int thicknessTexture;       // 184 byte
+  float attenuationDistance;  // 188 byte
   // --
-  float clearcoatFactor;     // 196 byte
-  float clearcoatRoughness;  // 200 byte
+  float clearcoatFactor;     // 192 byte
+  float clearcoatRoughness;  // 196 byte
   // 38
-  int clearcoatTexture;           // 204 byte
-  int clearcoatRoughnessTexture;  // 208 byte
-  uint sheen;                     // 212 byte
-  int _pad1;                      // 216 byte
+  int clearcoatTexture;           // 200 byte
+  int clearcoatRoughnessTexture;  // 204 byte
+  uint sheen;                     // 208 byte
+
+  vec4 _pad1;                     // 224 byte
+  vec4 _pad2;                     // 240 byte
+  vec4 _pad3;                     // 256 byte
   // 42
 
 #ifdef __cplusplus  // Descriptor binding helper for C++ and GLSL

@@ -43,7 +43,7 @@ class shader_binding_table {
 
  private:
   std::array<std::vector<std::uint32_t>, 4>
-      m_shader_handles_indeces{};  // Offset index in pipeline. It consists of
+      m_shader_handles_indices{};  // Offset index in pipeline. It consists of
                                    // raygen, miss, hit and callable. The amount
                                    // of shaders won't change
   std::array<std::uint32_t, 4>

@@ -54,15 +54,18 @@ void shader_binding_table::initialize(const rtx_pipeline& pipeline) {
 
 VkStridedDeviceAddressRegionKHR shader_binding_table::get_stage_address(
     shader_stage_type type) const {
+  auto& shader_group = m_shader_group_buffers[type];
+  auto stride = m_shader_stage_stride[type];
+  auto indices = m_shader_handles_indices[type];
   return VkStridedDeviceAddressRegionKHR{
-      .deviceAddress = m_shader_group_buffers[type]->get_address(),
-      .stride = 0,
-      .size = 0};
+      .deviceAddress = shader_group->get_address(),
+      .stride = stride,
+      .size = indices.size() * stride,};
 }
 
 void shader_binding_table::initialize_shader_indices(
     const rtx_pipeline& pipeline) {
-  for (auto& i : m_shader_handles_indeces) i = {};
+  for (auto& i : m_shader_handles_indices) i = {};
 
   const auto& info = pipeline.get_pipeline_create_info();
 
@@ -78,21 +81,21 @@ void shader_binding_table::initialize_shader_indices(
 
       if (vk_pipeline_shader_stage_create_info.stage &
           VK_SHADER_STAGE_RAYGEN_BIT_KHR) {
-        m_shader_handles_indeces[shader_stage_type::raygen].push_back(i);
+        m_shader_handles_indices[shader_stage_type::raygen].push_back(i);
         continue;
       }
       if (vk_pipeline_shader_stage_create_info.stage &
           VK_SHADER_STAGE_MISS_BIT_KHR) {
-        m_shader_handles_indeces[shader_stage_type::miss].push_back(i);
+        m_shader_handles_indices[shader_stage_type::miss].push_back(i);
         continue;
       }
       if (vk_pipeline_shader_stage_create_info.stage &
           VK_SHADER_STAGE_CALLABLE_BIT_KHR) {
-        m_shader_handles_indeces[shader_stage_type::callable].push_back(i);
+        m_shader_handles_indices[shader_stage_type::callable].push_back(i);
         continue;
       }
     } else {
-      m_shader_handles_indeces[shader_stage_type::hit].push_back(i);
+      m_shader_handles_indices[shader_stage_type::hit].push_back(i);
     }
   }
 }
@@ -136,13 +139,13 @@ shader_binding_table::create_shader_stages_handles(
   // Buffer holding the staging information
   std::array<std::vector<uint8_t>, 4> shader_stages_handles;
   shader_stages_handles[raygen] = std::vector<uint8_t>(
-      m_shader_stage_stride[raygen] * m_shader_handles_indeces[raygen].size());
+      m_shader_stage_stride[raygen] * m_shader_handles_indices[raygen].size());
   shader_stages_handles[miss] = std::vector<uint8_t>(
-      m_shader_stage_stride[miss] * m_shader_handles_indeces[miss].size());
+      m_shader_stage_stride[miss] * m_shader_handles_indices[miss].size());
   shader_stages_handles[hit] = std::vector<uint8_t>(
-      m_shader_stage_stride[hit] * m_shader_handles_indeces[hit].size());
+      m_shader_stage_stride[hit] * m_shader_handles_indices[hit].size());
   shader_stages_handles[callable] = std::vector<uint8_t>(
-      m_shader_stage_stride[hit] * m_shader_handles_indeces[hit].size());
+      m_shader_stage_stride[hit] * m_shader_handles_indices[hit].size());
 
   // Write the handles in the SBT buffer + data info (if any)
   auto copy_handles = [&](std::vector<uint8_t>& buffer,
@@ -162,14 +165,14 @@ shader_binding_table::create_shader_stages_handles(
   };
 
   // Copy the handles/data to each staging buffer
-  copy_handles(shader_stages_handles[raygen], m_shader_handles_indeces[raygen],
+  copy_handles(shader_stages_handles[raygen], m_shader_handles_indices[raygen],
                m_shader_stage_stride[raygen]);
-  copy_handles(shader_stages_handles[miss], m_shader_handles_indeces[miss],
+  copy_handles(shader_stages_handles[miss], m_shader_handles_indices[miss],
                m_shader_stage_stride[miss]);
-  copy_handles(shader_stages_handles[hit], m_shader_handles_indeces[hit],
+  copy_handles(shader_stages_handles[hit], m_shader_handles_indices[hit],
                m_shader_stage_stride[hit]);
   copy_handles(shader_stages_handles[callable],
-               m_shader_handles_indeces[callable],
+               m_shader_handles_indices[callable],
                m_shader_stage_stride[callable]);
   return shader_stages_handles;
 }

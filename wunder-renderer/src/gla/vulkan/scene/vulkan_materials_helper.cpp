@@ -92,13 +92,13 @@ unique_ptr<storage_buffer> materials_helper::create_material_buffer(
     create_shader_material(material_ref.get(), shader_materials.emplace_back());
   }
 
-  return std::make_unique<storage_device_buffer>(
+  return std::move(std::make_unique<storage_device_buffer>(
       descriptor_build_data{.m_enabled = true,
                             .m_descriptor_name = "_MaterialBuffer"},
       shader_materials.data(),
       shader_materials.size() * sizeof(GltfShadeMaterial),
       VK_BUFFER_USAGE_STORAGE_BUFFER_BIT |
-          VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT);
+          VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT));
 }
 
 const material_asset& materials_helper::get_default_material() {

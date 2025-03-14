@@ -34,10 +34,10 @@ assets<texture_asset> textures_helper::extract_texture_assets(
   return result;
 }
 
-std::vector<unique_ptr<wunder::vulkan::sampled_texture>>
+std::vector<unique_ptr<sampled_texture>>
 textures_helper::create_texture_buffers(
     const assets<texture_asset>& texture_assets) {
-  std::vector<unique_ptr<wunder::vulkan::sampled_texture>> result;
+  std::vector<unique_ptr<sampled_texture>> result;
 
   for (auto& [_, asset] : texture_assets) {
     auto& texture = result.emplace_back();
@@ -45,6 +45,6 @@ textures_helper::create_texture_buffers(
         {.m_enabled = true, .m_descriptor_name = "texturesMap"}, asset.get()));
   }
 
-  return result;
+  return std::move(result);
 }
 }  // namespace wunder::vulkan
