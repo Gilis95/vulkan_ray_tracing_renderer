@@ -75,6 +75,7 @@ class texture : public base_texture {
  private:
   std::shared_ptr<vulkan_image_info> m_image_info;
   VkDeviceSize m_gpu_allocation_size = 0;
+  int32_t m_mip_levels = 0;
   descriptor_build_data m_descriptor_build_data;
 };
 

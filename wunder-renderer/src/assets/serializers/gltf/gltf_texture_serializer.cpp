@@ -16,10 +16,10 @@ std::unordered_map<int, texture_filter_type> s_gltf_filter_type_to_internal{
 };
 std::unordered_map<int, mipmap_mode_type> s_gltf_mipmap_type_to_internal{
     {9728, mipmap_mode_type::NEAREST},  // NEAREST
-    {9729, mipmap_mode_type::NEAREST},  // LINEAR
+    {9729, mipmap_mode_type::LINEAR},  // LINEAR
     {9984, mipmap_mode_type::NEAREST},  // NEAREST_MIPMAP_NEAREST
-    {9985, mipmap_mode_type::NEAREST},  // LINEAR_MIPMAP_NEAREST
-    {9986, mipmap_mode_type::LINEAR},   // NEAREST_MIPMAP_LINEAR
+    {9985, mipmap_mode_type::LINEAR},  // LINEAR_MIPMAP_NEAREST
+    {9986, mipmap_mode_type::NEAREST},   // NEAREST_MIPMAP_LINEAR
     {9987, mipmap_mode_type::LINEAR},   // LINEAR_MIPMAP_LINEAR
 };
 
@@ -49,7 +49,7 @@ std::optional<texture_asset> gltf_texture_serializer::process_texture(
     texture.m_sampler = texture_sampler{
         .m_mag_filter = s_gltf_filter_type_to_internal[gltf_sampler.magFilter],
         .m_min_filter = s_gltf_filter_type_to_internal[gltf_sampler.minFilter],
-        .m_mipmap_mode = s_gltf_mipmap_type_to_internal[gltf_sampler.minFilter],
+        .m_mipmap_mode = s_gltf_mipmap_type_to_internal[gltf_sampler.magFilter],
         .m_address_mode_u = s_gltf_address_mode_to_internal[gltf_sampler.wrapS],
         .m_address_mode_v =
             s_gltf_address_mode_to_internal[gltf_sampler.wrapT]};

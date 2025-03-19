@@ -25,6 +25,7 @@ class top_level_acceleration_structure_builder final
   void wait_until_instances_buffer_is_available() const;
 
   void flush_commands();
+  void free_staging_data();
  protected:
   const std::vector<top_level_acceleration_structure_build_info>&
   get_build_infos() const override {

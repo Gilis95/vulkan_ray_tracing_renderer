@@ -128,11 +128,22 @@ void meshes_helper::create_index_and_vertex_buffer(
     _vulkan_mesh->m_is_double_sided = material.m_double_sided;
 
     id = mesh_id;
-
     ++i;
   }
 
   command_pool.flush_graphics_command_buffer();
+
+  //free staging data
+  for (auto& [_, mesh] : out_mesh_instances) {
+    AssertContinueUnless(mesh);
+
+    if (mesh->m_vertex_buffer) {
+      mesh->m_vertex_buffer->free_staging_data();
+    }
+    if (mesh->m_index_buffer) {
+      mesh->m_index_buffer->free_staging_data();
+    }
+  }
 }
 
 unique_ptr<storage_buffer> meshes_helper::create_mesh_instances_buffer(

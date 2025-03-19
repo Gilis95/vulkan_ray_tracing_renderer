@@ -23,6 +23,7 @@ class buffer : public non_copyable, public base_buffer_type {
 
  public:
   virtual void update_data(void* data, size_t data_size);
+  virtual void free_staging_data();
 
  public:
   void add_descriptor_to(descriptor_set_manager& renderer) override;

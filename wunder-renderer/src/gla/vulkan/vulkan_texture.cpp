@@ -86,6 +86,11 @@ VkAccessFlags access_flags_for_image_layout(VkImageLayout layout) {
   return access_flags_it->second;
 }
 
+inline uint32_t mip_levels(VkExtent2D extent)
+{
+  return static_cast<uint32_t>(std::floor(std::log2(std::max(extent.width, extent.height)))) + 1;
+}
+
 }  // namespace
 
 namespace wunder::vulkan {
@@ -106,6 +111,7 @@ texture<base_texture>::texture(descriptor_build_data build_data,
       m_image_info(std::make_shared<vulkan_image_info>()) {
   std::string name = generate_next_texture_name();
   VkImageLayout target_layout = VK_IMAGE_LAYOUT_GENERAL;
+  m_mip_levels = mip_levels({width, height});
 
   allocate_image(name, image_format, width, height);
   create_image_view(name, image_format);
@@ -121,6 +127,7 @@ texture<base_texture>::texture(descriptor_build_data build_data,
     : m_descriptor_build_data(std::move(build_data)),
       m_image_info(std::make_shared<vulkan_image_info>()) {
   std::string name = generate_next_texture_name();
+  m_mip_levels = mip_levels({asset.m_width, asset.m_height});
 
   VkFormat image_format = asset.m_texture_data.get_image_format();
   VkImageLayout target_layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
@@ -168,20 +175,18 @@ void texture<base_texture>::try_create_sampler(const texture_asset& asset,
   auto& device = vulkan_context.mutable_device();
   auto vulkan_logical_device = device.get_vulkan_logical_device();
 
-
   VkSamplerCreateInfo sampler_create_info = {};
   sampler_create_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
   sampler_create_info.maxAnisotropy = 0.0f;
   if (!fill_sampler_create_info_from(asset, sampler_create_info)) {
-    sampler_create_info.minFilter  = VK_FILTER_LINEAR;
-    sampler_create_info.magFilter  = VK_FILTER_LINEAR;
+    sampler_create_info.minFilter = VK_FILTER_LINEAR;
+    sampler_create_info.magFilter = VK_FILTER_LINEAR;
+    sampler_create_info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
   }
-
-  sampler_create_info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
 
   sampler_create_info.mipLodBias = 0.0f;
   sampler_create_info.minLod = 0.0f;
-  sampler_create_info.maxLod = 0.0f;
+  sampler_create_info.maxLod = std::numeric_limits<float>::max();
   sampler_create_info.unnormalizedCoordinates = VK_FALSE;
 
   VK_CHECK_RESULT(vkCreateSampler(vulkan_logical_device, &sampler_create_info,
@@ -208,6 +213,7 @@ bool texture<base_texture>::fill_sampler_create_info_from(
 
   out_sampler_create_info.magFilter = s_filters[model_sampler.m_mag_filter];
   out_sampler_create_info.minFilter = s_filters[model_sampler.m_min_filter];
+  out_sampler_create_info.mipmapMode = s_mip_map[model_sampler.m_mipmap_mode];
 
   out_sampler_create_info.borderColor =
       s_border_colour_map[model_sampler.m_border_colour];
@@ -270,7 +276,7 @@ void texture<base_texture>::allocate_image(const std::string& name,
   image_create_info.extent.width = width;
   image_create_info.extent.height = height;
   image_create_info.extent.depth = 1;
-  image_create_info.mipLevels = 1;
+  image_create_info.mipLevels = m_mip_levels;
   image_create_info.arrayLayers = 1;
   image_create_info.samples = VK_SAMPLE_COUNT_1_BIT;
   image_create_info.tiling = VK_IMAGE_TILING_OPTIMAL;
@@ -342,7 +348,7 @@ void texture<base_texture>::bind_texture_data(const texture_asset& asset,
   buffer_copy_region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
   buffer_copy_region.imageSubresource.mipLevel = 0;
   buffer_copy_region.imageSubresource.baseArrayLayer = 0;
-  buffer_copy_region.imageSubresource.layerCount = 1;
+  buffer_copy_region.imageSubresource.layerCount = m_mip_levels;
   buffer_copy_region.imageExtent.width = asset.m_width;
   buffer_copy_region.imageExtent.height = asset.m_height;
   buffer_copy_region.imageExtent.depth = 1;
@@ -377,7 +383,7 @@ void texture<base_texture>::transit_image_layout(
   subresource_range.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
   // Start at first mip level
   subresource_range.baseMipLevel = 0;
-  subresource_range.levelCount = 1;
+  subresource_range.levelCount = m_mip_levels;
   subresource_range.layerCount = 1;
 
   // Transition the texture image layout to transfer target, so we can safely

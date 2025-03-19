@@ -3,6 +3,7 @@
 #include <glad/vulkan.h>
 
 #include <cstdint>
+#include <vector>
 
 #include "core/non_copyable.h"
 namespace wunder::vulkan {
@@ -29,7 +30,7 @@ class acceleration_structure_build_info : public non_copyable {
     return m_build_info;
   }
 
-  [[nodiscard]] const VkAccelerationStructureBuildRangeInfoKHR&
+  [[nodiscard]] const std::vector<VkAccelerationStructureBuildRangeInfoKHR>&
   get_vulkan_as_build_offset_info() const {
     return m_as_build_offset_info;
   }
@@ -54,7 +55,7 @@ class acceleration_structure_build_info : public non_copyable {
 
  protected:
   VkAccelerationStructureGeometryKHR m_as_geometry{};
-  VkAccelerationStructureBuildRangeInfoKHR m_as_build_offset_info{};
+  std::vector<VkAccelerationStructureBuildRangeInfoKHR> m_as_build_offset_info;
   VkAccelerationStructureBuildGeometryInfoKHR m_build_info{};
   VkAccelerationStructureBuildSizesInfoKHR m_build_sizes_info{};
 };

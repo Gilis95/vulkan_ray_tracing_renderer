@@ -32,29 +32,33 @@ void acceleration_structure_builder<build_info_type>::create_scratch_buffer(
 }
 
 template <derived<acceleration_structure_build_info> build_info_type>
-void acceleration_structure_builder<
-    build_info_type>::build_acceleration_structure() {
+void acceleration_structure_builder<build_info_type>::
+    build_acceleration_structure(
+        std::vector<const VkAccelerationStructureBuildRangeInfoKHR*>&
+            as_build_offset_info,
+        std::vector<VkAccelerationStructureBuildGeometryInfoKHR>&
+            as_build_geometry_info) {
   auto& build_infos = get_build_infos();
 
-  std::vector<VkAccelerationStructureBuildRangeInfoKHR> as_build_offset_info;
+  ;
+  as_build_offset_info.reserve(build_infos.size());
   std::transform(build_infos.begin(), build_infos.end(),
                  std::back_insert_iterator(as_build_offset_info),
                  [](const acceleration_structure_build_info& build_info) {
-                   return build_info.get_vulkan_as_build_offset_info();
+                   return build_info.get_vulkan_as_build_offset_info().data();
                  });
 
-  const VkAccelerationStructureBuildRangeInfoKHR* tmp = as_build_offset_info.data();
-
-  std::vector<VkAccelerationStructureBuildGeometryInfoKHR>
-      as_build_geometry_info;
+  ;
+  as_build_geometry_info.reserve(build_infos.size());
   std::transform(build_infos.begin(), build_infos.end(),
                  std::back_insert_iterator(as_build_geometry_info),
                  [](const acceleration_structure_build_info& build_info) {
                    return build_info.get_build_info();
                  });
 
-  vkCmdBuildAccelerationStructuresKHR(m_command_buffer, 1,
-                                      as_build_geometry_info.data(), &tmp);
+  vkCmdBuildAccelerationStructuresKHR(
+      m_command_buffer, static_cast<uint32_t>(as_build_geometry_info.size()),
+      as_build_geometry_info.data(), as_build_offset_info.data());
 
   VkMemoryBarrier barrier{VK_STRUCTURE_TYPE_MEMORY_BARRIER};
   barrier.srcAccessMask = VK_ACCESS_ACCELERATION_STRUCTURE_WRITE_BIT_KHR;

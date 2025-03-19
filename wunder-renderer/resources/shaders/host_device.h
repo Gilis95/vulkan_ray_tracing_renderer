@@ -118,11 +118,11 @@ struct SceneCamera {
 };
 
 struct VertexAttributes {
-  vec3 position;
-  uint normal;    // compressed using oct
-  vec2 texcoord;  // Tangent handiness, stored in LSB of .y
-  uint tangent;   // compressed using oct
-  uint color;     // RGBA
+  vec3 position;  // 12
+  uint normal;    // 16 compressed using oct
+  vec2 texcoord;  // 24 Tangent handiness, stored in LSB of .y
+  uint tangent;   // 28 compressed using oct
+  uint color;     // 32 RGBA
 };
 
 // GLTF material
@@ -241,6 +241,7 @@ struct InstanceData {
   uint64_t vertexAddress;
   uint64_t indexAddress;
   int materialIndex;
+  vec3 _pad;
 };
 
 // KHR_lights_punctual extension.

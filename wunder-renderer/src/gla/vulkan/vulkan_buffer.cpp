@@ -47,6 +47,9 @@ template <typename base_buffer_type>
 void buffer<base_buffer_type>::update_data(void* data, size_t data_size) {}
 
 template <typename base_buffer_type>
+void buffer<base_buffer_type>::free_staging_data(){}
+
+template <typename base_buffer_type>
 void buffer<base_buffer_type>::add_descriptor_to(
     descriptor_set_manager& target) /*override*/
 {

@@ -40,7 +40,7 @@ rtx_renderer::~rtx_renderer() {
 
 void rtx_renderer::init_internal(const renderer_properties &properties) {
   m_state = std::make_unique<RtxState>();
-  m_state->maxDepth = 3;
+  m_state->maxDepth = 10;
   m_state->maxSamples = 1;
   m_state->fireflyClampThreshold = 0.f;
   m_state->hdrMultiplier = 1.f;

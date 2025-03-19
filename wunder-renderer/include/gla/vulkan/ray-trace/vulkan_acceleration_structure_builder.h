@@ -16,7 +16,11 @@ class acceleration_structure_builder {
 
  protected:
   void create_scratch_buffer(std::uint32_t scratch_buffer_size);
-  void build_acceleration_structure();
+  void build_acceleration_structure(
+      std::vector<const VkAccelerationStructureBuildRangeInfoKHR*>&
+          as_build_offset_info,
+      std::vector<VkAccelerationStructureBuildGeometryInfoKHR>&
+          as_build_geometry_info);
 
   virtual const std::vector<build_info_type>& get_build_infos() const = 0;
 

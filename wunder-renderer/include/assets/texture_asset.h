@@ -53,7 +53,7 @@ struct texture_data {
 
 struct texture_asset {
   texture_data m_texture_data;
-  int m_width, m_height;
+  uint32_t m_width, m_height;
   std::optional<texture_sampler> m_sampler;
   std::uint32_t m_max_lod = std::numeric_limits<uint32_t>::max();
 };

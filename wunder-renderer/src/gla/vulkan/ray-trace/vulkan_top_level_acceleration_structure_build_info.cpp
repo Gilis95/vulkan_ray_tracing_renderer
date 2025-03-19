@@ -44,15 +44,15 @@ top_level_acceleration_structure_build_info::
     top_level_acceleration_structure_build_info(
         top_level_acceleration_structure_build_info&& other) noexcept
     : acceleration_structure_build_info(std::move(other)) {
-  std::swap(m_acceleration_structures_buffers,
-            other.m_acceleration_structures_buffers);
+  std::swap(m_acceleration_structures_buffer,
+            other.m_acceleration_structures_buffer);
 }
 
 top_level_acceleration_structure_build_info&
 top_level_acceleration_structure_build_info::operator=(
     top_level_acceleration_structure_build_info&& other) noexcept {
-  std::swap(m_acceleration_structures_buffers,
-            other.m_acceleration_structures_buffers);
+  std::swap(m_acceleration_structures_buffer,
+            other.m_acceleration_structures_buffer);
   acceleration_structure_build_info::operator=(std::move(other));
   return *this;
 }
@@ -74,6 +74,13 @@ top_level_acceleration_structure_build_info::
 
   return result;
 }
+
+void top_level_acceleration_structure_build_info::free_staging_data() {
+    AssertReturnUnless(m_acceleration_structures_buffer);
+
+    m_acceleration_structures_buffer->free_staging_data();
+}
+
 bool top_level_acceleration_structure_build_info::
     create_acceleration_structure_instance(
         const vulkan_mesh_scene_node& mesh_node,
@@ -119,7 +126,7 @@ void top_level_acceleration_structure_build_info::
       VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT |
       VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR);
 
-  m_acceleration_structures_buffers = std::make_unique<storage_device_buffer>(
+  m_acceleration_structures_buffer = std::make_unique<storage_device_buffer>(
       m_command_buffer, descriptor_build_data{.m_enabled = false}, data, size,
       flags);
 }
@@ -132,7 +139,7 @@ void top_level_acceleration_structure_build_info::create_geometry_data(
   geometryInstances.sType =
       VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_INSTANCES_DATA_KHR;
   geometryInstances.data.deviceAddress =
-      m_acceleration_structures_buffers->get_address();
+      m_acceleration_structures_buffer->get_address();
 
   // Set up the geometry to use instance data.
   std::memset(&m_as_geometry, 0, sizeof(VkAccelerationStructureGeometryKHR));

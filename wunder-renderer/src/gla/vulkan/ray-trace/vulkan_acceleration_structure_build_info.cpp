@@ -10,7 +10,8 @@
 #include "include/assets/mesh_asset.h"
 
 namespace wunder::vulkan {
-acceleration_structure_build_info::acceleration_structure_build_info() = default;
+acceleration_structure_build_info::acceleration_structure_build_info() =
+    default;
 
 acceleration_structure_build_info::acceleration_structure_build_info(
     acceleration_structure_build_info&& other) noexcept
@@ -31,8 +32,8 @@ acceleration_structure_build_info& acceleration_structure_build_info::operator=(
   m_build_info.pGeometries = &m_as_geometry;
 }
 
-acceleration_structure_build_info::
-    ~acceleration_structure_build_info() = default;
+acceleration_structure_build_info::~acceleration_structure_build_info() =
+    default;
 
 void acceleration_structure_build_info::clear_geometry_data() {
   memset(&m_as_geometry, 0, sizeof(VkAccelerationStructureGeometryKHR));
@@ -40,10 +41,13 @@ void acceleration_structure_build_info::clear_geometry_data() {
 
 void acceleration_structure_build_info::fill_range_info_data(
     std::uint32_t geometries_count) {
-  m_as_build_offset_info.firstVertex = 0;
-  m_as_build_offset_info.primitiveCount = geometries_count;
-  m_as_build_offset_info.primitiveOffset = 0;
-  m_as_build_offset_info.transformOffset = 0;
+  VkAccelerationStructureBuildRangeInfoKHR& as_build_offset_info =
+      m_as_build_offset_info.emplace_back();
+
+  as_build_offset_info.firstVertex = 0;
+  as_build_offset_info.primitiveCount = geometries_count;
+  as_build_offset_info.primitiveOffset = 0;
+  as_build_offset_info.transformOffset = 0;
 }
 
 void acceleration_structure_build_info::create_build_info(
@@ -65,6 +69,8 @@ void acceleration_structure_build_info::create_build_info(
 }
 
 void acceleration_structure_build_info::calculate_build_size() {
+  AssertReturnIf(m_as_build_offset_info.empty());
+
   context& vulkan_context =
       layer_abstraction_factory::instance().get_vulkan_context();
   auto& device = vulkan_context.mutable_device();
@@ -76,6 +82,6 @@ void acceleration_structure_build_info::calculate_build_size() {
   vkGetAccelerationStructureBuildSizesKHR(
       device.get_vulkan_logical_device(),
       VK_ACCELERATION_STRUCTURE_BUILD_TYPE_DEVICE_KHR, &m_build_info,
-      &m_as_build_offset_info.primitiveCount, &m_build_sizes_info);
+      &m_as_build_offset_info.front().primitiveCount, &m_build_sizes_info);
 }
 }  // namespace wunder::vulkan

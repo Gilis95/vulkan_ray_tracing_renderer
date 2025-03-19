@@ -38,6 +38,10 @@ class gltf_mesh_serializer {
       const tinygltf::Model& gltf_scene_root,
       const tinygltf::Primitive& gltf_primitive, const std::string& mesh_name,
       const std::unordered_map<uint32_t, asset_handle>& material_map);
+
+  private:
+    static void create_mesh_colour(const tinygltf::Model& model, const tinygltf::Primitive& primitive,
+                                        wunder::mesh_asset& mesh_asset);
 };
 }  // namespace wunder
 #endif  // WUNDER_GLTF_MESH_SERIALIZER_H

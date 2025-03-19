@@ -24,8 +24,8 @@ top_level_acceleration_structure_builder::
       mesh_nodes(mesh_nodes) {}
 
 void top_level_acceleration_structure_builder::build() {
-  m_build_infos.push_back(
-      std::move(top_level_acceleration_structure_build_info(m_command_buffer, mesh_nodes)));
+  m_build_infos.push_back(std::move(top_level_acceleration_structure_build_info(
+      m_command_buffer, mesh_nodes)));
 
   AssertReturnIf(m_build_infos.empty());
 
@@ -36,9 +36,15 @@ void top_level_acceleration_structure_builder::build() {
   wait_until_instances_buffer_is_available();
 
   create_acceleration_structures();
-  build_acceleration_structure();
+
+  std::vector<const VkAccelerationStructureBuildRangeInfoKHR*>
+      as_build_offset_info;
+  std::vector<VkAccelerationStructureBuildGeometryInfoKHR>
+      as_build_geometry_info;
+  build_acceleration_structure(as_build_offset_info, as_build_geometry_info);
 
   flush_commands();
+  free_staging_data();
 }
 
 void top_level_acceleration_structure_builder::build_info_set_scratch_buffer() {
@@ -63,11 +69,6 @@ void top_level_acceleration_structure_builder::
 
 void top_level_acceleration_structure_builder::
     wait_until_instances_buffer_is_available() const {
-  context& vulkan_context =
-      layer_abstraction_factory::instance().get_vulkan_context();
-  auto& device = vulkan_context.mutable_device();
-  auto& command_pool = device.get_command_pool();
-
   VkMemoryBarrier barrier{VK_STRUCTURE_TYPE_MEMORY_BARRIER};
   barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
   barrier.dstAccessMask = VK_ACCESS_ACCELERATION_STRUCTURE_WRITE_BIT_KHR;
@@ -82,6 +83,12 @@ void top_level_acceleration_structure_builder::flush_commands() {
   auto& device = context.mutable_device();
 
   device.get_command_pool().flush_compute_command_buffer();
+}
+
+void top_level_acceleration_structure_builder::free_staging_data() {
+  for (auto& build_info : m_build_infos) {
+    build_info.free_staging_data();
+  }
 }
 
 }  // namespace wunder::vulkan

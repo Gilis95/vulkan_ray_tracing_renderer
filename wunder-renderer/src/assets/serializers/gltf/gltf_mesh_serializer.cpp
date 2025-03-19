@@ -2,8 +2,8 @@
 
 #include "assets/asset_storage.h"
 #include "assets/asset_types.h"
-#include "glm/vec4.hpp"
 #include "assets/mesh_asset.h"
+#include "glm/vec4.hpp"
 #include "tiny_gltf.h"
 #include "tinygltf/tinygltf_utils.h"
 
@@ -19,7 +19,7 @@ static bool try_parse_positions(const tinygltf::Model& gltf_scene_root,
 static void try_parse_mesh_tangents(const tinygltf::Model& gltf_scene_root,
                                     const tinygltf::Primitive& gltf_primitive,
                                     mesh_asset& mesh_asset);
-static void try_parse_mesh_colour(const tinygltf::Model& gltf_scene_root,
+static bool try_parse_mesh_colour(const tinygltf::Model& gltf_scene_root,
                                   const tinygltf::Primitive& gltf_primitive,
                                   mesh_asset& mesh_asset);
 static void try_parse_uvs(const tinygltf::Model& gltf_scene_root,
@@ -43,8 +43,8 @@ std::optional<mesh_asset> gltf_mesh_serializer::process_mesh(
 
   mesh_asset mesh_asset;
   auto found_material_it = material_map.find(gltf_primitive.material);
-  mesh_asset.m_material_handle =
-      found_material_it == material_map.end() ? asset_handle::invalid()
+  mesh_asset.m_material_handle = found_material_it == material_map.end()
+                                     ? asset_handle::invalid()
                                      : found_material_it->second;
 
   AssertReturnUnless(
@@ -58,7 +58,10 @@ std::optional<mesh_asset> gltf_mesh_serializer::process_mesh(
   try_parse_normals(gltf_scene_root, gltf_primitive, mesh_asset);
   try_parse_uvs(gltf_scene_root, gltf_primitive, mesh_asset);
   try_parse_mesh_tangents(gltf_scene_root, gltf_primitive, mesh_asset);
-  try_parse_mesh_colour(gltf_scene_root, gltf_primitive, mesh_asset);
+
+  if (!try_parse_mesh_colour(gltf_scene_root, gltf_primitive, mesh_asset)) {
+    create_mesh_colour(gltf_scene_root, gltf_primitive, mesh_asset);
+  }
 
   return mesh_asset;
 }
@@ -192,7 +195,7 @@ void try_parse_mesh_tangents(const tinygltf::Model& gltf_scene_root,
                              const tinygltf::Primitive& gltf_primitive,
                              mesh_asset& mesh_asset) {
   std::vector<glm::vec4> tangents;
-  //TODO:: GENERATE tangent in case it's missing
+  // TODO:: GENERATE tangent in case it's missing
   ReturnUnless(tinygltf::utils::get_attribute<glm::vec4>(
       gltf_scene_root, gltf_primitive, tangents, "TANGENT"));
 
@@ -202,16 +205,33 @@ void try_parse_mesh_tangents(const tinygltf::Model& gltf_scene_root,
   }
 }
 
-void try_parse_mesh_colour(const tinygltf::Model& gltf_scene_root,
+bool try_parse_mesh_colour(const tinygltf::Model& gltf_scene_root,
                            const tinygltf::Primitive& gltf_primitive,
                            mesh_asset& mesh_asset) {  // COLOR_0
   std::vector<glm::vec4> colors;
   ReturnUnless(tinygltf::utils::get_attribute<glm::vec4>(
-      gltf_scene_root, gltf_primitive, colors, "COLOR_0"));
+                   gltf_scene_root, gltf_primitive, colors, "COLOR_0"),
+               false);
 
   for (uint32_t i = 0; i < colors.size(); ++i) {
     auto& color = colors[i];
     mesh_asset.m_verticies[i].m_color = color;
+  }
+
+  return true;
+}
+
+void gltf_mesh_serializer::create_mesh_colour(
+    const tinygltf::Model& model, const tinygltf::Primitive& primitive,
+    wunder::mesh_asset& mesh_asset) {
+  std::vector<glm::vec4> colours;
+
+  colours.insert(colours.end(), mesh_asset.m_verticies.size(),
+                 glm::vec4(1, 1, 1, 1));
+
+  for (uint32_t i = 0; i < colours.size(); ++i) {
+    auto& colour = colours[i];
+    mesh_asset.m_verticies[i].m_color = colour;
   }
 }
 }  // namespace wunder

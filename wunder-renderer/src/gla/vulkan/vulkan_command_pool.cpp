@@ -82,8 +82,11 @@ void command_pool::flush_command_buffer(VkCommandBuffer& command_buffer,
   auto& logical_device = layer_abstraction_factory::instance()
                              .get_vulkan_context()
                              .mutable_device();
-
   auto vulkan_logical_device = logical_device.get_vulkan_logical_device();
+
+
+  const uint64_t DEFAULT_FENCE_TIMEOUT =
+      std::numeric_limits<std::uint64_t>::max();
 
   AssertReturnIf(command_buffer == VK_NULL_HANDLE);
   AssertReturnIf(vkEndCommandBuffer(command_buffer) != VkResult::VK_SUCCESS);
@@ -93,14 +96,25 @@ void command_pool::flush_command_buffer(VkCommandBuffer& command_buffer,
   submit_info.commandBufferCount = 1;
   submit_info.pCommandBuffers = &command_buffer;
 
+  // Create fence to ensure that the command buffer has finished executing
+  VkFenceCreateInfo fenceCreateInfo = {};
+  fenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+  fenceCreateInfo.flags = 0;
+  VkFence fence;
+  AssertReturnIf(vkCreateFence(vulkan_logical_device, &fenceCreateInfo, nullptr,
+                               &fence) != VkResult::VK_SUCCESS);
+
   {
     // Submit to the queue
-    VK_CHECK_RESULT(vkQueueSubmit(queue, 1, &submit_info, VK_NULL_HANDLE));
+    AssertReturnIf(vkQueueSubmit(queue, 1, &submit_info, fence) !=
+                   VkResult::VK_SUCCESS);
   }
-
   // Wait for the fence to signal that command buffer has finished executing
-  VK_CHECK_RESULT(vkQueueWaitIdle(queue));
+  AssertReturnIf(vkWaitForFences(vulkan_logical_device, 1, &fence, VK_TRUE,
+                                 DEFAULT_FENCE_TIMEOUT) !=
+                 VkResult::VK_SUCCESS);
 
+  vkDestroyFence(vulkan_logical_device, fence, nullptr);
   vkFreeCommandBuffers(vulkan_logical_device, source_pool, 1, &command_buffer);
 
   command_buffer = VK_NULL_HANDLE;

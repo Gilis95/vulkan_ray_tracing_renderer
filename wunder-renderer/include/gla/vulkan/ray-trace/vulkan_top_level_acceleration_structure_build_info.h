@@ -25,7 +25,8 @@ class top_level_acceleration_structure_build_info
       top_level_acceleration_structure_build_info&& other) noexcept;
   top_level_acceleration_structure_build_info& operator=(
       top_level_acceleration_structure_build_info&& other) noexcept;
-
+public:
+  void free_staging_data();
  public:
   [[nodiscard]] VkAccelerationStructureTypeKHR get_acceleration_structure_type()
       const override {
@@ -49,7 +50,7 @@ class top_level_acceleration_structure_build_info
 
  private:
   VkCommandBuffer m_command_buffer;
-  unique_ptr<storage_buffer> m_acceleration_structures_buffers;
+  unique_ptr<storage_buffer> m_acceleration_structures_buffer;
 };
 }  // namespace wunder::vulkan
 #endif  // WUNDER_VULKAN_TOP_LEVEL_ACCELERATION_STRUCTURE_BUILD_INFO_H
