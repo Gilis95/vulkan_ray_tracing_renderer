@@ -27,5 +27,10 @@ bool asset_handle::operator==(asset_handle other_value) const {
   return m_value == other_value.m_value;
 }
 
+ bool asset_handle::operator<(asset_handle other_value) const {
+ return m_value < other_value.m_value;
+}
+
+
 
 }

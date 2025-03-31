@@ -52,14 +52,15 @@ struct Ray
 
 struct PtPayload
 {
-  uint   seed;
-  float  hitT;
-  int    primitiveID;
-  int    instanceID;
-  int    instanceCustomIndex;
-  vec2   baryCoord;
-  mat4x3 objectToWorld;
-  mat4x3 worldToObject;
+  uint   seed; //4
+  float  hitT; //8
+  int    primitiveID; //12
+  int    instanceID; //16
+  int    instanceCustomIndex; //20
+  vec2   baryCoord; //28
+  mat4x3 objectToWorld; //76
+  mat4x3 worldToObject; //124
+  int    _pad;
 };
 
 struct ShadowHitPayload

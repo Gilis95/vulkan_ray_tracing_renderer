@@ -233,7 +233,7 @@ asset_serialization_result_codes import_scenes(
           auto maybe_mesh_asset = out_storage.find_asset<mesh_asset>(mesh_handle);
           AssertContinueUnless(maybe_mesh_asset);
 
-          scene.mutable_aabb().insert(maybe_mesh_asset->get().m_bounding_box);
+          scene.mutable_aabb().insert(maybe_mesh_asset->get().m_bounding_box.transform(model_matrix));
 
           scene_node node;
           node.add_component(

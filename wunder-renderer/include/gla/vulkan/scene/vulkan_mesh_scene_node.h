@@ -1,7 +1,3 @@
-//
-// Created by christian on 9/12/24.
-//
-
 #ifndef WUNDER_VULKAN_MESH_NODE_H
 #define WUNDER_VULKAN_MESH_NODE_H
 

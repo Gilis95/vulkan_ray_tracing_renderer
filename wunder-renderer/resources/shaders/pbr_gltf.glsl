@@ -208,7 +208,7 @@ vec3 EvalDiffuseGltf(State state, vec3 f0, vec3 f90, vec3 V, vec3 N, vec3 L, vec
   float NdotL = dot(N, L);
 
   if(NdotL < 0.0 || NdotV < 0.0)
-    return vec3(0.0);
+  return vec3(0.0);
 
   NdotL = clamp(NdotL, 0.001, 1.0);
   NdotV = clamp(abs(NdotV), 0.001, 1.0);
@@ -386,17 +386,17 @@ vec3 PbrEval(in State state, vec3 V, vec3 N, vec3 L, inout float pdf)
   // BSDF
   if(transWeight > 0.0)
   {
-    bsdf = EvalDielectricRefractionGltf(state, V, N, L, H, bsdfPdf);
+//    bsdf = EvalDielectricRefractionGltf(state, V, N, L, H, bsdfPdf);
 
     //// Transmission
-    //if(dot(N, L) < 0.0)
-    //{
-    //  bsdf = EvalDielectricRefractionGltf(state, V, N, L, H, bsdfPdf);
-    //}
-    //else  // Reflection
-    //{
-    //  bsdf = EvalDielectricReflectionGltf(state, V, N, L, H, bsdfPdf);
-    //}
+    if(dot(N, L) < 0.0)
+    {
+      bsdf = EvalDielectricRefractionGltf(state, V, N, L, H, bsdfPdf);
+    }
+    else  // Reflection
+    {
+      bsdf = EvalDielectricReflectionGltf(state, V, N, L, H, bsdfPdf);
+    }
   }
 
   if(transWeight < 1.0 && dot(N, L) > 0)

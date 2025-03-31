@@ -116,7 +116,7 @@ void lights_helper::map_host_light_specific_data(Light& host_light,
 }
 
 light_asset& lights_helper::get_default_light_asset() {
-  static light_asset res{};
+  static light_asset res{.intensity = 0.f, .specific_data = directional_light{}};
   return res;
 }
 

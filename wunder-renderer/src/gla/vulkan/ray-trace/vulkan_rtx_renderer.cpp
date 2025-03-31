@@ -48,6 +48,7 @@ void rtx_renderer::init_internal(const renderer_properties &properties) {
   m_state->minHeatmap = 0;
   m_state->maxHeatmap = 65000;
   m_state->pbrMode = 1;
+  m_state->debugging_mode = DebugMode::eNoDebug;
 
   initialize_shaders();
 }

@@ -35,8 +35,8 @@
 #include "glm/gtx/transform.hpp"
 #include "include/core/wunder_macros.h"
 
-#define GLTF_PERSPECTIVE_CAMERA_TYPE  "perspective"
-#define GLTF_ORTHOGRAPHIC_CAMERA_TYPE  "orthographic"
+#define GLTF_PERSPECTIVE_CAMERA_TYPE "perspective"
+#define GLTF_ORTHOGRAPHIC_CAMERA_TYPE "orthographic"
 
 #define KHR_MATERIALS_VARIANTS_EXTENSION_NAME "KHR_materials_variants"
 #define EXT_MESH_GPU_INSTANCING_EXTENSION_NAME "EXT_mesh_gpu_instancing"
@@ -416,22 +416,20 @@ void for_each_sparse_value(
   }
 
   const auto& idxs = accessor.sparse.indices;
-  if (!(idxs.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE      //
-        || idxs.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT  //
-        || idxs.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT)) {
-    assert(!"Unsupported sparse accessor index type.");
-    return;
-  }
+  AssertReturnUnless(
+      idxs.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE      //
+      || idxs.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT  //
+      || idxs.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT);
 
-  const tinygltf::BufferView& idxBufferView =
+  const tinygltf::BufferView& idx_buffer_view =
       tmodel.bufferViews[idxs.bufferView];
   const unsigned char* idxBuffer =
-      &tmodel.buffers[idxBufferView.buffer].data[idxBufferView.byteOffset];
-  const size_t idxBufferByteStride =
-      idxBufferView.byteStride
-          ? idxBufferView.byteStride
+      &tmodel.buffers[idx_buffer_view.buffer].data[idx_buffer_view.byteOffset];
+  const size_t idx_buffer_byte_stride =
+      idx_buffer_view.byteStride
+          ? idx_buffer_view.byteStride
           : tinygltf::GetComponentSizeInBytes(idxs.componentType);
-  if (idxBufferByteStride == size_t(-1)) return;  // Invalid
+  ReturnIf(idx_buffer_byte_stride == size_t(-1));  // Invalid
 
   const auto& vals = accessor.sparse.values;
   const tinygltf::BufferView& valBufferView =
@@ -439,7 +437,7 @@ void for_each_sparse_value(
   const unsigned char* valBuffer =
       &tmodel.buffers[valBufferView.buffer].data[valBufferView.byteOffset];
   const size_t valBufferByteStride = accessor.ByteStride(valBufferView);
-  if (valBufferByteStride == size_t(-1)) return;  // Invalid
+  ReturnIf(valBufferByteStride == size_t(-1));  // Invalid
 
   // Note that this could be faster for lots of small copies, since we could
   // binary search for the first sparse accessor index to use (since the
@@ -447,7 +445,7 @@ void for_each_sparse_value(
   for (size_t pairIdx = 0; pairIdx < accessor.sparse.count; pairIdx++) {
     // Read the index from the index buffer, converting its type
     size_t index = 0;
-    const unsigned char* pIdx = idxBuffer + idxBufferByteStride * pairIdx;
+    const unsigned char* pIdx = idxBuffer + idx_buffer_byte_stride * pairIdx;
     switch (idxs.componentType) {
       case TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE:
         index = *reinterpret_cast<const uint8_t*>(pIdx);
@@ -487,47 +485,41 @@ void for_each_sparse_value(
 // while numElementsToCopy is the number of elements to copy, not the number
 // of elements in accessor.
 template <class T>
-void copy_accessor_data(T* outData, size_t outDataSizeInElements,
-                        size_t outFirstElement, const tinygltf::Model& tmodel,
+void copy_accessor_data(T* out_data, size_t out_data_size_in_elements,
+                        size_t out_first_element, const tinygltf::Model& tmodel,
                         const tinygltf::Accessor& accessor,
-                        size_t accessorFirstElement, size_t numElementsToCopy) {
-  if (outFirstElement >= outDataSizeInElements) {
-    assert(!"Invalid outFirstElement!");
-    return;
-  }
+                        size_t accessor_first_element,
+                        size_t num_elements_to_copy) {
+  AssertReturnUnless(out_first_element < out_data_size_in_elements);
+  AssertReturnUnless(accessor_first_element < accessor.count);
 
-  if (accessorFirstElement >= accessor.count) {
-    assert(!"Invalid accessorFirstElement!");
-    return;
-  }
-
-  const tinygltf::BufferView& bufferView =
+  const tinygltf::BufferView& buffer_view =
       tmodel.bufferViews[accessor.bufferView];
   const unsigned char* buffer =
-      &tmodel.buffers[bufferView.buffer]
-           .data[accessor.byteOffset + bufferView.byteOffset];
+      &tmodel.buffers[buffer_view.buffer]
+           .data[accessor.byteOffset + buffer_view.byteOffset];
 
-  const size_t maxSafeCopySize =
-      std::min(accessor.count - accessorFirstElement,
-               outDataSizeInElements - outFirstElement);
-  numElementsToCopy = std::min(numElementsToCopy, maxSafeCopySize);
+  const size_t max_safe_copy_size =
+      std::min(accessor.count - accessor_first_element,
+               out_data_size_in_elements - out_first_element);
+  num_elements_to_copy = std::min(num_elements_to_copy, max_safe_copy_size);
 
-  if (bufferView.byteStride == 0) {
-    memcpy(outData + outFirstElement,
-           reinterpret_cast<const T*>(buffer) + accessorFirstElement,
-           numElementsToCopy * sizeof(T));
+  if (buffer_view.byteStride == 0) {
+    memcpy(out_data + out_first_element,
+           reinterpret_cast<const T*>(buffer) + accessor_first_element,
+           num_elements_to_copy * sizeof(T));
   } else {
     // Must copy one-by-one
-    for (size_t i = 0; i < numElementsToCopy; i++) {
-      outData[outFirstElement + i] =
-          *reinterpret_cast<const T*>(buffer + bufferView.byteStride * i);
+    for (size_t i = 0; i < num_elements_to_copy; i++) {
+      out_data[out_first_element + i] =
+          *reinterpret_cast<const T*>(buffer + buffer_view.byteStride * i);
     }
   }
 
   // Handle sparse accessors by overwriting already copied elements.
   for_each_sparse_value<T>(
-      tmodel, accessor, accessorFirstElement, numElementsToCopy,
-      [&outData](size_t index, const T* value) { outData[index] = *value; });
+      tmodel, accessor, accessor_first_element, num_elements_to_copy,
+      [&out_data](size_t index, const T* value) { out_data[index] = *value; });
 }
 
 // Same as copy_accessor_data(T*, ...), but taking a vector.
@@ -545,28 +537,39 @@ void copy_accessor_data(std::vector<T>& outData, size_t outFirstElement,
 // T must be glm::vec2, glm::vec3, or glm::vec4.
 template <typename T>
 inline bool get_accessor_data(const tinygltf::Model& tmodel,
-                            const tinygltf::Accessor& accessor,
-                            std::vector<T>& attribVec) {
+                              const tinygltf::Accessor& accessor,
+                              std::vector<T>& attribVec) {
   // Retrieving the data of the accessor
   const auto nbElems = accessor.count;
 
   const size_t oldNumElements = attribVec.size();
   attribVec.resize(oldNumElements + nbElems);
 
+  // Are we copying to a uint32_t type or to a vector of floats?
+  constexpr bool toU32 = std::is_same_v<T, uint32_t>;
+  constexpr int gltfComponentType =
+      (toU32 ? TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT
+             : TINYGLTF_COMPONENT_TYPE_FLOAT);
+  using ScalarType = std::conditional_t<toU32, uint32_t, float>;
+  // 1, 2, 3, 4 for scalar, VEC2, VEC3, VEC4
+  constexpr int nbComponents = sizeof(T) / sizeof(ScalarType);
+  // This depends on how TINYGLTF_TYPE_VEC{n} == n.
+  constexpr int gltfTyoe =
+      (toU32 ? TINYGLTF_TYPE_SCALAR : static_cast<int>(nbComponents));
+  if (accessor.type != gltfTyoe) {
+    return false;  // Invalid
+  }
+
   // Copying the attributes
-  if (accessor.componentType == TINYGLTF_COMPONENT_TYPE_FLOAT) {
+  if (accessor.componentType == gltfComponentType) {
     copy_accessor_data<T>(attribVec, oldNumElements, tmodel, accessor, 0,
                           accessor.count);
   } else {
-    // The component is smaller than float and need to be converted
+    // The component is smaller than 32 bits and needs to be converted
     const auto& bufView = tmodel.bufferViews[accessor.bufferView];
     const auto& buffer = tmodel.buffers[bufView.buffer];
     const unsigned char* bufferByte =
         &buffer.data[accessor.byteOffset + bufView.byteOffset];
-
-    // 2, 3, 4 for VEC2, VEC3, VEC4
-    const int nbComponents = tinygltf::GetNumComponentsInType(accessor.type);
-    if (nbComponents == -1) return false;  // Invalid
 
     // Stride per element
     const size_t byteStride = accessor.ByteStride(bufView);
@@ -582,37 +585,46 @@ inline bool get_accessor_data(const tinygltf::Model& tmodel,
 
     const auto& copyElementFn = [&](size_t elementIdx,
                                     const unsigned char* pElement) {
-      T vecValue;
+      T vecValue{};
 
       for (int c = 0; c < nbComponents; c++) {
+        ScalarType v{};
+
         switch (accessor.componentType) {
           case TINYGLTF_COMPONENT_TYPE_BYTE:
-            vecValue[c] = float(*(reinterpret_cast<const char*>(pElement) + c));
-            if (accessor.normalized) {
-              vecValue[c] = std::max(vecValue[c] / 127.f, -1.f);
+            v = static_cast<ScalarType>(
+                *(reinterpret_cast<const char*>(pElement) + c));
+            if (!toU32 && accessor.normalized) {
+              v = std::max(v / 127.f, -1.f);
             }
             break;
           case TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE:
-            vecValue[c] =
-                float(*(reinterpret_cast<const unsigned char*>(pElement) + c));
-            if (accessor.normalized) {
-              vecValue[c] = vecValue[c] / 255.f;
+            v = static_cast<ScalarType>(
+                *(reinterpret_cast<const unsigned char*>(pElement) + c));
+            if (!toU32 && accessor.normalized) {
+              v = v / 255.f;
             }
             break;
           case TINYGLTF_COMPONENT_TYPE_SHORT:
-            vecValue[c] =
-                float(*(reinterpret_cast<const short*>(pElement) + c));
-            if (accessor.normalized) {
-              vecValue[c] = std::max(vecValue[c] / 32767.f, -1.f);
+            v = static_cast<ScalarType>(
+                *(reinterpret_cast<const short*>(pElement) + c));
+            if (!toU32 && accessor.normalized) {
+              v = std::max(v / 32767.f, -1.f);
             }
             break;
           case TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT:
-            vecValue[c] =
-                float(*(reinterpret_cast<const unsigned short*>(pElement) + c));
-            if (accessor.normalized) {
-              vecValue[c] = vecValue[c] / 65535.f;
+            v = static_cast<ScalarType>(
+                *(reinterpret_cast<const unsigned short*>(pElement) + c));
+            if (!toU32 && accessor.normalized) {
+              v = v / 65535.f;
             }
             break;
+        }
+
+        if constexpr (nbComponents == 1) {
+          vecValue = v;
+        } else {
+          vecValue[c] = v;
         }
       }
 
@@ -635,11 +647,11 @@ inline bool get_accessor_data(const tinygltf::Model& tmodel,
 // T must be glm::vec2, glm::vec3, or glm::vec4.
 template <typename T>
 inline bool get_attribute(const tinygltf::Model& tmodel,
-                         const tinygltf::Primitive& primitive,
-                         std::vector<T>& attribVec,
-                         const std::string& attribName) {
+                          const tinygltf::Primitive& primitive,
+                          std::vector<T>& attribVec,
+                          const std::string& attribName) {
   const auto& it = primitive.attributes.find(attribName);
-  if (it == primitive.attributes.end()) return false;
+  ReturnIf(it == primitive.attributes.end(), false);
   const auto& accessor = tmodel.accessors[it->second];
   return get_accessor_data(tmodel, accessor, attribVec);
 }
@@ -658,7 +670,8 @@ uint32_t append_data(tinygltf::Buffer& buffer, const T& inData) {
 // Materials
 //--------------------------------------------------------------------------------------------------
 KHR_materials_unlit get_unlit(const tinygltf::Material& tmat);
-KHR_materials_specular get_specular(const tinygltf::Material& tmat);
+std::optional<KHR_materials_specular> get_specular(
+    const tinygltf::Material& tmat);
 KHR_texture_transform getTextureTransform(const tinygltf::TextureInfo& tinfo);
 KHR_materials_clearcoat get_clearcoat(const tinygltf::Material& tmat);
 KHR_materials_sheen get_sheen(const tinygltf::Material& tmat);

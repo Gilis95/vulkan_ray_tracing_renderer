@@ -2,6 +2,7 @@
 
 #include <functional>
 #include <numeric>
+#include <set>
 #include <unordered_set>
 
 #include "assets/asset_manager.h"
@@ -26,11 +27,11 @@ namespace wunder::vulkan {
 
 vector_map<asset_handle, const_ref<mesh_asset>>
 meshes_helper::extract_mesh_assets(
-    std::vector<ref<scene_node>> meshe_scene_nodes) {
+    std::vector<ref<scene_node>> mesh_scene_nodes) {
   auto& asset_manager = project::instance().get_asset_manager();
 
-  std::unordered_set<asset_handle> mesh_ids =
-      meshes_helper::extract_mesh_ids(meshe_scene_nodes);
+  asset_ids mesh_ids =
+      meshes_helper::extract_mesh_ids(mesh_scene_nodes);
 
   vector_map<asset_handle, const_ref<mesh_asset>> result =
       asset_manager.find_assets<mesh_asset>(mesh_ids.begin(), mesh_ids.end());
@@ -40,13 +41,15 @@ meshes_helper::extract_mesh_assets(
 
 asset_ids meshes_helper::extract_mesh_ids(
     std::vector<ref<scene_node>>& mesh_entities) {
-  std::unordered_set<asset_handle> mesh_ids;
+  asset_ids mesh_ids;
   for (auto& mesh_entity : mesh_entities) {
     optional_const_ref<mesh_component> maybe_mesh_component =
         mesh_entity.get().get_component<mesh_component>();
     AssertContinueUnless(maybe_mesh_component.has_value());
 
-    mesh_ids.emplace(maybe_mesh_component->get().m_handle);
+  auto handle = maybe_mesh_component->get().m_handle;
+
+    mesh_ids.emplace(handle);
   }
 
   return mesh_ids;
@@ -61,9 +64,6 @@ void meshes_helper::create_mesh_scene_nodes(
   // we first go through unique meshes and create them an instance
   vector_map<asset_handle, shared_ptr<vulkan_mesh>> mesh_instances;
   create_index_and_vertex_buffer(mesh_entities, materials, mesh_instances);
-
-  bottom_level_acceleration_structure_builder builder(mesh_instances);
-  builder.build();
 
   // then we use the instances to create a scene nodes, placed in specific
   // world space
@@ -88,6 +88,9 @@ void meshes_helper::create_mesh_scene_nodes(
         .m_model_matrix = maybe_transform_component->get().m_world_matrix,
     });
   }
+
+  bottom_level_acceleration_structure_builder builder(out_mesh_nodes);
+  builder.build();
 }
 
 void meshes_helper::create_index_and_vertex_buffer(
@@ -116,10 +119,10 @@ void meshes_helper::create_index_and_vertex_buffer(
     _vulkan_mesh = make_shared<vulkan_mesh>();
     _vulkan_mesh->m_vertex_buffer =
         std::move(vertex_buffer::create(command_buffer, mesh_asset));
-    _vulkan_mesh->m_vertices_count = mesh_asset.m_verticies.size();
+    _vulkan_mesh->m_vertices_count = mesh_asset.m_vertices.size();
     _vulkan_mesh->m_index_buffer =
         std::move(index_buffer::create(command_buffer, mesh_asset));
-    _vulkan_mesh->m_indices_count = mesh_asset.m_indecies.size();
+    _vulkan_mesh->m_indices_count = mesh_asset.m_indices.size();
     _vulkan_mesh->m_idx = i;
     _vulkan_mesh->m_material_idx = material_idx;
     _vulkan_mesh->m_is_opaque = material.m_alpha_mode == 0 ||
@@ -133,7 +136,7 @@ void meshes_helper::create_index_and_vertex_buffer(
 
   command_pool.flush_graphics_command_buffer();
 
-  //free staging data
+  // free staging data
   for (auto& [_, mesh] : out_mesh_instances) {
     AssertContinueUnless(mesh);
 
@@ -149,6 +152,7 @@ void meshes_helper::create_index_and_vertex_buffer(
 unique_ptr<storage_buffer> meshes_helper::create_mesh_instances_buffer(
     const std::vector<vulkan_mesh_scene_node>& mesh_nodes) {
   std::vector<InstanceData> instances;
+  instances.reserve(mesh_nodes.size());
 
   for (const auto& mesh_node : mesh_nodes) {
     AssertContinueUnless(mesh_node.m_mesh);

@@ -88,7 +88,7 @@ class camera : private event_handler<wunder::event::mouse::move>,
 
   // Fitting the camera position and interest to see the bounding box
   void fit(const glm::vec3& boxMin, const glm::vec3& boxMax,
-           bool instantFit = true, bool tight = false, float aspect = 1.0f);
+           bool instantFit = true, bool tight = true, float aspect = 1.0f);
 
   void collect_descriptors(vulkan::descriptor_set_manager& target);
 

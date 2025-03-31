@@ -1,7 +1,8 @@
 #include "gla/vulkan/vulkan_vertex_buffer.h"
 
+#include <fstream>
 #include <vector>
-
+#include <cmath>
 #include "gla/vulkan/vulkan_device_buffer.h"
 #include "include/assets/mesh_asset.h"
 #include "resources/shaders/compress.glsl"
@@ -12,13 +13,23 @@ unique_ptr<storage_buffer> vertex_buffer::create(VkCommandBuffer command_buffer,
                                                  const mesh_asset& asset)
 
 {
+  std::ofstream fs;
+  fs.open("normals.csv");
+  fs<<"x"<<","<<"y"<<","<<"z"<<","<<"compressed"<<"\n";
+
+
   std::vector<VertexAttributes> vertices{};
-  for (auto& vertex : asset.m_verticies) {
+  vertices.reserve(asset.m_vertices.size());
+
+  for (auto& vertex : asset.m_vertices) {
     VertexAttributes& device_vertex = vertices.emplace_back();
     device_vertex.position = vertex.m_position;
-    device_vertex.normal = compress_unit_vec(vertex.m_normal);
-    device_vertex.tangent =
-        compress_unit_vec(vertex.m_tangent);  // See .w encoding below
+    auto& normal = vertex.m_normal;
+    device_vertex.normal = compress_unit_vec(normal);
+    fs<<normal.x<<","<<normal.y<<","<<normal.z<<","<< device_vertex.normal << "\n";
+
+    device_vertex.tangent = compress_unit_vec(
+        glm::vec3(vertex.m_tangent));  // See .w encoding below
     device_vertex.texcoord = vertex.m_texcoord;
     device_vertex.color = glm::packUnorm4x8(vertex.m_color);
 
@@ -35,6 +46,8 @@ unique_ptr<storage_buffer> vertex_buffer::create(VkCommandBuffer command_buffer,
     }
     device_vertex.texcoord.y = uintBitsToFloat(value);
   }
+
+  fs.close();
 
   return std::make_unique<storage_device_buffer>(
       command_buffer, descriptor_build_data{.m_enabled = false},

@@ -81,9 +81,15 @@ void GetMetallicRoughness(inout State state, in GltfShadeMaterial material)
     baseColor *= SRGBtoLINEAR(textureLod(texturesMap[nonuniformEXT(material.pbrBaseColorTexture)], state.texCoord, 0));
   }
 
-  // baseColor.rgb = mix(baseColor.rgb * (vec3(1.0) - f0), vec3(0), metallic);
-  // Specular color (ior 1.4)
-  f0 = mix(vec3(dielectricSpecular), baseColor.xyz, metallic);
+  f0 = material.specularColourFactor;
+  if(material.specularColourTexture > -1)
+  {
+    f0 *= SRGBtoLINEAR(textureLod(texturesMap[nonuniformEXT(material.specularColourTexture)], state.texCoord, 0)).rgb;
+  }
+  else
+  {
+    f0 *= mix(vec3(dielectricSpecular), baseColor.xyz, metallic);
+  }
 
   state.mat.albedo    = baseColor.xyz;
   state.mat.metallic  = metallic;
@@ -105,7 +111,7 @@ void GetMaterialsAndTextures(inout State state, in Ray r)
 {
   GltfShadeMaterial material = materials[state.matID];
 
-  state.mat.specular     = 0.5;
+  state.mat.specular = material.specularFactor;
   state.mat.subsurface   = 0;
   state.mat.specularTint = 1;
   state.mat.sheen        = 0;
@@ -144,6 +150,11 @@ void GetMaterialsAndTextures(inout State state, in Ray r)
   if(material.transmissionTexture > -1)
   {
     state.mat.transmission *= textureLod(texturesMap[nonuniformEXT(material.transmissionTexture)], state.texCoord, 0).r;
+  }
+
+  if(material.specularTexture > -1)
+  {
+    state.mat.specular *= textureLod(texturesMap[nonuniformEXT(material.specularTexture)], state.texCoord, 0).a;
   }
 
   // KHR_materials_ior

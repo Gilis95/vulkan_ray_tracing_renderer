@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <functional>
+#include <set>
 #include <unordered_set>
 
 #include "core/vector_map.h"
@@ -45,6 +46,8 @@ class asset_handle {
 
   [[nodiscard]] bool operator==(asset_handle other_value) const;
 
+  [[nodiscard]] bool operator<(asset_handle other_value) const;
+
  private:
   type m_value;
 };
@@ -52,7 +55,7 @@ class asset_handle {
 template<typename asset_type>
 using assets = vector_map<asset_handle, const_ref<asset_type>>;
 
-using asset_ids = std::unordered_set<asset_handle>;
+using asset_ids = std::set<asset_handle>;
 
 }  // namespace wunder
 
@@ -60,7 +63,7 @@ namespace std {
 template <>
 struct hash<wunder::asset_handle> {
   size_t operator()(wunder::asset_handle handle) const noexcept {
-    return hash<wunder::asset_handle::type>{}(handle.value());
+    return handle.value();
   }
 };
 }  // namespace std

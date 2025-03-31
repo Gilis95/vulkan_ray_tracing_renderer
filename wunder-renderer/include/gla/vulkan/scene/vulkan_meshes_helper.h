@@ -25,7 +25,7 @@ class meshes_helper {
   [[nodiscard]] vector_map<asset_handle,
                            std::reference_wrapper<const mesh_asset>>
   extract_mesh_assets(
-      std::vector<std::reference_wrapper<scene_node>> meshe_scene_nodes);
+      std::vector<std::reference_wrapper<scene_node>> mesh_scene_nodes);
 
   void create_mesh_scene_nodes(
       assets<mesh_asset>& mesh_entities,

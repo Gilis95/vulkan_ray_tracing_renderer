@@ -3,6 +3,7 @@
 #include "assets/asset_types.h"
 #include "glm/vec4.hpp"
 #include "include/assets/material_asset.h"
+#include "resources/shaders/host_device.h"
 #include "tiny_gltf.h"
 #include "tinygltf/tinygltf_utils.h"
 
@@ -51,6 +52,9 @@ material_asset gltf_material_importer::process_material(
       tinygltf::utils::get_volume(gltf_material);
   auto volume_tickness_texture_handle =
       find_texture_or_default(textures_map, volume.m_thickness_texture.index);
+
+  std::optional<KHR_materials_specular> maybe_specular =
+      tinygltf::utils::get_specular(gltf_material);
 
   auto metallic_texture_handle = find_texture_or_default(
       textures_map, tpbr.metallicRoughnessTexture.index);
@@ -110,6 +114,26 @@ material_asset gltf_material_importer::process_material(
 
   mat.m_emissive_factor =
       glm::make_vec3<double>(gltf_material.emissiveFactor.data());
+
+  if (maybe_specular.has_value()) {
+    auto& specular = maybe_specular.value();
+
+    auto specular_colour_texture_handle = find_texture_or_default(
+        textures_map, specular.m_specular_color_texture.index);
+    auto specular_texture_handle = find_texture_or_default(
+        textures_map, specular.m_specular_texture.index);
+
+    mat.m_specular_texture = specular_texture_handle;
+    mat.m_specular_colour_texture = specular_colour_texture_handle;
+    mat.m_specular_factor = specular.m_specular_factor;
+    mat.m_specular_colour_factor = specular.m_specular_color_factor;
+  } else {
+    mat.m_specular_texture = asset_handle::invalid();
+    mat.m_specular_colour_texture = asset_handle::invalid();
+    mat.m_specular_factor = 0.5;
+    mat.m_specular_colour_factor = vec3(1.f);
+  }
+
   return mat;
 }
 

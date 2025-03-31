@@ -4,6 +4,7 @@
 #include <numeric>
 
 #include "gla/vulkan/scene/vulkan_mesh.h"
+#include "gla/vulkan/scene/vulkan_mesh_scene_node.h"
 #include "gla/vulkan/vulkan_buffer.h"
 #include "gla/vulkan/vulkan_command_pool.h"
 #include "gla/vulkan/vulkan_context.h"
@@ -14,18 +15,18 @@ namespace wunder::vulkan {
 
 bottom_level_acceleration_structure_builder::
     bottom_level_acceleration_structure_builder(
-        vector_map<asset_handle, shared_ptr<vulkan_mesh>>& mesh_instances)
+        std::vector<vulkan_mesh_scene_node>& mesh_nodes)
     : acceleration_structure_builder(layer_abstraction_factory::instance()
                                          .get_vulkan_context()
                                          .mutable_device()
                                          .get_command_pool()
                                          .get_current_compute_command_buffer()),
-      m_mesh_instances(mesh_instances),
-      m_min_alignment(256) {}
+      m_mesh_nodes(mesh_nodes),
+      m_min_alignment(128) {}
 
 void bottom_level_acceleration_structure_builder::build() {
-  for (auto& [_, _vulkan_mesh] : m_mesh_instances) {
-    m_build_infos.emplace_back(*_vulkan_mesh);
+  for (auto& [vulkan_mesh, _] : m_mesh_nodes) {
+    m_build_infos.emplace_back(*vulkan_mesh);
   }
 
   std::int32_t scratch_buffer_size = 0;
@@ -71,7 +72,7 @@ void bottom_level_acceleration_structure_builder::
 
 void bottom_level_acceleration_structure_builder::
     create_acceleration_structures() {
-  for (auto& [_, mesh_instance_ptr] : m_mesh_instances) {
+  for (auto& [mesh_instance_ptr,_ ] : m_mesh_nodes) {
     AssertContinueUnless(mesh_instance_ptr);
     vulkan_mesh& mesh_instance = *mesh_instance_ptr;
 

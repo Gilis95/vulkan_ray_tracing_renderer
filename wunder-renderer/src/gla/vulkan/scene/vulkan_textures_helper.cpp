@@ -25,6 +25,8 @@ assets<texture_asset> textures_helper::extract_texture_assets(
     texture_ids.emplace(material_asset.m_thickness_texture);
     texture_ids.emplace(material_asset.m_clearcoat_texture);
     texture_ids.emplace(material_asset.m_clearcoat_roughness_texture);
+    texture_ids.emplace(material_asset.m_specular_texture);
+    texture_ids.emplace(material_asset.m_specular_colour_texture);
   }
 
   vector_map<asset_handle, std::reference_wrapper<const texture_asset>> result =

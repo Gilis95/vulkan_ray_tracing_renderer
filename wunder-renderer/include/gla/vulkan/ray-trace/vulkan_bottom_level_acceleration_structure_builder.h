@@ -8,6 +8,7 @@
 #include "gla/vulkan/ray-trace/vulkan_bottom_level_acceleration_structure_build_info.h"
 
 namespace wunder::vulkan {
+struct vulkan_mesh_scene_node;
 struct vulkan_mesh;
 }  // namespace wunder::vulkan
 
@@ -16,7 +17,7 @@ class bottom_level_acceleration_structure_builder final
     : protected acceleration_structure_builder<bottom_level_acceleration_structure_build_info> {
 public:
   bottom_level_acceleration_structure_builder(
-      vector_map<asset_handle, shared_ptr<vulkan_mesh>>& mesh_instances);
+      std::vector<vulkan_mesh_scene_node>& mesh_nodes);
 
  public:
   void build();
@@ -34,7 +35,7 @@ protected:
  private:
   std::vector<bottom_level_acceleration_structure_build_info>
       m_build_infos;
-  vector_map<asset_handle, shared_ptr<vulkan_mesh>>& m_mesh_instances;
+  std::vector<vulkan_mesh_scene_node>& m_mesh_nodes;
   uint32_t m_min_alignment ; /*VkPhysicalDeviceAccelerationStructurePropertiesKHR.minAccelerationStructureScratchOffsetAlignment*/
 
 };

@@ -23,8 +23,8 @@ struct vertex
 
 
 struct mesh_asset {
-  std::vector<vertex> m_verticies;
-  std::vector<std::uint32_t> m_indecies;
+  std::vector<vertex> m_vertices;
+  std::vector<std::uint32_t> m_indices;
   asset_handle m_material_handle;
   aabb          m_bounding_box;
 };

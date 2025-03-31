@@ -28,11 +28,11 @@ KHR_materials_displacement get_displacement(const tinygltf::Material& tmat) {
                        KHR_MATERIALS_DISPLACEMENT_EXTENSION_NAME)) {
     const tinygltf::Value& ext = get_element_value(
         tmat.extensions, KHR_MATERIALS_DISPLACEMENT_EXTENSION_NAME);
-    get_value(ext, "m_displacement_geometry_texture",
+    get_value(ext, "displacementGeometryTexture",
               gmat.m_displacement_geometry_texture);
-    get_value(ext, "m_displacement_geometry_factor",
+    get_value(ext, "displacementGeometryFactor",
               gmat.m_displacement_geometry_factor);
-    get_value(ext, "m_displacement_geometry_offset",
+    get_value(ext, "displacementGeometryOffset",
               gmat.m_displacement_geometry_offset);
   }
   return gmat;
@@ -55,10 +55,10 @@ KHR_materials_volume get_volume(const tinygltf::Material& tmat) {
   if (has_element_name(tmat.extensions, KHR_MATERIALS_VOLUME_EXTENSION_NAME)) {
     const tinygltf::Value& ext =
         get_element_value(tmat.extensions, KHR_MATERIALS_VOLUME_EXTENSION_NAME);
-    get_value(ext, "m_thickness_factor", gmat.m_thickness_factor);
-    get_value(ext, "m_thickness_texture", gmat.m_thickness_texture);
-    get_value(ext, "m_attenuation_distance", gmat.m_attenuation_distance);
-    get_array_value(ext, "m_attenuation_color", gmat.m_attenuation_color);
+    get_value(ext, "thicknessFactor", gmat.m_thickness_factor);
+    get_value(ext, "thicknessTexture", gmat.m_thickness_texture);
+    get_value(ext, "attenuationDistance", gmat.m_attenuation_distance);
+    get_array_value(ext, "attenuationColor", gmat.m_attenuation_color);
   }
   return gmat;
 }
@@ -71,19 +71,21 @@ KHR_materials_unlit get_unlit(const tinygltf::Material& tmat) {
   return gmat;
 }
 
-KHR_materials_specular get_specular(const tinygltf::Material& tmat) {
-  KHR_materials_specular gmat;
+std::optional<KHR_materials_specular> get_specular(const tinygltf::Material& tmat) {
   if (has_element_name(tmat.extensions,
                        KHR_MATERIALS_SPECULAR_EXTENSION_NAME)) {
+  KHR_materials_specular gmat;
+
     const tinygltf::Value& ext = get_element_value(
         tmat.extensions, KHR_MATERIALS_SPECULAR_EXTENSION_NAME);
-    get_value(ext, "m_specular_factor", gmat.m_specular_factor);
-    get_value(ext, "m_specular_texture", gmat.m_specular_texture);
-    get_array_value(ext, "m_specular_color_factor",
+    get_value(ext, "specularFactor", gmat.m_specular_factor);
+    get_value(ext, "specularTexture", gmat.m_specular_texture);
+    get_array_value(ext, "specularColorFactor",
                     gmat.m_specular_color_factor);
-    get_value(ext, "m_specular_color_texture", gmat.m_specular_color_texture);
-  }
-  return gmat;
+    get_value(ext, "specularColorTexture", gmat.m_specular_color_texture);
+return gmat;
+                       }
+  return std::nullopt;
 }
 
 KHR_texture_transform getTextureTransform(const tinygltf::TextureInfo& tinfo) {
@@ -122,10 +124,10 @@ KHR_materials_sheen get_sheen(const tinygltf::Material& tmat) {
   if (has_element_name(tmat.extensions, KHR_MATERIALS_SHEEN_EXTENSION_NAME)) {
     const tinygltf::Value& ext =
         get_element_value(tmat.extensions, KHR_MATERIALS_SHEEN_EXTENSION_NAME);
-    get_array_value(ext, "m_sheen_color_factor", gmat.m_sheen_color_factor);
-    get_value(ext, "m_sheen_color_texture", gmat.m_sheen_color_texture);
-    get_value(ext, "m_sheen_roughness_factor", gmat.m_sheen_roughness_factor);
-    get_value(ext, "m_sheen_roughness_texture", gmat.m_sheen_roughness_texture);
+    get_array_value(ext, "sheenColorFactor", gmat.m_sheen_color_factor);
+    get_value(ext, "sheenColorTexture", gmat.m_sheen_color_texture);
+    get_value(ext, "sheenRoughnessFactor", gmat.m_sheen_roughness_factor);
+    get_value(ext, "sheenRoughnessTexture", gmat.m_sheen_roughness_texture);
   }
   return gmat;
 }
@@ -148,9 +150,9 @@ KHR_materials_anisotropy get_anisotropy(const tinygltf::Material& tmat) {
                        KHR_MATERIALS_ANISOTROPY_EXTENSION_NAME)) {
     const tinygltf::Value& ext = get_element_value(
         tmat.extensions, KHR_MATERIALS_ANISOTROPY_EXTENSION_NAME);
-    get_value(ext, "m_anisotropy_strength", gmat.m_anisotropy_strength);
-    get_value(ext, "m_anisotropy_rotation", gmat.m_anisotropy_rotation);
-    get_value(ext, "m_anisotropy_texture", gmat.m_anisotropy_texture);
+    get_value(ext, "anisotropyStrength", gmat.m_anisotropy_strength);
+    get_value(ext, "anisotropyRotation", gmat.m_anisotropy_rotation);
+    get_value(ext, "anisotropyTexture", gmat.m_anisotropy_texture);
   }
   return gmat;
 }
@@ -172,14 +174,14 @@ KHR_materials_iridescence get_iridescence(const tinygltf::Material& tmat) {
     const tinygltf::Value& ext = get_element_value(
         tmat.extensions, KHR_MATERIALS_IRIDESCENCE_EXTENSION_NAME);
 
-    get_value(ext, "m_iridescence_factor", gmat.m_iridescence_factor);
-    get_value(ext, "m_iridescence_texture", gmat.m_iridescence_texture);
-    get_value(ext, "m_iridescence_ior", gmat.m_iridescence_ior);
-    get_value(ext, "m_iridescence_thickness_minimum",
+    get_value(ext, "iridescenceFactor", gmat.m_iridescence_factor);
+    get_value(ext, "iridescenceTexture", gmat.m_iridescence_texture);
+    get_value(ext, "iridescenceIor", gmat.m_iridescence_ior);
+    get_value(ext, "iridescenceThicknessMinimum",
               gmat.m_iridescence_thickness_minimum);
-    get_value(ext, "m_iridescence_thickness_maximum",
+    get_value(ext, "iridescenceThicknessMaximum",
               gmat.m_iridescence_thickness_maximum);
-    get_value(ext, "m_iridescence_thickness_texture",
+    get_value(ext, "iridescenceThicknessTexture",
               gmat.m_iridescence_thickness_texture);
   }
   return gmat;

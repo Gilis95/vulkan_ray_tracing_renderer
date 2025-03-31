@@ -146,14 +146,14 @@ struct GltfShadeMaterial {
   vec3 emissiveFactor;  // 48 byte
   int alphaMode;        // 52 byte
   // 14
-  float alphaCutoff;         // 54 byte
+  float alphaCutoff;         // 56 byte
   int doubleSided;           // 60 byte
   int normalTexture;         // 64 byte
   float normalTextureScale;  // 68 byte
   // 18
   mat4 uvTransform;  // 132 byte
   // 22
-  int unlit;  // 136byte
+  int unlit;  // 136 byte
 
   float transmissionFactor;  // 140 byte
   int transmissionTexture;   // 144 byte
@@ -175,17 +175,20 @@ struct GltfShadeMaterial {
   int clearcoatRoughnessTexture;  // 204 byte
   uint sheen;                     // 208 byte
 
-  vec4 _pad1;                     // 224 byte
-  vec4 _pad2;                     // 240 byte
-  vec4 _pad3;                     // 256 byte
+  int specularTexture;        // 212 byte
+  int specularColourTexture;  // 216 byte
+  float specularFactor;       // 220 byte
+  vec3 specularColourFactor;  // 232 byte
+  vec2 _pad1;                 // 240 byte
+  vec4 _pad2;                 // 256 byte
   // 42
 
 #ifdef __cplusplus  // Descriptor binding helper for C++ and GLSL
   GltfShadeMaterial& operator=(const wunder::material_asset& other) {
     pbrBaseColorFactor = other.m_pbr_base_color_factor;  // 16 byte
 
-    pbrMetallicFactor = other.m_pbr_metallic_factor;       // 24 byte
-    pbrRoughnessFactor = other.m_pbr_roughness_factor;     // 28 byte
+    pbrMetallicFactor = other.m_pbr_metallic_factor;    // 24 byte
+    pbrRoughnessFactor = other.m_pbr_roughness_factor;  // 28 byte
 
     // 10
     emissiveFactor = other.m_emissive_factor;  // 52 byte
@@ -199,7 +202,7 @@ struct GltfShadeMaterial {
     // 22
     //    unlit = other.m_uv_transform;  // 140 byte
 
-    transmissionFactor = other.m_transmission_factor;    // 144 byte
+    transmissionFactor = other.m_transmission_factor;  // 144 byte
 
     ior = other.m_ior;  // 152 byte
     // 26
@@ -213,7 +216,10 @@ struct GltfShadeMaterial {
     clearcoatFactor = other.m_clearcoat_factor;        // 196 byte
     clearcoatRoughness = other.m_clearcoat_roughness;  // 200 byte
     // 38
-    sheen = other.m_sheen;                    // 212 byte
+    sheen = other.m_sheen;  // 212 byte
+
+    specularFactor = other.m_specular_factor;               // 218 byte
+    specularColourFactor = other.m_specular_colour_factor;  // 230 byte
 
     return *this;
   }
@@ -236,7 +242,7 @@ struct RtxState {
 };
 
 // Structure used for retrieving the primitive information in the closest hit
-// using gl_InstanceCustomIndexNV
+// using gl_InstanceCustomIndexExt
 struct InstanceData {
   uint64_t vertexAddress;
   uint64_t indexAddress;

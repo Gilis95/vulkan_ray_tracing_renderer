@@ -49,6 +49,11 @@ struct material_asset {
   asset_handle m_clearcoat_texture;                     // 204 byte
   asset_handle m_clearcoat_roughness_texture;  // 208 byte
   uint m_sheen;                                // 212 byte
+
+  asset_handle  m_specular_texture;                // 216 byte
+  asset_handle  m_specular_colour_texture;         // 220 byte
+  float         m_specular_factor;                 // 224 byte
+  glm::vec3     m_specular_colour_factor;          // 236 byte
 };
 }  // namespace wunder
 #endif  // WUNDER_MATERIAL_ASSET_H

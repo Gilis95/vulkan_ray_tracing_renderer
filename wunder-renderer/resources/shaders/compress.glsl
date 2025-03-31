@@ -36,6 +36,7 @@
 using vec3 = glm::vec3;
 using vec4 = glm::vec4;
 using std::isinf;
+using std::abs;
 using glm::normalize;
 
 INLINE float uintBitsToFloat(uint32_t const& v)
@@ -153,7 +154,7 @@ INLINE float short_to_floatm11(const int v)  // linearly maps a short 32767-3276
                     (uintBitsToFloat((0x80000000u | 0x3F800000u) | (uint(-v) << 8)) + 1.0f);
 }
 
-INLINE vec3 decompress_unit_vec(uint packed)
+vec3 decompress_unit_vec(uint packed)
 {
   if(packed != ~0u)  // sanity check, not needed as isvalid_unit_vec is called earlier
   {

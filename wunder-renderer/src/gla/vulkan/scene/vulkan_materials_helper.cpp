@@ -38,13 +38,11 @@ assets<material_asset> materials_helper::extract_material_assets(
   if (material_ids.empty()) {
     result.emplace_back(std::make_pair(asset_handle::invalid(),
                                        std::ref(get_default_material())));
-  }
-  else {
+  } else {
     auto found_assets = asset_manager.find_assets<material_asset>(
         material_ids.begin(), material_ids.end());
     std::move(found_assets.begin(), found_assets.end(),
               std::back_inserter(result));
-
   }
 
   return result;
@@ -84,6 +82,10 @@ unique_ptr<storage_buffer> materials_helper::create_material_buffer(
         get_texture_idx(asset.m_clearcoat_texture);
     out_shader_material.clearcoatRoughnessTexture =
         get_texture_idx(asset.m_clearcoat_roughness_texture);
+    out_shader_material.specularTexture =
+        get_texture_idx(asset.m_specular_texture);
+    out_shader_material.specularColourTexture =
+        get_texture_idx(asset.m_specular_colour_texture);
   };
 
   std::vector<GltfShadeMaterial> shader_materials;

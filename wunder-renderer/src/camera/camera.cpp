@@ -451,7 +451,7 @@ void camera::on_event(
       project::instance().get_scene_manager().mutable_api_scene(event.m_id);
   AssertReturnUnless(api_scene);
 
-  m_lights_count = api_scene->get().get_lights_count();
+  m_lights_count = 0;
 
   const aabb& scene_aabb = scene_asset->get().get_aabb();
   fit(scene_aabb.m_min, scene_aabb.m_max);

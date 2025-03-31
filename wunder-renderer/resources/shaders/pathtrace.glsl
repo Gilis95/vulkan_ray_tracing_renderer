@@ -347,8 +347,6 @@ vec3 PathTrace(Ray r)
 //-----------------------------------------------------------------------
 vec3 samplePixel(ivec2 imageCoords, ivec2 sizeImage)
 {
-  vec3 pixelColor = vec3(0);
-
   // Subpixel jitter: send the ray through a different position inside the pixel each time, to provide antialiasing.
   vec2 subpixel_jitter = rtxState.frame == 0 ? vec2(0.5f, 0.5f) : vec2(rand(prd.seed), rand(prd.seed));
 
