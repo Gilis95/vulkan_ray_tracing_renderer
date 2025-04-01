@@ -56,7 +56,7 @@ void mesh_asset_tangents_builder::create_tangents(
 
     float r = 1.0F;
     float a = duvE1.x * duvE2.y - duvE2.x * duvE1.y;
-    if (fabs(a) > 0)  // Catch degenerated UV
+    if (std::abs(a) > 0)  // Catch degenerated UV
     {
       r = 1.0f / a;
     }

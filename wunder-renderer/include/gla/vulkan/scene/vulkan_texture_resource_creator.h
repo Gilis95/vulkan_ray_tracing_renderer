@@ -11,13 +11,24 @@ struct material_asset;
 
 namespace vulkan {
 
-class textures_helper {
+class texture_resource_creator {
  public:
-  static assets<texture_asset> extract_texture_assets(
+  texture_resource_creator();
+
+ public:
+  std::vector<unique_ptr<sampled_texture>> create_texture_buffers(
       const assets<material_asset>& material_assets);
 
-  static std::vector<unique_ptr<sampled_texture>> create_texture_buffers(
-      const assets<texture_asset>& texture_assets);
+ public:
+  [[nodiscard]] const assets<texture_asset>& get_texture_assets() const {
+    return m_texture_assets;
+  }
+
+ private:
+  void extract_texture_assets(const assets<material_asset>& material_assets);
+
+ private:
+  assets<texture_asset> m_texture_assets;
 };
 }  // namespace vulkan
 }  // namespace wunder

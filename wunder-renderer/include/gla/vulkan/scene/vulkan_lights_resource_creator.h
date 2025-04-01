@@ -14,7 +14,7 @@ struct light_asset;
 }  // namespace wunder
 
 namespace wunder::vulkan {
-class lights_helper {
+class lights_resource_creator {
  public:
   [[nodiscard]] static unique_ptr<storage_buffer> create_light_buffer(
       const std::vector<ref<scene_node>>& light_nodes,

@@ -50,8 +50,8 @@ std::optional<mesh_asset> mesh_asset_builder::build() const {
   AssertReturnUnless(indices_builder.build(), std::nullopt);
   AssertReturnUnless(positions_builder.build(), std::nullopt);
   normals_builder.build();
-  tangents_builder.build();
   uvs_builder.build();
+  tangents_builder.build();
   colours_builder.build();
 
   return mesh_asset;

@@ -60,6 +60,8 @@ bool scene_manager::deactivate_scene(scene_id id) {
   auto active_scene_it = m_active_scenes.find(id);
   ReturnIf(active_scene_it == m_active_scenes.end(), false);
   m_active_scenes.erase(active_scene_it);
+
+  return true;
 }
 
 void scene_manager::on_event(

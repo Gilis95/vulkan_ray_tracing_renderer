@@ -1,5 +1,3 @@
-#include "gla/vulkan/scene/vulkan_environment_helper.h"
-
 #include <numeric>
 
 #include "assets/asset_manager.h"
@@ -7,6 +5,7 @@
 #include "core/project.h"
 #include "core/wunder_macros.h"
 #include "gla/vulkan/scene/vulkan_environment.h"
+#include "gla/vulkan/scene/vulkan_environment_resource_creator.h"
 #include "gla/vulkan/vulkan_device_buffer.h"
 #include "gla/vulkan/vulkan_texture.h"
 #include "resources/shaders/host_device.h"
@@ -21,7 +20,7 @@ float luminance(const float* color) {
 }  // namespace
 
 unique_ptr<uniform_buffer>
-vulkan_environment_helper::create_sky_and_sun_properties() {
+vulkan_environment_resource_creator::create_sky_and_sun_properties() {
   SunAndSky sun_and_sky{
       {1, 1, 1},            // rgb_unit_conversion;
       0.0000101320f,        // multiplier;
@@ -47,7 +46,7 @@ vulkan_environment_helper::create_sky_and_sun_properties() {
       &sun_and_sky, sizeof(SunAndSky), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT);
 }
 
-vulkan_environment vulkan_environment_helper::create_environment_texture() {
+vulkan_environment vulkan_environment_resource_creator::create_environment_texture() {
   vulkan_environment environment;
 
   // TODO:: first asset is being retrieved, it should be pointed out in the
@@ -73,7 +72,7 @@ vulkan_environment vulkan_environment_helper::create_environment_texture() {
 //--------------------------------------------------------------------------------------------------
 // Create acceleration data for importance sampling
 // See:  https://arxiv.org/pdf/1901.05423.pdf
-void vulkan_environment_helper::create_environment_accel(
+void vulkan_environment_resource_creator::create_environment_accel(
     const environment_texture_asset& asset,
     vulkan_environment& out_environment_data) {
   std::visit(
@@ -90,7 +89,7 @@ void vulkan_environment_helper::create_environment_accel(
       asset.m_texture_data.m_data);
 }
 
-void vulkan_environment_helper::create_environment_accel(
+void vulkan_environment_resource_creator::create_environment_accel(
     const environment_texture_asset& asset,
     vulkan_environment& out_environment_data,
     const std::vector<float>& pixels) {
@@ -176,7 +175,7 @@ void vulkan_environment_helper::create_environment_accel(
 // sampling shader to uniformly select a texel in the environment, and select
 // either that texel or its alias depending on their relative intensities
 //
-float vulkan_environment_helper::build_alias_map(const std::vector<float>& data,
+float vulkan_environment_resource_creator::build_alias_map(const std::vector<float>& data,
                                                  std::vector<EnvAccel>& accel) {
   auto size = static_cast<uint32_t>(data.size());
 

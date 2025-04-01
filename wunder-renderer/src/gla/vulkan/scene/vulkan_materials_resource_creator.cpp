@@ -1,4 +1,4 @@
-#include "gla/vulkan/scene/vulkan_materials_helper.h"
+#include "gla/vulkan/scene/vulkan_materials_resource_creator.h"
 
 #include <functional>
 #include <glm/ext/matrix_transform.hpp>
@@ -23,7 +23,8 @@ void fill_undefined_material_colour(glm::vec4& out_colour) {
 
 namespace wunder::vulkan {
 
-assets<material_asset> materials_helper::extract_material_assets(
+const assets<material_asset>&
+materials_resource_creator::extract_material_assets(
     assets<mesh_asset>& mesh_assets) {
   auto& asset_manager = project::instance().get_asset_manager();
 
@@ -32,35 +33,35 @@ assets<material_asset> materials_helper::extract_material_assets(
     material_ids.emplace(mesh.get().m_material_handle);
   }
 
-  assets<material_asset> result;
-  result.reserve(material_ids.size());
+  material_assets.reserve(material_ids.size());
 
   if (material_ids.empty()) {
-    result.emplace_back(std::make_pair(asset_handle::invalid(),
-                                       std::ref(get_default_material())));
+    material_assets.emplace_back(std::make_pair(
+        asset_handle::invalid(), std::ref(get_default_material())));
   } else {
     auto found_assets = asset_manager.find_assets<material_asset>(
         material_ids.begin(), material_ids.end());
     std::move(found_assets.begin(), found_assets.end(),
-              std::back_inserter(result));
+              std::back_inserter(material_assets));
   }
 
-  return result;
+  return material_assets;
 }
 
-unique_ptr<storage_buffer> materials_helper::create_material_buffer(
-    const assets<material_asset>& materials,
+unique_ptr<storage_buffer> materials_resource_creator::create_material_buffer(
     const assets<texture_asset>& texture_assets) {
   auto create_shader_material = [&texture_assets](
                                     const material_asset& asset,
                                     GltfShadeMaterial& out_shader_material) {
     auto get_texture_idx = [&texture_assets](asset_handle handle) {
-      auto asset_it = texture_assets.find(handle);
-      if (asset_it == texture_assets.end()) {
-        WUNDER_DEBUG_TAG("vulkan_scene", "Failed to find texture asset {0}",
+      if (!handle.is_valid()) {
+        WUNDER_DEBUG_TAG("vulkan_scene", "Handle is invalid skipping",
                          handle.value());
         return -1;
       }
+
+      auto asset_it = texture_assets.find(handle);
+      AssertReturnIf(asset_it == texture_assets.end(), -1);
 
       return static_cast<int>(std::distance(texture_assets.begin(), asset_it));
     };
@@ -90,7 +91,7 @@ unique_ptr<storage_buffer> materials_helper::create_material_buffer(
 
   std::vector<GltfShadeMaterial> shader_materials;
 
-  for (const auto& [handle, material_ref] : materials) {
+  for (const auto& [handle, material_ref] : material_assets) {
     create_shader_material(material_ref.get(), shader_materials.emplace_back());
   }
 
@@ -103,7 +104,7 @@ unique_ptr<storage_buffer> materials_helper::create_material_buffer(
           VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT));
 }
 
-const material_asset& materials_helper::get_default_material() {
+const material_asset& materials_resource_creator::get_default_material() {
   static material_asset default_material{
       .m_pbr_base_color_factor = {1.f, 1.f, 1.f, 1.f},
       .m_pbr_base_color_texture = asset_handle::invalid(),

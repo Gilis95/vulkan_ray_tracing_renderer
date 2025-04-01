@@ -1,4 +1,4 @@
-#include "gla/vulkan/scene/vulkan_textures_helper.h"
+#include "gla/vulkan/scene/vulkan_texture_resource_creator.h"
 
 #include "assets/asset_manager.h"
 #include "assets/asset_types.h"
@@ -9,7 +9,25 @@
 
 namespace wunder::vulkan {
 
-assets<texture_asset> textures_helper::extract_texture_assets(
+texture_resource_creator::texture_resource_creator() = default;
+
+std::vector<unique_ptr<sampled_texture>>
+texture_resource_creator::create_texture_buffers(
+    const assets<material_asset>& material_assets) {
+  std::vector<unique_ptr<sampled_texture>> result;
+
+  extract_texture_assets(material_assets);
+
+  for (auto& [_, asset] : m_texture_assets) {
+    auto& texture = result.emplace_back();
+    texture.reset(new wunder::vulkan::sampled_texture(
+        {.m_enabled = true, .m_descriptor_name = "texturesMap"}, asset.get()));
+  }
+
+  return std::move(result);
+}
+
+void texture_resource_creator::extract_texture_assets(
     const assets<material_asset>& material_assets) {
   auto& asset_manager = project::instance().get_asset_manager();
 
@@ -29,24 +47,8 @@ assets<texture_asset> textures_helper::extract_texture_assets(
     texture_ids.emplace(material_asset.m_specular_colour_texture);
   }
 
-  vector_map<asset_handle, std::reference_wrapper<const texture_asset>> result =
-      asset_manager.find_assets<texture_asset>(texture_ids.begin(),
-                                               texture_ids.end());
-
-  return result;
+  m_texture_assets = asset_manager.find_assets<texture_asset>(
+      texture_ids.begin(), texture_ids.end());
 }
 
-std::vector<unique_ptr<sampled_texture>>
-textures_helper::create_texture_buffers(
-    const assets<texture_asset>& texture_assets) {
-  std::vector<unique_ptr<sampled_texture>> result;
-
-  for (auto& [_, asset] : texture_assets) {
-    auto& texture = result.emplace_back();
-    texture.reset(new wunder::vulkan::sampled_texture(
-        {.m_enabled = true, .m_descriptor_name = "texturesMap"}, asset.get()));
-  }
-
-  return std::move(result);
-}
 }  // namespace wunder::vulkan

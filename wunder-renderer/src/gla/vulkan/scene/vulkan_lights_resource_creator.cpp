@@ -1,8 +1,7 @@
-#include "gla/vulkan/scene/vulkan_lights_helper.h"
-
 #include "assets/asset_manager.h"
 #include "assets/light_asset.h"
 #include "core/project.h"
+#include "gla/vulkan/scene/vulkan_lights_resource_creator.h"
 #include "gla/vulkan/vulkan_device_buffer.h"
 #include "glm/ext/matrix_transform.hpp"
 #include "resources/shaders/host_device.h"
@@ -12,7 +11,7 @@ using host_light_type = Light;
 
 using host_light_array = std::vector<host_light_type>;
 
-unique_ptr<storage_buffer> lights_helper::create_light_buffer(
+unique_ptr<storage_buffer> lights_resource_creator::create_light_buffer(
     const std::vector<ref<scene_node>>& light_nodes,
     std::uint64_t& out_lights_count) {
   vector_map<asset_handle, transform_component> transformations;
@@ -32,7 +31,7 @@ unique_ptr<storage_buffer> lights_helper::create_light_buffer(
       VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
 }
 
-assets<light_asset> lights_helper::extract_scene_light_data(
+assets<light_asset> lights_resource_creator::extract_scene_light_data(
     const std::vector<ref<scene_node>>& light_nodes,
     vector_map<asset_handle, transform_component>& out_transformations) {
   auto& asset_manager = project::instance().get_asset_manager();
@@ -62,7 +61,7 @@ assets<light_asset> lights_helper::extract_scene_light_data(
   return std::move(result);
 }
 
-std::vector<Light> lights_helper::create_host_light_array(
+std::vector<Light> lights_resource_creator::create_host_light_array(
     const vector_map<asset_handle, transform_component>& transformations,
     assets<light_asset>& light_assets) {
   std::vector<Light> host_lights;
@@ -84,7 +83,7 @@ std::vector<Light> lights_helper::create_host_light_array(
   return host_lights;
 }
 
-void lights_helper::map_to_host_light(Light& host_light,
+void lights_resource_creator::map_to_host_light(Light& host_light,
                                       const light_asset& light,
                                       glm::mat4 model_matrix) {
   host_light.range = static_cast<float>(light.range);
@@ -97,7 +96,7 @@ void lights_helper::map_to_host_light(Light& host_light,
   map_host_light_specific_data(host_light, light);
 }
 
-void lights_helper::map_host_light_specific_data(Light& host_light,
+void lights_resource_creator::map_host_light_specific_data(Light& host_light,
                                                  const light_asset& light) {
   std::visit(overloaded{[&host_light](const spot_light& light) {
                           host_light.type = LightType_Spot;
@@ -115,7 +114,7 @@ void lights_helper::map_host_light_specific_data(Light& host_light,
              light.specific_data);
 }
 
-light_asset& lights_helper::get_default_light_asset() {
+light_asset& lights_resource_creator::get_default_light_asset() {
   static light_asset res{.intensity = 0.f, .specific_data = directional_light{}};
   return res;
 }

@@ -55,10 +55,10 @@ class gltf_asset_importer final {
 
   asset_serialization_result_codes import_scenes(
     const tinygltf::Model& gltf_root_node,
-    std::unordered_map<std::uint32_t /*mesh_id*/, std::vector<asset_handle>>&
+    const std::unordered_map<std::uint32_t /*mesh_id*/, std::vector<asset_handle>>&
         mesh_id_to_primitive,
-    std::unordered_map<std::uint32_t, asset_handle> cameras_map,
-    std::unordered_map<std::uint32_t, asset_handle> lights_map);
+    const std::unordered_map<std::uint32_t, asset_handle>& cameras_map,
+    const std::unordered_map<std::uint32_t, asset_handle>& lights_map);
 
 
  private:
