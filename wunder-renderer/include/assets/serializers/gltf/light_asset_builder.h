@@ -9,13 +9,15 @@ struct Light;
 }
 namespace wunder {
 struct light_asset;
-class gltf_light_serializer final {
- private:
-  gltf_light_serializer() = default;
+class light_asset_builder final {
+ public:
+  explicit light_asset_builder(const tinygltf::Light& gltf_light);
 
  public:
-  [[nodiscard]] static std::optional<light_asset> serialize(
-      const tinygltf::Light& gltf_light);
+  [[nodiscard]] std::optional<light_asset> build();
+
+ private:
+  const tinygltf::Light& gltf_light;
 };
 }  // namespace wunder
 #endif  // WUNDER_GLTF_LIGHT_SERIALIZER_H

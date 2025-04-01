@@ -14,14 +14,17 @@ typedef std::map<std::string, Value> ExtensionMap;
 
 namespace wunder {
 struct camera_asset;
-class gltf_camera_serializer final {
- private:
-  gltf_camera_serializer() = default;
+class camera_asset_builder final {
+ public:
+  camera_asset_builder(const tinygltf::Camera& gltf_camera,
+                         const tinygltf::ExtensionMap& gltf_node_extensions);
 
  public:
-  [[nodiscard]] static std::optional<camera_asset> serialize(
-      const tinygltf::Camera& gltf_camera,
-      tinygltf::ExtensionMap gltf_node_extensions);
+  [[nodiscard]] std::optional<camera_asset> build();
+
+ private:
+  const tinygltf::Camera& gltf_camera;
+  const tinygltf::ExtensionMap& gltf_node_extensions;
 };
 }  // namespace wunder
 #endif  // WUNDER_GLTF_CAMERA_SERIALIZER_H

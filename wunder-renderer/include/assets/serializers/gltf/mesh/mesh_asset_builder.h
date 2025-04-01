@@ -22,9 +22,12 @@ struct Primitive;
 namespace wunder {
 struct mesh_asset;
 
-class gltf_mesh_serializer {
- private:
-  gltf_mesh_serializer() = default;
+class mesh_asset_builder final {
+ public:
+  mesh_asset_builder(
+      const tinygltf::Model& gltf_scene_root,
+      const tinygltf::Primitive& gltf_primitive, const std::string& mesh_name,
+      const std::unordered_map<uint32_t, asset_handle>& material_map);
 
  public:
   // one mesh consists of multiple primitives, because different part of the
@@ -34,14 +37,18 @@ class gltf_mesh_serializer {
   // on the other hand leads to one more complication, mesh transformation is
   // parsed in the next stage and should be applied to all primitives of
   // single mesh
-  [[nodiscard]] static std::optional<mesh_asset> process_mesh(
-      const tinygltf::Model& gltf_scene_root,
-      const tinygltf::Primitive& gltf_primitive, const std::string& mesh_name,
-      const std::unordered_map<uint32_t, asset_handle>& material_map);
+  [[nodiscard]] std::optional<mesh_asset> build() const;
 
-  private:
-    static void create_mesh_colour(const tinygltf::Model& model, const tinygltf::Primitive& primitive,
-                                        wunder::mesh_asset& mesh_asset);
+ private:
+  void try_parse_aabb(const tinygltf::Model& gltf_scene_root,
+                      const tinygltf::Primitive& gltf_primitive,
+                      mesh_asset& mesh_asset);
+
+ private:
+  const tinygltf::Model& gltf_scene_root;
+  const tinygltf::Primitive& gltf_primitive;
+  const std::string& mesh_name;
+  const std::unordered_map<uint32_t, asset_handle>& material_map;
 };
 }  // namespace wunder
 #endif  // WUNDER_GLTF_MESH_SERIALIZER_H

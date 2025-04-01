@@ -10,9 +10,8 @@
 namespace wunder {
 
 asset_manager::asset_manager()
-    : m_gltf(std::make_unique<tinygltf::TinyGLTF>())
-
-{
+    : m_gltf(std::make_unique<tinygltf::TinyGLTF>()),
+      m_asset_importer(std::make_unique<gltf_asset_importer>(m_asset_storage)) {
   m_load_fns.emplace(
       ".gltf", std::bind(&tinygltf::TinyGLTF::LoadASCIIFromFile, m_gltf.get(),
                          std::placeholders::_1, std::placeholders::_2,
@@ -44,7 +43,7 @@ asset_serialization_result_codes asset_manager::import_asset(
            asset_serialization_result_codes::not_supported_format_error);
 
   if (!load_fn->second(&gltf_model, &error, &warn, scene_real_path,
-                      tinygltf::REQUIRE_VERSION)) {
+                       tinygltf::REQUIRE_VERSION)) {
     WUNDER_ERROR_TAG("Asset", error);
     return asset_serialization_result_codes::error;
   }
@@ -81,7 +80,7 @@ asset_serialization_result_codes asset_manager::import_environment_map(
 
 asset_serialization_result_codes asset_manager::load_gltf_file(
     tinygltf::Model &gltf_model) {
-  auto result = gltf_asset_importer::import_asset(gltf_model, m_asset_storage);
+  auto result = m_asset_importer->import_asset(gltf_model);
   AssertReturnUnless(result == asset_serialization_result_codes::ok, result);
 
   return result;

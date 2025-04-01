@@ -1,8 +1,7 @@
-#include "assets/serializers/gltf/gltf_camera_serializer.h"
-
 #include <algorithm>
 #include <cctype>
 
+#include "assets/serializers/gltf/camera_asset_builder.h"
 #include "include/assets/camera_asset.h"
 #include "tiny_gltf.h"
 #include "tinygltf/tinygltf_utils.h"
@@ -13,9 +12,13 @@ bool ichar_equals(char a, char b) {
 }
 
 namespace wunder {
-std::optional<camera_asset> gltf_camera_serializer::serialize(
+
+camera_asset_builder::camera_asset_builder(
     const tinygltf::Camera& gltf_camera,
-    tinygltf::ExtensionMap gltf_node_extensions) {
+    const tinygltf::ExtensionMap& gltf_node_extensions)
+    : gltf_camera(gltf_camera), gltf_node_extensions(gltf_node_extensions) {}
+
+std::optional<camera_asset> camera_asset_builder::build() {
   ReturnUnless(std::ranges::equal(gltf_camera.type,
                                   GLTF_PERSPECTIVE_CAMERA_TYPE, ichar_equals),
                std::nullopt);
@@ -25,8 +28,7 @@ std::optional<camera_asset> gltf_camera_serializer::serialize(
   auto gltf_perspective_camera = gltf_camera.perspective;
   camera.m_perspective_camera_data.aspect_ratio =
       gltf_perspective_camera.aspectRatio;
-  camera.m_perspective_camera_data.fov =
-      gltf_perspective_camera.yfov;
+  camera.m_perspective_camera_data.fov = gltf_perspective_camera.yfov;
 
   // If the node has the Iray extension, extract the camera information.
   if (tinygltf::utils::has_element_name(gltf_node_extensions,

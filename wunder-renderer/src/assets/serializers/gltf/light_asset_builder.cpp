@@ -1,11 +1,13 @@
-#include "assets/serializers/gltf/gltf_light_serializer.h"
-
+#include "assets/serializers/gltf/light_asset_builder.h"
 #include "include/assets/light_asset.h"
 #include "tinygltf/tinygltf_utils.h"
 
 namespace wunder {
-std::optional<light_asset> gltf_light_serializer::serialize(
-    const tinygltf::Light& gltf_light) {
+
+light_asset_builder::light_asset_builder(const tinygltf::Light& gltf_light)
+    : gltf_light(gltf_light) {}
+
+std::optional<light_asset> light_asset_builder::build() {
   auto maybe_colour =
       tinygltf::utils::vector_to_glm<glm::vec4>(gltf_light.color);
   AssertReturnUnless(maybe_colour.has_value(), std::nullopt);
@@ -21,9 +23,8 @@ std::optional<light_asset> gltf_light_serializer::serialize(
   }
 
   return light_asset{.color = maybe_colour.value(),
-                    .intensity = gltf_light.intensity,
-                    .range = gltf_light.range};
-
+                     .intensity = gltf_light.intensity,
+                     .range = gltf_light.range};
 }
 
 }  // namespace wunder
