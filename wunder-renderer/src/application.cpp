@@ -60,7 +60,7 @@ void application::run() {
   auto &window = window_factory::instance().get_window();
   auto &gla = vulkan::layer_abstraction_factory::instance();
   auto &renderers = gla.get_renderers();
-  auto &service_factory = service_factory::instance();
+  auto &project = project::instance();
 
   time_unit frame_end = time_unit::from_current_time_in_miliseconds();
   std::uint64_t frame_number = 0;
@@ -74,6 +74,9 @@ void application::run() {
     for (auto &[_, renderer] : renderers) {
       renderer->update(frame_duration);
     }
+
+    project.update(frame_duration);
+
     FrameMark;
 
     frame_end = frame_start;

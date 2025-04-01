@@ -9,13 +9,16 @@
 
 #include "assets/asset_storage.h"
 #include "assets/asset_types.h"
+#include "core/time_unit.h"
 #include "core/vector_map.h"
 
 namespace tinygltf {
 class TinyGLTF;
 class Model;
 }  // namespace tinygltf
+
 namespace wunder {
+class task_executor;
 class gltf_asset_importer;
 class asset_manager {
  public:
@@ -28,7 +31,8 @@ class asset_manager {
 
   asset_serialization_result_codes import_environment_map(
       const std::filesystem::path& asset);
-
+public:
+  void update(time_unit dt);
  public:
   template <typename asset_type>
   optional_const_ref<asset_type> find_asset(asset_handle handle) const;
@@ -41,19 +45,12 @@ class asset_manager {
   [[nodiscard]] assets<asset_type> find_assets() const;
 
  private:
-  asset_serialization_result_codes load_gltf_file(tinygltf::Model& gltf_model);
-
- private:
   unique_ptr<tinygltf::TinyGLTF> m_gltf;
+  unique_ptr<gltf_asset_importer> m_asset_importer;
+
+  unique_ptr<task_executor> m_asset_importer_executor;
 
   asset_storage m_asset_storage;
-  std::unique_ptr<gltf_asset_importer> m_asset_importer;
-
-  std::unordered_map<
-      std::string,
-      std::function<bool(tinygltf::Model*, std::string*, std::string*,
-                         const std::string&, unsigned int)>>
-      m_load_fns;
 };
 
 template <typename asset_type>

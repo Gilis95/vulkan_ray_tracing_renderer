@@ -18,6 +18,11 @@ project& project::instance() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
+void project::update(time_unit dt) {
+  m_asset_manager->update(dt);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
 void project::initialize() {
   m_scene_manager = make_unique<scene_manager>();
   m_asset_manager = make_unique<asset_manager>();

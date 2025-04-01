@@ -12,6 +12,7 @@
 namespace wunder {
 enum class asset_serialization_result_codes {
   ok = 0,
+  scheduled = 1,
   warning = 1000,
   error = 10000,
   not_supported_format_error = 10001,
@@ -26,9 +27,10 @@ class asset_handle {
   static type s_invalid;
 
   static asset_handle invalid();
+
  public:
-  asset_handle() ;
-  explicit asset_handle(type value) ;
+  asset_handle();
+  explicit asset_handle(type value);
 
   asset_handle(const asset_handle& other);
   asset_handle& operator=(const asset_handle& other);
@@ -52,7 +54,7 @@ class asset_handle {
   type m_value;
 };
 
-template<typename asset_type>
+template <typename asset_type>
 using assets = vector_map<asset_handle, const_ref<asset_type>>;
 
 using asset_ids = std::set<asset_handle>;
