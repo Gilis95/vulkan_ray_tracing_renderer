@@ -32,7 +32,7 @@ class scene : public non_copyable {
   scene& operator=(scene&&) noexcept;
 
  public:
-  void load_scene(scene_asset& asset);
+  void load_scene(const scene_asset& asset);
   void collect_descriptors(descriptor_set_manager& target);
 
   const vulkan_environment& get_environment_texture() const {

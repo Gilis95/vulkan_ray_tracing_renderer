@@ -10,6 +10,7 @@
 #include "gla/vulkan/ray-trace/vulkan_top_level_acceleration_structure.h"
 #include "gla/vulkan/scene/vulkan_mesh_scene_node.h"
 #include "gla/vulkan/scene/vulkan_scene.h"
+#include "scene/scene_load_task.h"
 
 namespace wunder {
 scene_id scene_manager::s_scene_counter = 0;
@@ -17,6 +18,10 @@ scene_id scene_manager::s_scene_counter = 0;
 scene_manager::scene_manager() : event_handler<asset_loaded>() {}
 
 scene_manager::~scene_manager() /*override*/ = default;
+
+void scene_manager::update(wunder::time_unit dt) {
+  m_executor.update(dt);
+}
 
 optional_ref<vulkan::scene> scene_manager::mutable_api_scene(scene_id id) {
   static optional_ref<vulkan::scene> s_empty = std::nullopt;
@@ -46,12 +51,11 @@ bool scene_manager::activate_scene(scene_id id) {
 
   std::pair<scene_id, vulkan::scene> l;
 
-  vulkan::scene api_scene;
   auto& [scene_id, scene] = m_active_scenes.emplace_back();
-  scene.load_scene(found_scene_asset_it->second);
   scene_id = id;
-
-  event_controller::on_event<wunder::event::scene_activated>({scene_id});
+  unique_ptr load_task = std::make_unique<scene_load_task>(
+      scene_id, scene, found_scene_asset_it->second);
+  m_executor.enqueue(std::move(load_task));
 
   return true;
 }

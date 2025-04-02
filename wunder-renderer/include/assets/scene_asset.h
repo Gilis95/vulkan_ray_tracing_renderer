@@ -22,7 +22,7 @@ class scene_asset {
   [[nodiscard]] std::vector<std::reference_wrapper<scene_node>> filter_nodes();
 
   template <typename... types>
-  [[nodiscard]] std::vector<std::reference_wrapper<const scene_node>>
+  [[nodiscard]] std::vector<const_ref<const scene_node>>
   filter_nodes() const;
 
   [[nodiscard]] aabb& mutable_aabb() { return m_aabb; }

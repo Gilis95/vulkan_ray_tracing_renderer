@@ -17,12 +17,12 @@ namespace wunder::vulkan {
 class lights_resource_creator {
  public:
   [[nodiscard]] static unique_ptr<storage_buffer> create_light_buffer(
-      const std::vector<ref<scene_node>>& light_nodes,
+      const std::vector<const_ref<scene_node>>& light_nodes,
       std::uint64_t& out_lights_count);
 
  private:
   [[nodiscard]] static assets<light_asset> extract_scene_light_data(
-      const std::vector<ref<scene_node>>& light_nodes,
+      const std::vector<const_ref<scene_node>>& light_nodes,
       vector_map<asset_handle, transform_component>& out_transformations);
   [[nodiscard]] static std::vector<Light> create_host_light_array(
       const vector_map<asset_handle, transform_component>& transformations,

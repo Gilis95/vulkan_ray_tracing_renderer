@@ -23,7 +23,7 @@ struct vulkan_mesh;
 class meshes_resource_creator {
  public:
   meshes_resource_creator(
-      std::vector<std::reference_wrapper<scene_node>>& input_mesh_scene_nodes,
+      std::vector<const_ref<scene_node>>& input_mesh_scene_nodes,
       std::vector<vulkan_mesh_scene_node>& out_vulkan_mesh_scene_nodes);
 
  public:
@@ -41,7 +41,7 @@ class meshes_resource_creator {
       vector_map<asset_handle, shared_ptr<vulkan_mesh>>& out_mesh_instances);
 
  private:
-  std::vector<std::reference_wrapper<scene_node>>& m_input_mesh_scene_nodes;
+  std::vector<const_ref<scene_node>>& m_input_mesh_scene_nodes;
   std::vector<vulkan_mesh_scene_node>& m_out_vulkan_mesh_nodes;
 
   assets<mesh_asset> m_input_mesh_assets;

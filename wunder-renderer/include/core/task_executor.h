@@ -24,7 +24,7 @@ public:
  public:
   void update(time_unit dt);
 
-  void schedule(std::unique_ptr<async_task> task);
+  void enqueue(std::unique_ptr<async_task> task);
 private:
   void try_start_task();
   void try_finish_task();

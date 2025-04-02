@@ -12,7 +12,7 @@ using host_light_type = Light;
 using host_light_array = std::vector<host_light_type>;
 
 unique_ptr<storage_buffer> lights_resource_creator::create_light_buffer(
-    const std::vector<ref<scene_node>>& light_nodes,
+    const std::vector<const_ref<scene_node>>& light_nodes,
     std::uint64_t& out_lights_count) {
   vector_map<asset_handle, transform_component> transformations;
 
@@ -32,7 +32,7 @@ unique_ptr<storage_buffer> lights_resource_creator::create_light_buffer(
 }
 
 assets<light_asset> lights_resource_creator::extract_scene_light_data(
-    const std::vector<ref<scene_node>>& light_nodes,
+    const std::vector<const_ref<scene_node>>& light_nodes,
     vector_map<asset_handle, transform_component>& out_transformations) {
   auto& asset_manager = project::instance().get_asset_manager();
 

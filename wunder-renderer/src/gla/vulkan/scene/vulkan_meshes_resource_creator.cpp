@@ -24,7 +24,7 @@
 
 namespace wunder::vulkan {
 meshes_resource_creator::meshes_resource_creator(
-    std::vector<std::reference_wrapper<scene_node>>& input_mesh_scene_nodes,
+    std::vector<const_ref<scene_node>>& input_mesh_scene_nodes,
     std::vector<vulkan_mesh_scene_node>& out_vulkan_mesh_scene_nodes)
     : m_input_mesh_scene_nodes(input_mesh_scene_nodes),
       m_out_vulkan_mesh_nodes(out_vulkan_mesh_scene_nodes) {}

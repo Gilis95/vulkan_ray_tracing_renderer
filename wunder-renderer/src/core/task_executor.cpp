@@ -11,7 +11,7 @@ void task_executor::update(time_unit dt) {
   try_start_task();
 }
 
-void task_executor::schedule(unique_ptr<async_task> task) {
+void task_executor::enqueue(unique_ptr<async_task> task) {
   AssertReturnUnless(task)
 
   m_scheduled_task_queue.emplace(std::move(task));

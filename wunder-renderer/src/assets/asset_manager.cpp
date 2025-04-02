@@ -37,7 +37,7 @@ asset_serialization_result_codes asset_manager::import_asset(
       task->is_file_supported(),
       asset_serialization_result_codes::not_supported_format_error);
 
-  m_asset_importer_executor->schedule(std::move(task));
+  m_asset_importer_executor->enqueue(std::move(task));
 
   return asset_serialization_result_codes::scheduled;
 }

@@ -33,7 +33,7 @@ scene::~scene() = default;
 scene::scene(scene&&) = default;
 scene& scene::operator=(scene&&) noexcept = default;
 
-void scene::load_scene(scene_asset& asset) {
+void scene::load_scene(const scene_asset& asset) {
   auto mesh_entities =
       asset.filter_nodes<mesh_component, transform_component>();
   AssertReturnIf(mesh_entities.empty(), );  // nothing to render
