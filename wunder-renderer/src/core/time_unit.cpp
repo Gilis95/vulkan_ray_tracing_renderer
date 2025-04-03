@@ -46,20 +46,23 @@ std::uint64_t get_current_time() {
 #endif
 }  // namespace
 namespace wunder {
-time_unit::time_unit() {}
-time_unit::time_unit(std::uint64_t miliseconds) {}
+time_unit::time_unit() : m_miliseconds(0) {}
+time_unit::time_unit(std::uint64_t miliseconds) : m_miliseconds(miliseconds) {}
+
+time_unit::time_unit(const time_unit& other) : m_miliseconds(other.m_miliseconds) {}
+time_unit::time_unit(time_unit&& other) noexcept : m_miliseconds(other.m_miliseconds) {}
 
 time_unit time_unit::from_current_time_in_miliseconds() {
-  return {get_current_time()};
+  return time_unit{get_current_time()};
 }
 time_unit time_unit::from_current_time_in_seconds() {
-  return {miliseconds_to_seconds(get_current_time())};
+  return time_unit{miliseconds_to_seconds(get_current_time())};
 }
 time_unit time_unit::from_current_time_in_minutes() {
-  return {miliseconds_to_minutes(get_current_time())};
+  return time_unit{miliseconds_to_minutes(get_current_time())};
 }
 time_unit time_unit::from_current_time_in_hours() {
-  return {miliseconds_to_hours(get_current_time())};
+  return time_unit{miliseconds_to_hours(get_current_time())};
 }
 
 time_unit::value_type time_unit::as_miliseconds() const {
@@ -80,20 +83,38 @@ time_unit::value_type time_unit::as_days() const {
   return miliseconds_to_days(m_miliseconds);
 }
 
+
+time_unit& time_unit::operator=(const time_unit& other) {
+  if (this == &other) return *this;
+  m_miliseconds = other.m_miliseconds;
+  return *this;
+}
+
+time_unit& time_unit::operator=(time_unit&& other) noexcept {
+  if (this == &other) return *this;
+  m_miliseconds = other.m_miliseconds;
+  return *this;
+}
+
+
 time_unit& time_unit::operator-=(time_unit other){
-  m_miliseconds -=other.m_miliseconds;
+  m_miliseconds -= other.m_miliseconds;
+
+  return *this;
 }
 time_unit& time_unit::operator+=(time_unit other){
   m_miliseconds +=other.m_miliseconds;
+
+  return *this;
 }
 
 time_unit time_unit::operator-(time_unit right) const
 {
-  return m_miliseconds - right.m_miliseconds;
+  return time_unit(m_miliseconds - right.m_miliseconds);
 }
 
 time_unit time_unit::operator+(time_unit right) const
 {
-  return m_miliseconds + right.m_miliseconds;
+  return time_unit(m_miliseconds + right.m_miliseconds);
 }
 }  // namespace wunder

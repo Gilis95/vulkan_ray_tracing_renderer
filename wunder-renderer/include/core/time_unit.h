@@ -9,9 +9,10 @@ class time_unit {
   using value_type = std::uint64_t;
  public:
   time_unit();
-  time_unit(std::uint64_t miliseconds);
-
- public:
+  explicit time_unit(std::uint64_t miliseconds);
+  time_unit(const time_unit& other);
+  time_unit(time_unit&& other) noexcept;
+  public:
   [[nodiscard]] static time_unit from_current_time_in_miliseconds();
   [[nodiscard]] static time_unit from_current_time_in_seconds();
   [[nodiscard]] static time_unit from_current_time_in_minutes();
@@ -24,6 +25,9 @@ class time_unit {
   [[nodiscard]] value_type as_days() const;
 
  public:
+
+  time_unit& operator=(const time_unit& other);
+  time_unit& operator=(time_unit&& other) noexcept;
   time_unit& operator-=(time_unit other);
   time_unit& operator+=(time_unit other);
 
