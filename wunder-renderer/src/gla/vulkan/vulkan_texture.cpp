@@ -86,9 +86,10 @@ VkAccessFlags access_flags_for_image_layout(VkImageLayout layout) {
   return access_flags_it->second;
 }
 
-inline uint32_t mip_levels(VkExtent2D extent)
-{
-  return static_cast<uint32_t>(std::floor(std::log2(std::max(extent.width, extent.height)))) + 1;
+inline uint32_t mip_levels(VkExtent2D extent) {
+  return static_cast<uint32_t>(
+             std::floor(std::log2(std::max(extent.width, extent.height)))) +
+         1;
 }
 
 }  // namespace
@@ -108,7 +109,8 @@ texture<base_texture>::texture(descriptor_build_data build_data,
                                VkFormat image_format, std::uint32_t width,
                                std::uint32_t height)
     : m_descriptor_build_data(std::move(build_data)),
-      m_image_info(std::make_shared<vulkan_image_info>()) {
+      m_image_info(std::make_shared<vulkan_image_info>()),
+      m_image_size(width, height) {
   std::string name = generate_next_texture_name();
   VkImageLayout target_layout = VK_IMAGE_LAYOUT_GENERAL;
   m_mip_levels = mip_levels({width, height});
@@ -125,9 +127,10 @@ template <typename base_texture>
 texture<base_texture>::texture(descriptor_build_data build_data,
                                const texture_asset& asset)
     : m_descriptor_build_data(std::move(build_data)),
-      m_image_info(std::make_shared<vulkan_image_info>()) {
+      m_image_info(std::make_shared<vulkan_image_info>()),
+      m_image_size(asset.m_width, asset.m_height) {
   std::string name = generate_next_texture_name();
-  m_mip_levels = mip_levels({asset.m_width, asset.m_height});
+  m_mip_levels = 1;
 
   VkFormat image_format = asset.m_texture_data.get_image_format();
   VkImageLayout target_layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
@@ -147,6 +150,105 @@ template <typename base_texture>
 void texture<base_texture>::add_descriptor_to(descriptor_set_manager& target) {
   ReturnUnless(m_descriptor_build_data.m_enabled);
   target.add_resource(m_descriptor_build_data.m_descriptor_name, *this);
+}
+
+template <typename base_texture>
+void texture<base_texture>::generate_mip_levels(
+    VkCommandBuffer command_buffer) {
+  // Transfer the top level image to a layout 'eTransferSrcOptimal` and its
+  // access to 'eTransferRead'
+  VkImageMemoryBarrier barrier{VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER};
+  barrier.subresourceRange.baseArrayLayer = 0;
+  barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+  barrier.subresourceRange.baseMipLevel = 0;
+  barrier.subresourceRange.layerCount = 1;
+  barrier.subresourceRange.levelCount = 1;
+  barrier.image = m_image_info->m_image;
+  barrier.oldLayout = base_texture::m_descriptor.imageLayout;
+  barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+  barrier.srcAccessMask =
+      access_flags_for_image_layout(base_texture::m_descriptor.imageLayout);
+  barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+  barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+  barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+  vkCmdPipelineBarrier(
+      command_buffer,
+      pipeline_stage_for_layout(base_texture::m_descriptor.imageLayout),
+      VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier);
+
+  if (m_mip_levels > 1) {
+    // transfer remaining mips to DST optimal
+    barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+    barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+    barrier.subresourceRange.baseMipLevel = 1;
+    barrier.subresourceRange.levelCount = VK_REMAINING_MIP_LEVELS;
+    vkCmdPipelineBarrier(
+        command_buffer,
+        pipeline_stage_for_layout(base_texture::m_descriptor.imageLayout),
+        VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier);
+  };
+
+  int32_t mipWidth = m_image_size.width;
+  int32_t mipHeight = m_image_size.height;
+
+  for (uint32_t i = 1; i < m_mip_levels; i++) {
+    VkImageBlit blit;
+    blit.srcOffsets[0] = {0, 0, 0};
+    blit.srcOffsets[1] = {mipWidth, mipHeight, 1};
+    blit.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    blit.srcSubresource.mipLevel = i - 1;
+    blit.srcSubresource.baseArrayLayer = 0;
+    blit.srcSubresource.layerCount = 1;
+    blit.dstOffsets[0] = {0, 0, 0};
+    blit.dstOffsets[1] = {mipWidth > 1 ? mipWidth / 2 : 1,
+                          mipHeight > 1 ? mipHeight / 2 : 1, 1};
+    blit.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    blit.dstSubresource.mipLevel = i;
+    blit.dstSubresource.baseArrayLayer = 0;
+    blit.dstSubresource.layerCount = 1;
+
+    vkCmdBlitImage(command_buffer, m_image_info->m_image,
+                   VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, m_image_info->m_image,
+                   VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &blit,
+                   VK_FILTER_LINEAR);
+
+    // Next
+    {
+      // Transition the current miplevel into a eTransferSrcOptimal layout, to
+      // be used as the source for the next one.
+      barrier.subresourceRange.baseMipLevel = i;
+      barrier.subresourceRange.levelCount = 1;
+      barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+      barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+      barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+      barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+      vkCmdPipelineBarrier(command_buffer, VK_PIPELINE_STAGE_TRANSFER_BIT,
+                           VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0,
+                           nullptr, 1, &barrier);
+    }
+
+    if (mipWidth > 1) {
+      mipWidth /= 2;
+    }
+
+    if (mipHeight > 1) {
+      mipHeight /= 2;
+    }
+  }
+
+  // Transition all miplevels (now in VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL) back
+  // to currentLayout
+  barrier.subresourceRange.baseMipLevel = 0;
+  barrier.subresourceRange.levelCount = VK_REMAINING_MIP_LEVELS;
+  barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+  barrier.newLayout = base_texture::m_descriptor.imageLayout;
+  barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+  barrier.dstAccessMask =
+      access_flags_for_image_layout(base_texture::m_descriptor.imageLayout);
+  vkCmdPipelineBarrier(
+      command_buffer, VK_PIPELINE_STAGE_TRANSFER_BIT,
+      pipeline_stage_for_layout(base_texture::m_descriptor.imageLayout), 0, 0,
+      nullptr, 0, nullptr, 1, &barrier);
 }
 
 template <typename base_texture>

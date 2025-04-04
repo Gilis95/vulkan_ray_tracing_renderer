@@ -41,13 +41,13 @@ rtx_renderer::~rtx_renderer() {
 void rtx_renderer::init_internal(const renderer_properties &properties) {
   m_state = std::make_unique<RtxState>();
   m_state->maxDepth = 10;
-  m_state->maxSamples = 1;
+  m_state->maxSamples = 7;
   m_state->fireflyClampThreshold = 0.f;
   m_state->hdrMultiplier = 1.f;
   m_state->size = {properties.m_width, properties.m_height};
   m_state->minHeatmap = 0;
   m_state->maxHeatmap = 65000;
-  m_state->pbrMode = 1;
+  m_state->pbrMode = 0;
   m_state->debugging_mode = DebugMode::eNoDebug;
 
   initialize_shaders();
@@ -138,9 +138,9 @@ void rtx_renderer::update(time_unit dt) /*override*/
                     m_renderer_properties.m_height, 1);
   ++m_state->frame;
 
-  swap_chain.begin_render_pass();
+  m_rasterize_renderer->begin_frame();
   m_rasterize_renderer->draw_frame();
-  swap_chain.end_render_pass();
+  m_rasterize_renderer->end_frame();
 
   swap_chain.flush_current_command_buffer();
 

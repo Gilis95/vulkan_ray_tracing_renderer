@@ -341,23 +341,6 @@ vec3 EvalDielectricRefractionGltf(State state, vec3 V, vec3 N, vec3 L, vec3 H, i
 {
   pdf = abs(dot(N, L));
   return state.mat.albedo;
-
-
-  //float NdotL = dot(N, L);
-  //float NdotH = dot(N, H);
-  //float NdotV = dot(N, V);
-  //float VdotH = dot(V, H);
-  //float LdotH = dot(L, H);
-
-  //float F = F_Schlick(state.eta, 1, dot(V, H));
-  //float D = D_GGX(NdotH, state.mat.roughness);
-  //float G = V_GGX(NdotL, NdotV, state.mat.roughness);
-
-
-  //float denomSqrt = LdotH * state.eta + VdotH;
-  //pdf             = D * NdotH * (1.0 - F) * abs(LdotH) / (denomSqrt * denomSqrt);
-
-  //return state.mat.albedo * (1.0 - F) * D * G * abs(VdotH) * abs(LdotH) * 4.0 * state.eta * state.eta / (denomSqrt * denomSqrt);
 }
 
 //-----------------------------------------------------------------------

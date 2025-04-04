@@ -1,7 +1,8 @@
+#include "assets/serializers/gltf/mesh/mesh_asset_normals_builder.h"
+
 #include <glm/geometric.hpp>
 
 #include "assets/mesh_asset.h"
-#include "assets/serializers/gltf/mesh/mesh_asset_normals_builder.h"
 #include "core/wunder_macros.h"
 #include "tinygltf/tinygltf_utils.h"
 
@@ -17,22 +18,19 @@ void mesh_asset_normals_builder::build() {
   std::vector<glm::vec3> normals;
   if (!tinygltf::utils::get_attribute<glm::vec3>(
           m_gltf_scene_root, m_gltf_primitive, normals, "NORMAL")) {
-    create_normals( normals);
-    for (auto& normal : normals) {
-      normal = glm::normalize(normal);
-    }
+    create_normals(normals);
   }
 
   AssertReturnIf(normals.size() != m_out_mesh_asset.m_vertices.size(), );
 
   for (uint32_t i = 0; i < normals.size(); ++i) {
     const auto& normal = normals[i];
-    m_out_mesh_asset.m_vertices[i].m_normal = normal;
+    m_out_mesh_asset.m_vertices[i].m_normal = glm::normalize(normal);
   }
 }
 
 void mesh_asset_normals_builder::create_normals(
-                    std::vector<glm::vec3>& out_normals) {
+    std::vector<glm::vec3>& out_normals) {
   // Need to compute the normals
   std::vector<glm::vec3> geo_normal(m_out_mesh_asset.m_vertices.size());
   for (size_t i = 0; i < m_out_mesh_asset.m_indices.size(); i += 3) {

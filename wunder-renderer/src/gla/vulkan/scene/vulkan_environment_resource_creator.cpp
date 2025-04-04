@@ -33,8 +33,8 @@ vulkan_environment_resource_creator::create_sky_and_sun_properties() {
       {0.0, 0.0, 0.01f},    // night_color;
       0.8f,                 // sun_disk_intensity;
       {0.00, 0.78, 0.62f},  // sun_direction;
-      5.0f,                 // sun_disk_scale;
-      1.0f,                 // sun_glow_intensity;
+      2.0f,                 // sun_disk_scale;
+      2.0f,                 // sun_glow_intensity;
       1,                    // y_is_up;
       1,                    // physically_scaled_sun;
       1,                    // in_use;

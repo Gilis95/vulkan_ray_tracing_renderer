@@ -75,7 +75,7 @@ void camera::update_movement(time_unit dt) {
 
   ReturnIf(is_control_pressed || is_alt_pressed || is_shift_pressed);
 
-  auto factor = static_cast<float>(dt.m_miliseconds * 3);
+  auto factor = static_cast<float>(dt.m_miliseconds * 0.1f);
   m_camera_position_difference = {0, 0, 0};
 
   if (input_manager.is_key_in_state(wunder::keyboard::key_code::w,

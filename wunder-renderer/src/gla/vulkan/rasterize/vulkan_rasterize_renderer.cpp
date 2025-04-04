@@ -13,7 +13,7 @@
 
 namespace wunder::vulkan {
 rasterize_renderer::rasterize_renderer(
-    const renderer_properties& renderer_properties)
+    const renderer_properties &renderer_properties)
     : m_renderer_properties(renderer_properties),
       m_render_region{.offset = {.x = 0, .y = 0},
                       .extent = {.width = m_renderer_properties.m_width,
@@ -25,14 +25,14 @@ rasterize_renderer::rasterize_renderer(
                    .avgLum = 1.0f,
                    .zoom = 1.0f,
                    .renderingRatio = {1.34, 1.03},
-                   .autoExposure = 0,
-                   .Ywhite = 0.5f,
-                   .key = 0.5f,
+                   .autoExposure = 1,
+                   .Ywhite = 0.7f,
+                   .key = 0.4f,
                    .dither = 1} {
   m_output_image.reset(new storage_texture(
-    {.m_enabled = true, .m_descriptor_name = "rtxGeneratedImage"},
-    VK_FORMAT_R32G32B32A32_SFLOAT, m_renderer_properties.m_width,
-    m_renderer_properties.m_height));
+      {.m_enabled = true, .m_descriptor_name = "rtxGeneratedImage"},
+      VK_FORMAT_R32G32B32A32_SFLOAT, m_renderer_properties.m_width,
+      m_renderer_properties.m_height));
   m_input_image.reset(new sampled_texture(*m_output_image));
 }
 
@@ -48,11 +48,11 @@ void rasterize_renderer::initialize() {
       rasterize_pipeline::create(*m_descriptor_set_manager, m_shaders));
 }
 
-storage_texture& rasterize_renderer::get_output_image() {
+storage_texture &rasterize_renderer::get_output_image() {
   return *m_output_image;
 }
 
-void rasterize_renderer::create_descriptor_manager(const shader& shader) {
+void rasterize_renderer::create_descriptor_manager(const shader &shader) {
   m_descriptor_set_manager.reset(
       new descriptor_set_manager(shader.get_shader_reflection_data()));
 }
@@ -80,13 +80,16 @@ rasterize_renderer::get_shaders_for_compilation() {
   return shaders_to_compile;
 }
 
-void rasterize_renderer::draw_frame() {
-  //
-  // auto size =
-  //     glm::vec2(m_renderer_properties.m_width,
-  //     m_renderer_properties.m_height);
-  // auto area =
-  //     glm::vec2(m_render_region.extent.width, m_render_region.extent.height);
+void rasterize_renderer::begin_frame() {
+  auto &vulkan_context =
+      layer_abstraction_factory::instance().get_vulkan_context();
+  auto &swap_chain = vulkan_context.mutable_swap_chain();
+
+  auto graphic_command_buffer = swap_chain.get_current_command_buffer();
+  m_input_image->generate_mip_levels(graphic_command_buffer);
+
+  swap_chain.begin_render_pass();
+
 
   VkViewport viewport{static_cast<float>(m_render_region.offset.x),
                       static_cast<float>(m_render_region.offset.y),
@@ -95,16 +98,20 @@ void rasterize_renderer::draw_frame() {
                       0.0f,
                       1.0f};
   VkRect2D scissor{
-      m_render_region.offset,
-      {m_render_region.extent.width, m_render_region.extent.height}};
+    m_render_region.offset,
+    {m_render_region.extent.width, m_render_region.extent.height}};
+
+  vkCmdSetViewport(graphic_command_buffer, 0, 1, &viewport);
+  vkCmdSetScissor(graphic_command_buffer, 0, 1, &scissor);
+}
+
+void rasterize_renderer::draw_frame() {
 
   auto graphic_command_buffer = layer_abstraction_factory::instance()
                                     .get_vulkan_context()
                                     .mutable_swap_chain()
                                     .get_current_command_buffer();
 
-  vkCmdSetViewport(graphic_command_buffer, 0, 1, &viewport);
-  vkCmdSetScissor(graphic_command_buffer, 0, 1, &scissor);
 
   vkCmdPushConstants(
       graphic_command_buffer, m_pipeline->get_vulkan_pipeline_layout(),
@@ -113,6 +120,14 @@ void rasterize_renderer::draw_frame() {
   m_descriptor_set_manager->bind(*m_pipeline);
 
   vkCmdDraw(graphic_command_buffer, 3, 1, 0, 0);
+}
+
+void rasterize_renderer::end_frame() {
+  auto &vulkan_context =
+      layer_abstraction_factory::instance().get_vulkan_context();
+  auto &swap_chain = vulkan_context.mutable_swap_chain();
+
+  swap_chain.end_render_pass();
 }
 
 }  // namespace wunder::vulkan

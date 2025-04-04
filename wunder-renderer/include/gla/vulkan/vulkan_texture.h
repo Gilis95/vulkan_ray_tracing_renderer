@@ -40,6 +40,8 @@ class texture : public base_texture {
  public:
   void add_descriptor_to(descriptor_set_manager& target) override;
 
+  void generate_mip_levels(VkCommandBuffer command_buffer);
+
  private:
   void allocate_image(const std::string& name, VkFormat image_format,
                       std::uint32_t width, std::uint32_t height);
@@ -68,6 +70,9 @@ class texture : public base_texture {
     return m_gpu_allocation_size;
   }
 
+  [[nodiscard]] VkExtent2D get_image_size() const { return m_image_size; }
+  [[nodiscard]] uint32_t get_mip_levels() const { return m_mip_levels; }
+
   [[nodiscard]] const descriptor_build_data& get_descriptor_build_data() const {
     return m_descriptor_build_data;
   }
@@ -75,16 +80,22 @@ class texture : public base_texture {
  private:
   std::shared_ptr<vulkan_image_info> m_image_info;
   VkDeviceSize m_gpu_allocation_size = 0;
-  int32_t m_mip_levels = 0;
+  VkExtent2D m_image_size;
+
+ private:
+  uint32_t m_mip_levels = 0;
+
   descriptor_build_data m_descriptor_build_data;
 };
 
 template <typename base_texture>
 template <typename other_base_texture>
 texture<base_texture>::texture(const texture<other_base_texture>& other)
-    : m_descriptor_build_data(other.get_descriptor_build_data()),
-      m_image_info(other.get_image_info()),
-      m_gpu_allocation_size(other.get_gpu_allocation_size()) {
+    : m_image_info(other.get_image_info()),
+      m_gpu_allocation_size(other.get_gpu_allocation_size()),
+      m_image_size(other.get_image_size()),
+      m_mip_levels(other.get_mip_levels()),
+      m_descriptor_build_data(other.get_descriptor_build_data()) {
   base_texture::m_descriptor = other.m_descriptor;
 }
 

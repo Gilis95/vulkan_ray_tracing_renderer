@@ -21,17 +21,25 @@ class rasterize_renderer : public base_renderer {
  public:
   explicit rasterize_renderer(const renderer_properties& m_renderer_properties);
   ~rasterize_renderer();
+
  public:
   void initialize();
 
   storage_texture& get_output_image();
+
  public:
+  void begin_frame();
+
   void draw_frame();
+
+  void end_frame();
+
  private:
   void create_descriptor_manager(const shader& shader);
 
   vector_map<VkShaderStageFlagBits, std::vector<shader_to_compile>>
   get_shaders_for_compilation() override;
+
  private:
   const renderer_properties& m_renderer_properties;
   VkRect2D m_render_region;
