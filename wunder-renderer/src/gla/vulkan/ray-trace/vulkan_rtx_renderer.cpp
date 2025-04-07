@@ -43,7 +43,7 @@ void rtx_renderer::init_internal(const renderer_properties &properties) {
   m_state->maxDepth = 10;
   m_state->maxSamples = 7;
   m_state->fireflyClampThreshold = 0.f;
-  m_state->hdrMultiplier = 1.f;
+  m_state->hdrMultiplier = 1.7f;
   m_state->size = {properties.m_width, properties.m_height};
   m_state->minHeatmap = 0;
   m_state->maxHeatmap = 65000;

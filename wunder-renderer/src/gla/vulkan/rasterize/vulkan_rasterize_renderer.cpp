@@ -25,9 +25,9 @@ rasterize_renderer::rasterize_renderer(
                    .avgLum = 1.0f,
                    .zoom = 1.0f,
                    .renderingRatio = {1.34, 1.03},
-                   .autoExposure = 1,
-                   .Ywhite = 0.7f,
-                   .key = 0.4f,
+                   .autoExposure = 0,
+                   .Ywhite = 0.5f,
+                   .key = 0.5f,
                    .dither = 1} {
   m_output_image.reset(new storage_texture(
       {.m_enabled = true, .m_descriptor_name = "rtxGeneratedImage"},

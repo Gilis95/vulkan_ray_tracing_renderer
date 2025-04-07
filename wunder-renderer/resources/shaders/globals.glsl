@@ -90,13 +90,12 @@ struct Material
   vec3  attenuationColor;
   float attenuationDistance;
 
-  //vec3  texIDs;
   // Roughness calculated from anisotropic
   float ax;
   float ay;
   // ----
-  vec3  f0;
-  float alpha;
+  vec3  f0; //specular facotr
+  float alpha; //surface roughness
   bool  unlit;
   bool  thinwalled;
 };
