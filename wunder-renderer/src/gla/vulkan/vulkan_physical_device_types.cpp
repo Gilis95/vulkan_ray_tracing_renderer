@@ -7,7 +7,51 @@
 #include <cstring>
 
 namespace wunder::vulkan {
-features_11O_old::features_11O_old() {
+physical_device_info::physical_device_info()
+    : m_memory_properties(),
+      m_features_10{},
+      m_vulkan_11_features{},
+      m_vulkan_12_features{},
+      m_vulkan_13_features{},
+      m_properties_10{},
+      m_vulkan_11_properties{},
+      m_vulkan_12_properties{},
+      m_vulkan_13_properties{} {
+  m_features_10.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
+  m_vulkan_11_features.sType =
+      VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES;
+  m_vulkan_12_features.sType =
+      VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
+  m_vulkan_13_features.sType =
+      VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;
+  m_properties_10.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2;
+  m_vulkan_11_properties.sType =
+      VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_PROPERTIES;
+  m_vulkan_12_properties.sType =
+      VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_PROPERTIES;
+  m_vulkan_13_properties.sType =
+      VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_PROPERTIES;
+}
+
+features_11O_old::features_11O_old()
+    : m_multiview{},
+      m_t_16_bit_storage{},
+      m_sampler_ycbcr_conversion{},
+      m_protected_memory{},
+      m_draw_parameters{},
+      m_variable_pointers{} {
+  m_multiview.sType = {VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MULTIVIEW_FEATURES};
+  m_t_16_bit_storage.sType = {
+      VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_16BIT_STORAGE_FEATURES};
+  m_sampler_ycbcr_conversion.sType = {
+      VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SAMPLER_YCBCR_CONVERSION_FEATURES};
+  m_protected_memory.sType = {
+      VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROTECTED_MEMORY_FEATURES};
+  m_draw_parameters.sType = {
+      VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_DRAW_PARAMETER_FEATURES};
+  m_variable_pointers.sType = {
+      VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VARIABLE_POINTER_FEATURES};
+
   m_multiview.pNext = &m_t_16_bit_storage;
   m_t_16_bit_storage.pNext = &m_sampler_ycbcr_conversion;
   m_sampler_ycbcr_conversion.pNext = &m_protected_memory;
@@ -37,7 +81,8 @@ void features_11O_old::read(
       features11.variablePointersStorageBuffer;
 }
 
-void features_11O_old::write(VkPhysicalDeviceVulkan11Features& features11) {
+void features_11O_old::write(
+    VkPhysicalDeviceVulkan11Features& features11) const {
   features11.multiview = m_multiview.multiview;
   features11.multiviewGeometryShader = m_multiview.multiviewGeometryShader;
   features11.multiviewTessellationShader =
@@ -57,7 +102,25 @@ void features_11O_old::write(VkPhysicalDeviceVulkan11Features& features11) {
       m_variable_pointers.variablePointersStorageBuffer;
 }
 
-properties_11O_old::properties_11O_old() {
+properties_11O_old::properties_11O_old()
+    : m_maintenance_3{},
+      m_device_id{},
+      m_multiview{},
+      m_protected_memory{},
+      m_point_clipping{},
+      m_subgroup_properties{}
+{
+  m_maintenance_3.sType = {
+      VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MAINTENANCE_3_PROPERTIES};
+  m_device_id.sType = {VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ID_PROPERTIES};
+  m_multiview.sType = {VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MULTIVIEW_PROPERTIES};
+  m_protected_memory.sType = {
+      VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROTECTED_MEMORY_PROPERTIES};
+  m_point_clipping.sType = {
+      VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_POINT_CLIPPING_PROPERTIES};
+  m_subgroup_properties.sType = {
+      VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SUBGROUP_PROPERTIES};
+
   m_maintenance_3.pNext = &m_device_id;
   m_device_id.pNext = &m_multiview;
   m_multiview.pNext = &m_protected_memory;
@@ -67,7 +130,7 @@ properties_11O_old::properties_11O_old() {
 }
 
 void properties_11O_old::write(
-    VkPhysicalDeviceVulkan11Properties& properties11) {
+    VkPhysicalDeviceVulkan11Properties& properties11) const {
   memcpy(properties11.deviceLUID, m_device_id.deviceLUID,
          sizeof(properties11.deviceLUID));
   memcpy(properties11.deviceUUID, m_device_id.deviceUUID,
@@ -93,8 +156,8 @@ void properties_11O_old::write(
 }
 
 void init_physical_info(physical_device_info& info,
-                        VkPhysicalDevice physical_device, uint32_t version_major,
-                        uint32_t version_minor) {
+                        VkPhysicalDevice physical_device,
+                        uint32_t version_major, uint32_t version_minor) {
   vkGetPhysicalDeviceMemoryProperties(physical_device,
                                       &info.m_memory_properties);
   uint32_t count;
@@ -144,4 +207,4 @@ void init_physical_info(physical_device_info& info,
   vkGetPhysicalDeviceProperties2(physical_device, &info.m_properties_10);
 }
 
-}  // namespace wunder
+}  // namespace wunder::vulkan

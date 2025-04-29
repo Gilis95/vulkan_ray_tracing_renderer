@@ -86,7 +86,8 @@ void device_buffer<base_buffer_type>::update_data(
   auto graphics_queue = swap_chain.get_current_command_buffer();
 
   // Ensure that the modified UBO is not visible to previous frames.
-  VkBufferMemoryBarrier before_barrier{VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER};
+  VkBufferMemoryBarrier before_barrier{};
+  before_barrier.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
   before_barrier.srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
   before_barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
   before_barrier.buffer = buffer<base_buffer_type>::m_vk_buffer;
@@ -104,7 +105,8 @@ void device_buffer<base_buffer_type>::update_data(
                     data_size, data);
 
   // Making sure the updated UBO will be visible.
-  VkBufferMemoryBarrier after_barrier{VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER};
+  VkBufferMemoryBarrier after_barrier{};
+  after_barrier.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
   after_barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
   after_barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
   after_barrier.buffer = buffer<base_buffer_type>::m_vk_buffer;

@@ -31,16 +31,14 @@ class rtx_pipeline : public base_pipeline, public non_copyable {
   [[nodiscard]] VkPushConstantRange get_push_constant_range() const override;
 
  private:
-  [[nodiscard]] void create_shader_group_info();
+  void create_shader_group_info();
 
   void initialize_pipeline(
       const vector_map<VkShaderStageFlagBits, std::vector<unique_ptr<shader>>>&
           shaders_of_types);
 
  private:
-  VkRayTracingPipelineCreateInfoKHR m_pipeline_create_info = {
-      VK_STRUCTURE_TYPE_RAY_TRACING_PIPELINE_CREATE_INFO_KHR};
-
+  VkRayTracingPipelineCreateInfoKHR m_pipeline_create_info;
   std::vector<VkRayTracingShaderGroupCreateInfoKHR> m_shader_stage_groups;
 };
 }  // namespace wunder::vulkan

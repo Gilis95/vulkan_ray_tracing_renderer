@@ -63,7 +63,6 @@ void application::run() {
   auto &project = project::instance();
 
   time_unit frame_end = time_unit::from_current_time_in_miliseconds();
-  std::uint64_t frame_number = 0;
   while (m_is_running) {
     // WUNDER_WARN("Frame {0}", frame_number++);
 

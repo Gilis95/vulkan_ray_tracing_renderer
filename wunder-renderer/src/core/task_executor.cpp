@@ -6,7 +6,7 @@ namespace wunder {
 task_executor::task_executor(std::uint32_t pool_size)
     : m_pool_size(pool_size) {}
 
-void task_executor::update(time_unit dt) {
+void task_executor::update(time_unit /*dt*/) {
   try_finish_task();
   try_start_task();
 }

@@ -9,7 +9,7 @@ class asset_storage;
 
 class environment_map_serializer final {
   struct input_data {
-    int32_t m_width, m_height, m_components;
+    uint32_t m_width, m_height, m_components;
     float* m_pixels_ptr;
   };
 

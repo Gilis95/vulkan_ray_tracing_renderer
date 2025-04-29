@@ -30,6 +30,8 @@ acceleration_structure_build_info& acceleration_structure_build_info::operator=(
   std::swap(m_build_sizes_info, other.m_build_sizes_info);
 
   m_build_info.pGeometries = &m_as_geometry;
+
+  return *this;
 }
 
 acceleration_structure_build_info::~acceleration_structure_build_info() =

@@ -76,9 +76,9 @@ top_level_acceleration_structure_build_info::
 }
 
 void top_level_acceleration_structure_build_info::free_staging_data() {
-    AssertReturnUnless(m_acceleration_structures_buffer);
+  AssertReturnUnless(m_acceleration_structures_buffer);
 
-    m_acceleration_structures_buffer->free_staging_data();
+  m_acceleration_structures_buffer->free_staging_data();
 }
 
 bool top_level_acceleration_structure_build_info::
@@ -127,12 +127,13 @@ void top_level_acceleration_structure_build_info::
       VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR);
 
   m_acceleration_structures_buffer = std::make_unique<storage_device_buffer>(
-      m_command_buffer, descriptor_build_data{.m_enabled = false}, data, size,
-      flags);
+      m_command_buffer,
+      descriptor_build_data{.m_enabled = false, .m_descriptor_name = ""}, data,
+      size, flags);
 }
 
 void top_level_acceleration_structure_build_info::create_geometry_data(
-    std::uint32_t acceleration_structure_instances_count) {
+    std::uint32_t /*acceleration_structure_instances_count*/) {
   VkAccelerationStructureGeometryInstancesDataKHR geometryInstances;
   std::memset(&geometryInstances, 0,
               sizeof(VkAccelerationStructureGeometryInstancesDataKHR));

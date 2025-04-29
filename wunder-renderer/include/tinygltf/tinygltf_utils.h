@@ -24,16 +24,17 @@
 #endif
 
 #include <algorithm>
+#include <cmath>
 #include <sstream>
 #include <string>
 #include <vector>
 
-#include "../../../cmake-build-debug/_deps/tinygltf-src/tiny_gltf.h"
 #include "glm/glm.hpp"
 #include "glm/gtc/type_ptr.hpp"
 #include "glm/gtx/matrix_decompose.hpp"
 #include "glm/gtx/transform.hpp"
 #include "include/core/wunder_macros.h"
+#include "tiny_gltf.h"
 
 #define GLTF_PERSPECTIVE_CAMERA_TYPE "perspective"
 #define GLTF_ORTHOGRAPHIC_CAMERA_TYPE "orthographic"
@@ -62,10 +63,10 @@ struct KHR_texture_transform {
       glm::mat3(1);  // Computed transform of offset, rotation, scale
   void updateTransform() {
     // Compute combined transformation matrix
-    float cosR = cos(rotation);
-    float sinR = sin(rotation);
-    float tx = offset.x;
-    float ty = offset.y;
+    float cosR = std::cos(rotation);
+    float sinR = std::sin(rotation);
+    const float tx = offset.x;
+    const float ty = offset.y;
     float sx = scale.x;
     float sy = scale.y;
     m_uv_transform =
@@ -160,9 +161,7 @@ struct KHR_materials_iridescence {
   tinygltf::TextureInfo m_iridescence_thickness_texture = {};
 };
 
-namespace tinygltf {
-
-namespace utils {
+namespace tinygltf::utils {
 
 //--------------------------------------------------------------------------------------------------
 // Utility functions to parse the glTF file
@@ -177,8 +176,7 @@ namespace utils {
 // - name: The name of the attribute to retrieve.
 // - result: The variable to store the retrieved value in.
 template <typename T>
-inline void get_value(const tinygltf::Value& value, const std::string& name,
-                      T& result) {
+void get_value(const Value& value, const std::string& name, T& result) {
   if (value.Has(name)) {
     result = value.Get(name).Get<T>();
   }
@@ -188,7 +186,7 @@ inline void get_value(const tinygltf::Value& value, const std::string& name,
 // Retrieves the value of the specified attribute as a float and stores it in
 // the result variable.
 template <>
-inline void get_value(const tinygltf::Value& value, const std::string& name,
+inline void get_value(const Value& value, const std::string& name,
                       float& result) {
   if (value.Has(name)) {
     result = static_cast<float>(value.Get(name).Get<double>());
@@ -199,8 +197,8 @@ inline void get_value(const tinygltf::Value& value, const std::string& name,
 // Retrieves the texture attribute values and stores them in the result
 // variable.
 template <>
-inline void get_value(const tinygltf::Value& value, const std::string& name,
-                      tinygltf::TextureInfo& result) {
+inline void get_value(const Value& value, const std::string& name,
+                      TextureInfo& result) {
   if (value.Has(name)) {
     const auto& t = value.Get(name);
     get_value(t, "index", result.index);
@@ -219,14 +217,12 @@ inline void get_value(const tinygltf::Value& value, const std::string& name,
 // - name: The name of the attribute to retrieve.
 // - result: The variable to store the retrieved array value in.
 template <class T>
-inline void get_array_value(const tinygltf::Value& value,
-                            const std::string& name, T& result) {
+void get_array_value(const Value& value, const std::string& name, T& result) {
   if (value.Has(name)) {
-    const auto& v = value.Get(name).Get<tinygltf::Value::Array>();
-    std::transform(v.begin(), v.end(), glm::value_ptr(result),
-                   [](const tinygltf::Value& v) {
-                     return static_cast<float>(v.Get<double>());
-                   });
+    const auto& v = value.Get(name).Get<Value::Array>();
+    std::transform(
+        v.begin(), v.end(), glm::value_ptr(result),
+        [](const Value& v) { return static_cast<float>(v.Get<double>()); });
   }
 }
 
@@ -240,8 +236,7 @@ inline void get_array_value(const tinygltf::Value& value,
 //
 // Returns:
 // - A tinygltf::Value representing the array of elements.
-tinygltf::Value convert_to_tinygltf_value(int numElements,
-                                          const float* elements);
+Value convert_to_tinygltf_value(int numElements, const float* elements);
 
 // Retrieves the translation, rotation, and scale of a GLTF node.
 // This function extracts the translation, rotation, and scale (TRS) properties
@@ -254,8 +249,8 @@ tinygltf::Value convert_to_tinygltf_value(int numElements,
 // - translation: Output parameter for the translation vector.
 // - rotation: Output parameter for the rotation quaternion.
 // - scale: Output parameter for the scale vector.
-void get_node_trs(const tinygltf::Node& node, glm::vec3& translation,
-                  glm::quat& rotation, glm::vec3& scale);
+void get_node_trs(const Node& node, glm::vec3& translation, glm::quat& rotation,
+                  glm::vec3& scale);
 
 // Sets the translation, rotation, and scale of a GLTF node.
 // This function sets the translation, rotation, and scale (TRS) properties of
@@ -266,7 +261,7 @@ void get_node_trs(const tinygltf::Node& node, glm::vec3& translation,
 // - translation: The translation vector to set.
 // - rotation: The rotation quaternion to set.
 // - scale: The scale vector to set.
-void set_node_trs(tinygltf::Node& node, const glm::vec3& translation,
+void set_node_trs(Node& node, const glm::vec3& translation,
                   const glm::quat& rotation, const glm::vec3& scale);
 
 // Retrieves the transformation matrix of a GLTF node.
@@ -280,7 +275,7 @@ void set_node_trs(tinygltf::Node& node, const glm::vec3& translation,
 //
 // Returns:
 // - The transformation matrix of the node.
-glm::mat4 get_node_matrix(const tinygltf::Node& node);
+glm::mat4 get_node_matrix(const Node& node);
 
 // Generates a unique key for a GLTF primitive based on its attributes.
 // This function creates a unique string key for the given GLTF primitive by
@@ -292,24 +287,7 @@ glm::mat4 get_node_matrix(const tinygltf::Node& node);
 //
 // Returns:
 // - A unique string key representing the primitive's attributes.
-std::string generate_primitive_key(const tinygltf::Primitive& primitive);
-
-// Check if the map has the specified element.
-// Can be used for extensions, extras, or any other map.
-// Returns true if the map has the specified element, false otherwise.
-template <typename MapType>
-bool has_element_name(const MapType& map, const std::string& key) {
-  return map.find(key) != map.end();
-}
-
-// Get the value of the specified element from the map.
-// Can be extension, extras, or any other map.
-// Returns the value of the element.
-template <typename MapType>
-const typename MapType::mapped_type& get_element_value(const MapType& map,
-                                                       const std::string& key) {
-  return map.at(key);
-}
+std::string generate_primitive_key(const Primitive& primitive);
 
 // This function retrieves the buffer data for the specified accessor from the
 // GLTF model and returns it as a span of type T. The function assumes that the
@@ -323,12 +301,12 @@ template <typename T>
 std::span<const T> get_buffer_data_span(const tinygltf::Model& model,
                                         int accessorIndex)
 #else
-std::pair<const T*, size_t> get_buffer_data_span(const tinygltf::Model& model,
+std::pair<const T*, size_t> get_buffer_data_span(const Model& model,
                                                  int accessorIndex)
 #endif
 {
-  const tinygltf::Accessor& accessor = model.accessors[accessorIndex];
-  const tinygltf::BufferView& view = model.bufferViews[accessor.bufferView];
+  const Accessor& accessor = model.accessors[accessorIndex];
+  const BufferView& view = model.bufferViews[accessor.bufferView];
   assert(view.byteStride == 0 ||
          view.byteStride == sizeof(T));  // Not supporting stride
                                          // Add assertions based on the type
@@ -382,17 +360,16 @@ std::pair<const T*, size_t> get_buffer_data_span(const tinygltf::Model& model,
 // Returns:
 // - A vector of type T containing the attribute data.
 template <typename T>
-inline std::vector<T> extract_attribute_data(const tinygltf::Model& model,
-                                             const tinygltf::Value& attributes,
-                                             const std::string& attributeName) {
+std::vector<T> extract_attribute_data(const Model& model,
+                                      const Value& attributes,
+                                      const std::string& attributeName) {
   std::vector<T> attributeValues;
 
   if (attributes.Has(attributeName)) {
-    const tinygltf::Accessor& accessor =
+    const Accessor& accessor =
         model.accessors.at(attributes.Get(attributeName).GetNumberAsInt());
-    const tinygltf::BufferView& bufferView =
-        model.bufferViews.at(accessor.bufferView);
-    const tinygltf::Buffer& buffer = model.buffers.at(bufferView.buffer);
+    const BufferView& bufferView = model.bufferViews.at(accessor.bufferView);
+    const Buffer& buffer = model.buffers.at(bufferView.buffer);
 
     attributeValues.resize(accessor.count);
     std::memcpy(attributeValues.data(),
@@ -408,8 +385,8 @@ inline std::vector<T> extract_attribute_data(const tinygltf::Model& model,
 // accessorFirstElement through accessorFirstElement + numElementsToProcess - 1.
 template <class T>
 void for_each_sparse_value(
-    const tinygltf::Model& tmodel, const tinygltf::Accessor& accessor,
-    size_t accessorFirstElement, size_t numElementsToProcess,
+    const Model& tmodel, const Accessor& accessor, size_t accessorFirstElement,
+    size_t numElementsToProcess,
     std::function<void(size_t index, const T* value)> fn) {
   if (!accessor.sparse.isSparse) {
     return;  // Nothing to do
@@ -421,19 +398,16 @@ void for_each_sparse_value(
       || idxs.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT  //
       || idxs.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT);
 
-  const tinygltf::BufferView& idx_buffer_view =
-      tmodel.bufferViews[idxs.bufferView];
+  const BufferView& idx_buffer_view = tmodel.bufferViews[idxs.bufferView];
   const unsigned char* idxBuffer =
       &tmodel.buffers[idx_buffer_view.buffer].data[idx_buffer_view.byteOffset];
   const size_t idx_buffer_byte_stride =
-      idx_buffer_view.byteStride
-          ? idx_buffer_view.byteStride
-          : tinygltf::GetComponentSizeInBytes(idxs.componentType);
+      idx_buffer_view.byteStride ? idx_buffer_view.byteStride
+                                 : GetComponentSizeInBytes(idxs.componentType);
   ReturnIf(idx_buffer_byte_stride == size_t(-1));  // Invalid
 
   const auto& vals = accessor.sparse.values;
-  const tinygltf::BufferView& valBufferView =
-      tmodel.bufferViews[vals.bufferView];
+  const BufferView& valBufferView = tmodel.bufferViews[vals.bufferView];
   const unsigned char* valBuffer =
       &tmodel.buffers[valBufferView.buffer].data[valBufferView.byteOffset];
   const size_t valBufferByteStride = accessor.ByteStride(valBufferView);
@@ -442,19 +416,21 @@ void for_each_sparse_value(
   // Note that this could be faster for lots of small copies, since we could
   // binary search for the first sparse accessor index to use (since the
   // glTF specification requires the indices be sorted)!
-  for (size_t pairIdx = 0; pairIdx < accessor.sparse.count; pairIdx++) {
+  for (int pairIdx = 0; pairIdx < accessor.sparse.count; pairIdx++) {
     // Read the index from the index buffer, converting its type
     size_t index = 0;
     const unsigned char* pIdx = idxBuffer + idx_buffer_byte_stride * pairIdx;
     switch (idxs.componentType) {
       case TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE:
-        index = *reinterpret_cast<const uint8_t*>(pIdx);
+        index = *pIdx;
         break;
       case TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT:
         index = *reinterpret_cast<const uint16_t*>(pIdx);
         break;
       case TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT:
         index = *reinterpret_cast<const uint32_t*>(pIdx);
+        break;
+      default:
         break;
     }
 
@@ -486,15 +462,13 @@ void for_each_sparse_value(
 // of elements in accessor.
 template <class T>
 void copy_accessor_data(T* out_data, size_t out_data_size_in_elements,
-                        size_t out_first_element, const tinygltf::Model& tmodel,
-                        const tinygltf::Accessor& accessor,
-                        size_t accessor_first_element,
+                        size_t out_first_element, const Model& tmodel,
+                        const Accessor& accessor, size_t accessor_first_element,
                         size_t num_elements_to_copy) {
   AssertReturnUnless(out_first_element < out_data_size_in_elements);
   AssertReturnUnless(accessor_first_element < accessor.count);
 
-  const tinygltf::BufferView& buffer_view =
-      tmodel.bufferViews[accessor.bufferView];
+  const BufferView& buffer_view = tmodel.bufferViews[accessor.bufferView];
   const unsigned char* buffer =
       &tmodel.buffers[buffer_view.buffer]
            .data[accessor.byteOffset + buffer_view.byteOffset];
@@ -525,8 +499,7 @@ void copy_accessor_data(T* out_data, size_t out_data_size_in_elements,
 // Same as copy_accessor_data(T*, ...), but taking a vector.
 template <class T>
 void copy_accessor_data(std::vector<T>& outData, size_t outFirstElement,
-                        const tinygltf::Model& tmodel,
-                        const tinygltf::Accessor& accessor,
+                        const Model& tmodel, const Accessor& accessor,
                         size_t accessorFirstElement, size_t numElementsToCopy) {
   copy_accessor_data<T>(outData.data(), outData.size(), outFirstElement, tmodel,
                         accessor, accessorFirstElement, numElementsToCopy);
@@ -536,9 +509,8 @@ void copy_accessor_data(std::vector<T>& outData, size_t outFirstElement,
 // Return false if the accessor is invalid.
 // T must be glm::vec2, glm::vec3, or glm::vec4.
 template <typename T>
-inline bool get_accessor_data(const tinygltf::Model& tmodel,
-                              const tinygltf::Accessor& accessor,
-                              std::vector<T>& attribVec) {
+bool get_accessor_data(const Model& tmodel, const Accessor& accessor,
+                       std::vector<T>& attribVec) {
   // Retrieving the data of the accessor
   const auto nbElems = accessor.count;
 
@@ -619,6 +591,8 @@ inline bool get_accessor_data(const tinygltf::Model& tmodel,
               v = v / 65535.f;
             }
             break;
+          default:
+            break;
         }
 
         if constexpr (nbComponents == 1) {
@@ -646,10 +620,8 @@ inline bool get_accessor_data(const tinygltf::Model& tmodel,
 // Return false if the attribute is missing or invalid.
 // T must be glm::vec2, glm::vec3, or glm::vec4.
 template <typename T>
-inline bool get_attribute(const tinygltf::Model& tmodel,
-                          const tinygltf::Primitive& primitive,
-                          std::vector<T>& attribVec,
-                          const std::string& attribName) {
+bool get_attribute(const Model& tmodel, const Primitive& primitive,
+                   std::vector<T>& attribVec, const std::string& attribName) {
   const auto& it = primitive.attributes.find(attribName);
   ReturnIf(it == primitive.attributes.end(), false);
   const auto& accessor = tmodel.accessors[it->second];
@@ -659,9 +631,9 @@ inline bool get_attribute(const tinygltf::Model& tmodel,
 // This is appending the incoming data to the binary buffer (just one)
 // and return the amount in byte of data that was added.
 template <class T>
-uint32_t append_data(tinygltf::Buffer& buffer, const T& inData) {
+uint32_t append_data(Buffer& buffer, const T& inData) {
   auto* pData = reinterpret_cast<const char*>(inData.data());
-  uint32_t len = static_cast<uint32_t>(sizeof(inData[0]) * inData.size());
+  const auto len = static_cast<uint32_t>(sizeof(inData[0]) * inData.size());
   buffer.data.insert(buffer.data.end(), pData, pData + len);
   return len;
 }
@@ -669,24 +641,26 @@ uint32_t append_data(tinygltf::Buffer& buffer, const T& inData) {
 //--------------------------------------------------------------------------------------------------
 // Materials
 //--------------------------------------------------------------------------------------------------
-KHR_materials_unlit get_unlit(const tinygltf::Material& tmat);
-std::optional<KHR_materials_specular> get_specular(
-    const tinygltf::Material& tmat);
-KHR_texture_transform getTextureTransform(const tinygltf::TextureInfo& tinfo);
-KHR_materials_clearcoat get_clearcoat(const tinygltf::Material& tmat);
-KHR_materials_sheen get_sheen(const tinygltf::Material& tmat);
-KHR_materials_transmission get_transmission(const tinygltf::Material& tmat);
-KHR_materials_anisotropy get_anisotropy(const tinygltf::Material& tmat);
-KHR_materials_ior get_ior(const tinygltf::Material& tmat);
-KHR_materials_volume get_volume(const tinygltf::Material& tmat);
-KHR_materials_displacement get_displacement(const tinygltf::Material& tmat);
-KHR_materials_emissive_strength get_emissive_strength(
-    const tinygltf::Material& tmat);
-KHR_materials_iridescence get_iridescence(const tinygltf::Material& tmat);
+KHR_materials_unlit get_unlit(const Material& tmat);
+std::optional<KHR_materials_specular> get_specular(const Material& tmat);
+KHR_texture_transform getTextureTransform(const TextureInfo& tinfo);
+KHR_materials_clearcoat get_clearcoat(const Material& tmat);
+KHR_materials_sheen get_sheen(const Material& tmat);
+KHR_materials_transmission get_transmission(const Material& tmat);
+KHR_materials_anisotropy get_anisotropy(const Material& tmat);
+KHR_materials_ior get_ior(const Material& tmat);
+KHR_materials_volume get_volume(const Material& tmat);
+KHR_materials_displacement get_displacement(const Material& tmat);
+KHR_materials_emissive_strength get_emissive_strength(const Material& tmat);
+KHR_materials_iridescence get_iridescence(const Material& tmat);
 
 template <typename T>
-inline std::optional<T> vector_to_glm(const std::vector<double>& data) {
-  AssertReturnIf(T::length() > data.size(), std::nullopt);
+std::optional<T> vector_to_glm(const std::vector<double>& data) {
+  auto target_length = T::length();
+
+  AssertReturnUnless(target_length > 0 && static_cast<decltype(data.size())>(
+                                              target_length) < data.size(),
+                     std::nullopt);
   T res;
   for (int i = 0; i < T::length(); ++i) {
     res[i] = data[i];
@@ -695,8 +669,7 @@ inline std::optional<T> vector_to_glm(const std::vector<double>& data) {
   return res;
 }
 
-glm::mat4 getLocalMatrix(const tinygltf::Node& tnode);
-}  // namespace utils
+glm::mat4 getLocalMatrix(const Node& tnode);
+}  // namespace tinygltf::utils
 
-}  // namespace tinygltf
 #endif  // WUNDER_TINYGLTF_UTILS_H

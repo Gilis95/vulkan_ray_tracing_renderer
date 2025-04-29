@@ -20,8 +20,9 @@ top_level_acceleration_structure_builder::
                                          .get_command_pool()
                                          .get_current_compute_command_buffer()),
       m_acceleration_structure(acceleration_structure),
-      m_build_infos(build_infos),
-      mesh_nodes(mesh_nodes) {}
+      mesh_nodes(mesh_nodes),
+      m_build_infos(build_infos)
+{}
 
 void top_level_acceleration_structure_builder::build() {
   m_build_infos.push_back(std::move(top_level_acceleration_structure_build_info(
@@ -69,7 +70,8 @@ void top_level_acceleration_structure_builder::
 
 void top_level_acceleration_structure_builder::
     wait_until_instances_buffer_is_available() const {
-  VkMemoryBarrier barrier{VK_STRUCTURE_TYPE_MEMORY_BARRIER};
+  VkMemoryBarrier barrier{};
+  barrier.sType = VK_STRUCTURE_TYPE_MEMORY_BARRIER;
   barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
   barrier.dstAccessMask = VK_ACCESS_ACCELERATION_STRUCTURE_WRITE_BIT_KHR;
   vkCmdPipelineBarrier(m_command_buffer,

@@ -28,10 +28,10 @@ size_t texture_data::size() const {
 }
 
 VkFormat  texture_data::get_image_format() const {
-  return std::visit(overloaded{[](const std::vector<unsigned char>& pixels) {
+  return std::visit(overloaded{[](const std::vector<unsigned char>& /*pixels*/) {
                                  return VK_FORMAT_R8G8B8A8_UNORM;
                                },
-                               [](const std::vector<float>& pixels) {
+                               [](const std::vector<float>& /*pixels*/) {
                                  return VK_FORMAT_R32G32B32A32_SFLOAT;
                                }},
                     m_data);

@@ -10,8 +10,10 @@
 namespace wunder::vulkan {
 rasterize_pipeline::rasterize_pipeline() noexcept
     : base_pipeline(VK_PIPELINE_BIND_POINT_GRAPHICS),
-      m_pipeline_create_info(),
-      m_pipeline_cache(VK_NULL_HANDLE) {}
+      m_pipeline_create_info{},
+      m_pipeline_cache(VK_NULL_HANDLE)
+    , m_pipeline_state{}
+{}
 
 std::unique_ptr<rasterize_pipeline> rasterize_pipeline::create(
     const descriptor_set_manager& descriptor_set_manager,
@@ -23,7 +25,7 @@ std::unique_ptr<rasterize_pipeline> rasterize_pipeline::create(
   pipeline->initialize_pipeline_layout(descriptor_set_manager);
   pipeline->initialize_pipeline(shaders);
 
-  return std::move(pipeline);
+  return pipeline;
 }
 
 [[nodiscard]] VkPushConstantRange rasterize_pipeline::get_push_constant_range()
@@ -43,8 +45,6 @@ void rasterize_pipeline::initialize_pipeline(
   render_pass& renderPass = swap_chain.mutable_render_pass();
 
   create_shader_stage_create_info(shaders_of_types);
-
-  memset(&m_pipeline_create_info, 0, sizeof(VkGraphicsPipelineCreateInfo));
 
   m_pipeline_create_info.sType =
       VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;

@@ -112,9 +112,9 @@ inline const char* vk_result_to_string(VkResult result) {
       return "VK_OPERATION_NOT_DEFERRED_KHR";
     case VK_PIPELINE_COMPILE_REQUIRED_EXT:
       return "VK_PIPELINE_COMPILE_REQUIRED_EXT";
+    default:
+      return nullptr;
   }
-
-  return nullptr;
 }
 
 inline void dump_gpu_info() {
@@ -141,7 +141,7 @@ inline void vulkan_check_result(VkResult result, const char* file, int line) {
   }
 }
 
-static const char* vulkan_vendor_id_to_string(uint32_t vendorID) {
+[[maybe_unused]] static const char* vulkan_vendor_id_to_string(uint32_t vendorID) {
   switch (vendorID) {
     case 0x10DE:
       return "NVIDIA";
@@ -151,11 +151,12 @@ static const char* vulkan_vendor_id_to_string(uint32_t vendorID) {
       return "INTEL";
     case 0x13B5:
       return "ARM";
+    default:
+      return "Unknown";
   }
-  return "Unknown";
 }
 
-inline static void set_debug_utils_object_name(VkDevice device,
+static void set_debug_utils_object_name(VkDevice device,
                                                const VkObjectType objectType,
                                                const std::string& name,
                                                const void* handle) {

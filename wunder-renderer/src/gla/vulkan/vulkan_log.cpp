@@ -6,7 +6,7 @@
 VKAPI_ATTR VkBool32 debug_messenger_callback(
     VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
     VkDebugUtilsMessageTypeFlagsEXT messageType,
-    const VkDebugUtilsMessengerCallbackDataEXT *callbackData, void *userData) {
+    const VkDebugUtilsMessengerCallbackDataEXT *callbackData, void */*userData*/) {
   // repeating nvprintfLevel to help with breakpoints : so we can selectively
   // break right after the print
   if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT) {

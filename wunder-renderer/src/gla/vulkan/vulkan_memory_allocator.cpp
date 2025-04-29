@@ -1,6 +1,6 @@
 #include "gla/vulkan/vulkan_memory_allocator.h"
 
-#define VMA_IMPLEMENTATION 1
+
 #include <vk_mem_alloc.h>
 
 #include <map>

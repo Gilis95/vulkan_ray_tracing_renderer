@@ -16,7 +16,11 @@ namespace wunder::vulkan {
 class shader;
 
 rtx_pipeline::rtx_pipeline()
-    : base_pipeline(VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR) {}
+    : base_pipeline(VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR),
+      m_pipeline_create_info{} {
+  m_pipeline_create_info.sType = {
+      VK_STRUCTURE_TYPE_RAY_TRACING_PIPELINE_CREATE_INFO_KHR};
+}
 
 std::unique_ptr<rtx_pipeline> rtx_pipeline::create(
     const descriptor_set_manager& descriptor_set_manager,
@@ -28,7 +32,7 @@ std::unique_ptr<rtx_pipeline> rtx_pipeline::create(
   pipeline->initialize_pipeline_layout(descriptor_set_manager);
   pipeline->initialize_pipeline(shaders);
 
-  return std::move(pipeline);
+  return pipeline;
 }
 
 VkPushConstantRange rtx_pipeline::get_push_constant_range() const {
@@ -55,11 +59,12 @@ void rtx_pipeline::initialize_pipeline(
   // --- Pipeline ---
   // Assemble the shader stages and recursion depth info into the ray tracing
   // pipeline
-  m_pipeline_create_info.stageCount =
-      static_cast<uint32_t>(m_shader_stage_create_infos.size());  // Stages are shaders
+  m_pipeline_create_info.stageCount = static_cast<uint32_t>(
+      m_shader_stage_create_infos.size());  // Stages are shaders
   m_pipeline_create_info.pStages = m_shader_stage_create_infos.data();
 
-  m_pipeline_create_info.groupCount = static_cast<uint32_t>(m_shader_stage_groups.size());
+  m_pipeline_create_info.groupCount =
+      static_cast<uint32_t>(m_shader_stage_groups.size());
   m_pipeline_create_info.pGroups = m_shader_stage_groups.data();
 
   m_pipeline_create_info.maxPipelineRayRecursionDepth = 2;  // Ray depth
@@ -113,8 +118,8 @@ void rtx_pipeline::create_shader_group_info() {
   auto add_group = [&groups = m_shader_stage_groups](
                        VkRayTracingShaderGroupTypeKHR type,
                        uint32_t shader_offset) {
-    VkRayTracingShaderGroupCreateInfoKHR group{
-        VK_STRUCTURE_TYPE_RAY_TRACING_SHADER_GROUP_CREATE_INFO_KHR};
+    VkRayTracingShaderGroupCreateInfoKHR group{};
+    group.sType = VK_STRUCTURE_TYPE_RAY_TRACING_SHADER_GROUP_CREATE_INFO_KHR;
     group.anyHitShader = VK_SHADER_UNUSED_KHR;
     group.closestHitShader = VK_SHADER_UNUSED_KHR;
     group.generalShader = VK_SHADER_UNUSED_KHR;
@@ -126,7 +131,7 @@ void rtx_pipeline::create_shader_group_info() {
   };
 
   auto add_hit_shader_group_info =
-      [&groups=m_shader_stage_groups, &stages = m_shader_stage_create_infos](
+      [&groups = m_shader_stage_groups, &stages = m_shader_stage_create_infos](
           std::vector<VkPipelineShaderStageCreateInfo>::iterator&
               closest_hit_begin,
           std::vector<VkPipelineShaderStageCreateInfo>::iterator&
@@ -148,8 +153,9 @@ void rtx_pipeline::create_shader_group_info() {
             closest_hit_begin == stages.end() && any_hit_begin == stages.end(),
             false);
 
-        VkRayTracingShaderGroupCreateInfoKHR group{
-            VK_STRUCTURE_TYPE_RAY_TRACING_SHADER_GROUP_CREATE_INFO_KHR};
+        VkRayTracingShaderGroupCreateInfoKHR group{};
+        group.sType =
+            VK_STRUCTURE_TYPE_RAY_TRACING_SHADER_GROUP_CREATE_INFO_KHR;
         group.anyHitShader = VK_SHADER_UNUSED_KHR;
         group.closestHitShader = VK_SHADER_UNUSED_KHR;
         group.generalShader = VK_SHADER_UNUSED_KHR;

@@ -183,4 +183,24 @@ concept derived = std::is_base_of_v<parent_class_type, child_class_type>;
 
 }  // namespace wunder
 
+
+#if defined(__GNUC__) || defined(__clang__)
+#   define BEGIN_IGNORE_WARNINGS \
+_Pragma("GCC diagnostic push") \
+_Pragma("GCC diagnostic ignored \"-Wall\"") \
+_Pragma("GCC diagnostic ignored \"-Wextra\"") \
+_Pragma("GCC diagnostic ignored \"-Wpedantic\"") 
+#   define END_IGNORE_WARNINGS \
+_Pragma("GCC diagnostic pop")
+#elif defined(_MSC_VER)
+#   define BEGIN_IGNORE_WARNINGS \
+__pragma(warning(push)) \
+__pragma(warning(disable: 4996))
+#   define END_IGNORE_WARNINGS \
+__pragma(warning(pop))
+#else
+#   define BEGIN_IGNORE_WARNINGS
+#   define END_IGNORE_WARNINGS
+#endif
+
 #endif

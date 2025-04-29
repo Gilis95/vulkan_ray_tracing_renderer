@@ -108,19 +108,37 @@ const material_asset& materials_resource_creator::get_default_material() {
   static material_asset default_material{
       .m_pbr_base_color_factor = {1.f, 1.f, 1.f, 1.f},
       .m_pbr_base_color_texture = asset_handle::invalid(),
+      .m_pbr_metallic_factor = 0.f,
       .m_pbr_roughness_factor = 1.0f,
       .m_pbr_metallic_roughness_texture = asset_handle::invalid(),
       .m_emissive_texture = asset_handle::invalid(),
+      .m_emissive_factor = glm::vec3{0.f},
+      .m_alpha_mode = 0,
       .m_alpha_cutoff = 0.5f,
+      .m_double_sided = 0,
       .m_normal_texture = asset_handle::invalid(),
+      .m_normal_texture_scale = 0.f,
       .m_uv_transform = glm::identity<glm::mat4>(),
+      .unlit = 0,
+      .m_transmission_factor = 0.f,
       .m_transmission_texture = asset_handle::invalid(),
+      .m_ior = 0,
       .m_anisotropy_direction = {0.f, 1.f, 0.f},
+      .m_anisotropy = 0.f,
       .m_attenuation_color = {1.f, 1.f, 1.f},
+      .m_thickness_factor = 0.f,
       .m_thickness_texture = asset_handle::invalid(),
       .m_attenuation_distance = std::numeric_limits<float>::max(),
+      .m_clearcoat_factor = 0.f,
+      .m_clearcoat_roughness = 0.f,
       .m_clearcoat_texture = asset_handle::invalid(),
-      .m_clearcoat_roughness_texture = asset_handle::invalid()};
+      .m_clearcoat_roughness_texture = asset_handle::invalid(),
+      .m_sheen = 0,
+      .m_specular_texture = asset_handle::invalid(),
+      .m_specular_colour_texture = asset_handle::invalid(),
+      .m_specular_factor = 0.f,
+      .m_specular_colour_factor = glm::vec3{0.f},
+  };
   fill_undefined_material_colour(default_material.m_pbr_base_color_factor);
   return default_material;
 }

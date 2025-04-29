@@ -17,7 +17,6 @@ namespace event_handlers {
 /////////////////////////////////////////////////////////////////////////////////////////
 template <typename event_type>
 struct event_handler_container {
-
   static std::vector<event_handler<event_type>*> container;
 };
 
@@ -34,23 +33,29 @@ class event_controller {
 
   /////////////////////////////////////////////////////////////////////////////////////////
   template <typename event_type>
-  static void register_event_handler(
-      event_handler<event_type>* listener) {
-    event_handlers::event_handler_container<event_type>::container.emplace_back(listener);
+  static void register_event_handler(event_handler<event_type>* listener) {
+    event_handlers::event_handler_container<event_type>::container.emplace_back(
+        listener);
   }
 
   template <typename event_type>
   static void unregister_event_handler(
       const event_handler<event_type>* listener) {
-    std::remove_if(event_handlers::event_handler_container<event_type>::container.begin(),
-                   event_handlers::event_handler_container<event_type>::container.end(), [listener](const event_handler<event_type>* element){
+    auto from_pos = std::remove_if(
+        event_handlers::event_handler_container<event_type>::container.begin(),
+        event_handlers::event_handler_container<event_type>::container.end(),
+        [listener](const event_handler<event_type>* element) {
           return element == listener;
-    });
+        });
+
+    event_handlers::event_handler_container<event_type>::container.erase(
+        from_pos,
+        event_handlers::event_handler_container<event_type>::container.end());
   }
 
   /////////////////////////////////////////////////////////////////////////////////////////
   template <typename event_type>
-  static void on_event(const event_type &event) {
+  static void on_event(const event_type& event) {
     std::for_each(
         event_handlers::event_handler_container<event_type>::container.begin(),
         event_handlers::event_handler_container<event_type>::container.end(),

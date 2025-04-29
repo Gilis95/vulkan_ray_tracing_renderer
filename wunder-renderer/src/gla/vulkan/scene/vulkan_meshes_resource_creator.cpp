@@ -1,3 +1,5 @@
+#include "gla/vulkan/scene/vulkan_meshes_resource_creator.h"
+
 #include <functional>
 #include <numeric>
 #include <set>
@@ -13,7 +15,6 @@
 #include "gla/vulkan/ray-trace/vulkan_top_level_acceleration_structure_build_info.h"
 #include "gla/vulkan/scene/vulkan_mesh.h"
 #include "gla/vulkan/scene/vulkan_mesh_scene_node.h"
-#include "gla/vulkan/scene/vulkan_meshes_resource_creator.h"
 #include "gla/vulkan/vulkan_command_pool.h"
 #include "gla/vulkan/vulkan_context.h"
 #include "gla/vulkan/vulkan_device.h"
@@ -78,7 +79,8 @@ void meshes_resource_creator::create_mesh_scene_nodes(
   builder.build();
 }
 
-unique_ptr<storage_buffer> meshes_resource_creator::create_mesh_instances_buffer() {
+unique_ptr<storage_buffer>
+meshes_resource_creator::create_mesh_instances_buffer() {
   std::vector<InstanceData> instances;
   instances.reserve(m_out_vulkan_mesh_nodes.size());
 
@@ -90,8 +92,8 @@ unique_ptr<storage_buffer> meshes_resource_creator::create_mesh_instances_buffer
         .vertexAddress = mesh.m_vertex_buffer->get_address(),
         .indexAddress = mesh.m_index_buffer->get_address(),
         .materialIndex = static_cast<int>(
-            mesh.m_material_idx)  // most probably will never overflow
-    });
+            mesh.m_material_idx),  // most probably will never overflow
+        ._pad = glm::vec3{0.f}});
   }
 
   unique_ptr<storage_buffer> result;

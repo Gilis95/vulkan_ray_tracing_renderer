@@ -11,10 +11,10 @@ class render_pass {
 
  public:
   void initialize();
-  void deallocate();
+  void deallocate() const;
 
  public:
-  void begin(VkFramebuffer framebuffer, VkExtent2D size);
+  void begin(VkFramebuffer framebuffer, VkExtent2D size) const;
   void end();
 
  public:

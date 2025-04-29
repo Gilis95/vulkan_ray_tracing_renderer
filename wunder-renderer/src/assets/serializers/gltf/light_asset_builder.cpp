@@ -1,4 +1,5 @@
 #include "assets/serializers/gltf/light_asset_builder.h"
+
 #include "include/assets/light_asset.h"
 #include "tinygltf/tinygltf_utils.h"
 
@@ -24,7 +25,8 @@ std::optional<light_asset> light_asset_builder::build() {
 
   return light_asset{.color = maybe_colour.value(),
                      .intensity = gltf_light.intensity,
-                     .range = gltf_light.range};
+                     .range = gltf_light.range,
+                     .specific_data = light_specific_data};
 }
 
 }  // namespace wunder

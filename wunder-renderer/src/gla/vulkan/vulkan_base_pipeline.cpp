@@ -2,7 +2,6 @@
 
 #include "gla/vulkan/descriptors/vulkan_descriptor_set_manager.h"
 #include "gla/vulkan/rasterize/vulkan_swap_chain.h"
-#include "gla/vulkan/descriptors/vulkan_descriptor_set_manager.h"
 #include "gla/vulkan/vulkan_context.h"
 #include "gla/vulkan/vulkan_device.h"
 #include "gla/vulkan/vulkan_layer_abstraction_factory.h"
@@ -27,8 +26,9 @@ void base_pipeline::initialize_pipeline_layout(
   // TODO:: This must be comming from shader reflect data!!!
   VkPushConstantRange push_constants = get_push_constant_range();
 
-  VkPipelineLayoutCreateInfo pipeline_layout_create_info{
-      VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO};
+  VkPipelineLayoutCreateInfo pipeline_layout_create_info{};
+  pipeline_layout_create_info.sType =
+      VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
   pipeline_layout_create_info.pushConstantRangeCount = 1;
   pipeline_layout_create_info.pPushConstantRanges = &push_constants;
   pipeline_layout_create_info.setLayoutCount =
@@ -42,10 +42,9 @@ void base_pipeline::initialize_pipeline_layout(
 void base_pipeline::create_shader_stage_create_info(
     const vector_map<VkShaderStageFlagBits, std::vector<unique_ptr<shader>>>&
         shaders_of_types) {
-
   for (auto& [shader_type, shaders] : shaders_of_types) {
     for (auto& shader : shaders) {
-      m_shader_stage_create_infos .push_back(shader->get_shader_stage_info());
+      m_shader_stage_create_infos.push_back(shader->get_shader_stage_info());
     }
   }
 }

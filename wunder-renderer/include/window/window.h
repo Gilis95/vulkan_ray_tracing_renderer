@@ -12,7 +12,7 @@ namespace wunder::vulkan{
 
 struct vulkan_extensions {
  public:
-  std::vector<char *> m_extensions;
+  std::vector<const char *> m_extensions;
 };
 
 }
@@ -34,7 +34,7 @@ class window {
 
   virtual void shutdown() = 0;
 
-  [[nodiscard]] virtual void fill_vulkan_extensions(
+  virtual void fill_vulkan_extensions(
       wunder::vulkan::vulkan_extensions & out_extensions) const = 0;
 
   [[nodiscard]] virtual VkSurfaceKHR create_vulkan_surface() const = 0;

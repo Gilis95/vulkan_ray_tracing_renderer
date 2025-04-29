@@ -15,7 +15,7 @@ input_manager::input_manager()
 
 input_manager::~input_manager() = default;
 
-void input_manager::update(time_unit dt) {
+void input_manager::update(time_unit /*dt*/) {
   transition_pressed_keys();
   clear_released_keys();
 }

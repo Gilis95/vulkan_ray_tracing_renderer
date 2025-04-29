@@ -37,7 +37,7 @@ vulkan_environment_resource_creator::create_sky_and_sun_properties() {
       2.0f,                 // sun_glow_intensity;
       1,                    // y_is_up;
       1,                    // physically_scaled_sun;
-      1,                    // in_use;
+      0,                    // in_use;
   };
 
   return std::make_unique<uniform_device_buffer>(
@@ -47,7 +47,7 @@ vulkan_environment_resource_creator::create_sky_and_sun_properties() {
 }
 
 vulkan_environment vulkan_environment_resource_creator::create_environment_texture() {
-  vulkan_environment environment;
+  vulkan_environment environment{};
 
   // TODO:: first asset is being retrieved, it should be pointed out in the
   // scene, which one to be used
@@ -55,7 +55,7 @@ vulkan_environment vulkan_environment_resource_creator::create_environment_textu
   assets<environment_texture_asset> assets =
       asset_manager.find_assets<environment_texture_asset>();
 
-  AssertReturnIf(assets.empty(), std::move(environment));
+  AssertReturnIf(assets.empty(), environment);
 
   const_ref<environment_texture_asset>& first_environment_texture =
       assets.begin()->second;
@@ -66,7 +66,7 @@ vulkan_environment vulkan_environment_resource_creator::create_environment_textu
   // Needed acceleration metadata
   create_environment_accel(first_environment_texture.get(), environment);
 
-  return std::move(environment);
+  return environment;
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -77,7 +77,7 @@ void vulkan_environment_resource_creator::create_environment_accel(
     vulkan_environment& out_environment_data) {
   std::visit(
       overloaded{
-          [](const std::vector<unsigned char>& pixels) -> void {
+          [](const std::vector<unsigned char>& /*pixels*/) -> void {
             WUNDER_ERROR(
                 "Environment map components couldn't be with size less than "
                 "32bits");

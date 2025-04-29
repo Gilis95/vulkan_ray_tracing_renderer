@@ -13,7 +13,7 @@ asset_serialization_result_codes environment_map_serializer::import_asset(
                      asset_serialization_result_codes::error);
 
   std::vector<float> pixels;
-  int32_t texture_elements_count =
+  uint32_t texture_elements_count =
       input.m_width * input.m_height * input.m_components;
   pixels.resize(texture_elements_count);
 

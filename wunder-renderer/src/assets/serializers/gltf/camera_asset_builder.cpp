@@ -1,7 +1,8 @@
+#include "assets/serializers/gltf/camera_asset_builder.h"
+
 #include <algorithm>
 #include <cctype>
 
-#include "assets/serializers/gltf/camera_asset_builder.h"
 #include "include/assets/camera_asset.h"
 #include "tiny_gltf.h"
 #include "tinygltf/tinygltf_utils.h"
@@ -23,7 +24,7 @@ std::optional<camera_asset> camera_asset_builder::build() {
                                   GLTF_PERSPECTIVE_CAMERA_TYPE, ichar_equals),
                std::nullopt);
 
-  camera_asset camera;
+  camera_asset camera{};
 
   auto gltf_perspective_camera = gltf_camera.perspective;
   camera.m_perspective_camera_data.aspect_ratio =
@@ -31,15 +32,14 @@ std::optional<camera_asset> camera_asset_builder::build() {
   camera.m_perspective_camera_data.fov = gltf_perspective_camera.yfov;
 
   // If the node has the Iray extension, extract the camera information.
-  if (tinygltf::utils::has_element_name(gltf_node_extensions,
-                                        EXTENSION_ATTRIB_IRAY)) {
-    auto& iray_ext = gltf_node_extensions.at(EXTENSION_ATTRIB_IRAY);
-    auto& attributes = iray_ext.Get("attributes");
-    tinygltf::utils::get_array_value(attributes, "iview:position", camera.eye);
-    tinygltf::utils::get_array_value(attributes, "iview:interest",
-                                     camera.center);
-    tinygltf::utils::get_array_value(attributes, "iview:up", camera.up);
-  }
+  const auto found_ext = gltf_node_extensions.find(EXTENSION_ATTRIB_IRAY);
+  ReturnIf(found_ext == gltf_node_extensions.end(), camera);
+
+  auto& iray_ext = found_ext->second;
+  auto& attributes = iray_ext.Get("attributes");
+  tinygltf::utils::get_array_value(attributes, "iview:position", camera.eye);
+  tinygltf::utils::get_array_value(attributes, "iview:interest", camera.center);
+  tinygltf::utils::get_array_value(attributes, "iview:up", camera.up);
 
   return camera;
 }

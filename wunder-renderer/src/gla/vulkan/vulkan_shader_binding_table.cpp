@@ -19,9 +19,11 @@ shader_binding_table::shader_binding_table() noexcept {
   auto& vulkan_context =
       layer_abstraction_factory::instance().get_vulkan_context();
   auto& physical_device = vulkan_context.mutable_physical_device();
+  m_vulkan_pipeline_properties.sType =
+      VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_PROPERTIES_KHR;
 
-  VkPhysicalDeviceProperties2 device_properties{
-      VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2};
+  VkPhysicalDeviceProperties2 device_properties{};
+  device_properties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2;
   device_properties.pNext = &m_vulkan_pipeline_properties;
   vkGetPhysicalDeviceProperties2(physical_device.get_vulkan_physical_device(),
                                  &device_properties);
@@ -32,11 +34,11 @@ shader_binding_table::~shader_binding_table() = default;
 unique_ptr<shader_binding_table> shader_binding_table::create(
     const rtx_pipeline& pipeline) {
   unique_ptr<shader_binding_table> shader_binding_table;
-  shader_binding_table.reset(new wunder::vulkan::shader_binding_table());
 
+  shader_binding_table.reset(new wunder::vulkan::shader_binding_table());
   shader_binding_table->initialize(pipeline);
 
-  return std::move(shader_binding_table);
+  return shader_binding_table;
 }
 
 void shader_binding_table::initialize(const rtx_pipeline& pipeline) {
@@ -54,7 +56,8 @@ VkStridedDeviceAddressRegionKHR shader_binding_table::get_stage_address(
   return VkStridedDeviceAddressRegionKHR{
       .deviceAddress = shader_group->get_address(),
       .stride = stride,
-      .size = indices.size() * stride,};
+      .size = indices.size() * stride,
+  };
 }
 
 void shader_binding_table::initialize_shader_indices(
@@ -181,7 +184,7 @@ void shader_binding_table::create_sbt_buffer(
     auto& shader_stage_handles = shader_stages_handles[i];
     AssertContinueIf(shader_stage_handles.empty());
     m_shader_group_buffers[i] = std::make_unique<storage_device_buffer>(
-        descriptor_build_data{.m_enabled = false}, shader_stage_handles.data(),
+        descriptor_build_data{.m_enabled = false, .m_descriptor_name = ""}, shader_stage_handles.data(),
         shader_stage_handles.size() * sizeof(uint8_t),
         VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT |
             VK_BUFFER_USAGE_SHADER_BINDING_TABLE_BIT_KHR);

@@ -1,5 +1,8 @@
 project(wunder-renderer VERSION 1.0.0 LANGUAGES CXX)
 
+include(cmake/Files.cmake)
+include(cmake/Variables.cmake)
+
 add_definitions(-DWANDER_ENABLE_LOG -D_CRT_SECURE_NO_WARNINGS -DWANDER_ENGINE_DEBUG -DTRACY_ENABLE -DGLFW_INCLUDE_NONE)
 message(hui="${CMAKE_SYSTEM_NAME}")
 if (${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
@@ -14,9 +17,6 @@ endif ()
 add_definitions(-DENABLE_ASSERTS=1 -DWUNDER_ENABLE_LOG=1)
 
 option(WANDER_ENGINE_INSTALL "Generate installation target" OFF)
-
-include(cmake/Variables.cmake)
-include(cmake/Files.cmake)
 
 glad_add_library(Vulkan REPRODUCIBLE LOADER API vulkan=1.3 EXTENSIONS
         #Nvidia
@@ -63,8 +63,20 @@ glad_add_library(Vulkan REPRODUCIBLE LOADER API vulkan=1.3 EXTENSIONS
         VK_EXT_pipeline_creation_cache_control
 )
 
+set_source_files_properties(
+        ${VULKAN_SRC_DIR}/vma_implementation.cpp
+        ${TINY_GLTF_SRC_DIR}/stb_image.cpp
+        PROPERTIES COMPILE_FLAGS "-Wno-error")
+
 ################################################################################################
 add_library(wunder-renderer STATIC ${WUNDER_RENDERER_HEADERS} ${WUNDER_RENDERER_SOURCES})
+
+target_compile_options(wunder-renderer PRIVATE
+        -Wall
+        -Wextra
+        -Wpedantic
+        -Werror
+)
 
 target_include_directories(wunder-renderer PUBLIC
         $<BUILD_INTERFACE: ${HDR_DIR}>

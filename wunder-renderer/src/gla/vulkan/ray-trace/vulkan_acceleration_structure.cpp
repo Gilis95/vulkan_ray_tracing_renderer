@@ -31,6 +31,8 @@ acceleration_structure& acceleration_structure::operator=(
   std::swap(m_descriptor, other.m_descriptor);
   std::swap(m_acceleration_structure_buffer,
             other.m_acceleration_structure_buffer);
+
+  return *this;
 }
 
 acceleration_structure::~acceleration_structure() {
@@ -52,10 +54,11 @@ void acceleration_structure::create_acceleration_structure(
   auto& device = vulkan_context.mutable_device();
 
   // Allocating the buffer to hold the acceleration structure
-  m_acceleration_structure_buffer.reset(new
-      storage_device_buffer({.m_enabled = false}, acceleration_structure_size,
-                    VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_STORAGE_BIT_KHR |
-                        VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT));
+  m_acceleration_structure_buffer.reset(new storage_device_buffer(
+      {.m_enabled = false, .m_descriptor_name = ""},
+      acceleration_structure_size,
+      VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_STORAGE_BIT_KHR |
+          VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT));
 
   VkAccelerationStructureCreateInfoKHR acceleration_structure_create_info;
   std::memset(&acceleration_structure_create_info, 0,
@@ -73,18 +76,17 @@ void acceleration_structure::create_acceleration_structure(
                                    &m_descriptor);
 }
 
-void acceleration_structure::add_descriptor_to(descriptor_set_manager& target) {
+void acceleration_structure::add_descriptor_to(descriptor_set_manager& /*target*/) {
 }
 
-VkDeviceAddress acceleration_structure::get_address() {
+VkDeviceAddress acceleration_structure::get_address() const {
   ReturnIf(vkGetAccelerationStructureDeviceAddressKHR == nullptr, 0);
 
   context& vulkan_context =
       layer_abstraction_factory::instance().get_vulkan_context();
   auto& device = vulkan_context.mutable_device();
 
-  VkAccelerationStructureDeviceAddressInfoKHR info;
-  std::memset(&info, 0, sizeof(VkAccelerationStructureDeviceAddressInfoKHR));
+  VkAccelerationStructureDeviceAddressInfoKHR info = {};
   info.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_DEVICE_ADDRESS_INFO_KHR;
   info.accelerationStructure = m_descriptor;
   return vkGetAccelerationStructureDeviceAddressKHR(

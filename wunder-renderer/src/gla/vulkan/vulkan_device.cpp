@@ -22,14 +22,14 @@ namespace wunder::vulkan {
 // Vulkan Device
 ////////////////////////////////////////////////////////////////////////////////////
 
-device::device(VkPhysicalDeviceFeatures enabled_features) {}
+device::device(VkPhysicalDeviceFeatures /*enabled_features*/) {}
 
 device::~device() { destroy(); }
 
 void device::initialize() {
   auto& physical_device = layer_abstraction_factory::instance()
-                             .get_vulkan_context()
-                             .mutable_physical_device();
+                              .get_vulkan_context()
+                              .mutable_physical_device();
   create_extensions_list();
   create_logical_device();
 
@@ -63,11 +63,11 @@ void device::create_extensions_list() {
       {.m_name = VK_KHR_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME,
        .m_optional = false});
   m_requested_extensions.push_back(
-      {.m_name = VK_EXT_OPACITY_MICROMAP_EXTENSION_NAME,
-       .m_optional = false});
+      {.m_name = VK_EXT_OPACITY_MICROMAP_EXTENSION_NAME, .m_optional = false});
 
-  static VkPhysicalDeviceShaderClockFeaturesKHR clock_features_khr{
-      VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_CLOCK_FEATURES_KHR};
+  static VkPhysicalDeviceShaderClockFeaturesKHR clock_features_khr{};
+  clock_features_khr.sType =
+      VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_CLOCK_FEATURES_KHR;
   m_requested_extensions.push_back(
       {.m_name = VK_KHR_SHADER_CLOCK_EXTENSION_NAME,
        .m_optional = false,
@@ -75,28 +75,33 @@ void device::create_extensions_list() {
 
   // #VKRay: Activate the ray tracing extension
   static VkPhysicalDeviceAccelerationStructureFeaturesKHR
-      acceleration_structure_features_khr{
-          VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR};
+      acceleration_structure_features_khr{};
+  acceleration_structure_features_khr.sType =
+          VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR;
   m_requested_extensions.push_back(
       {.m_name = VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME,
        .m_optional = false,
        .m_feature_struct = &acceleration_structure_features_khr});
 
   static VkPhysicalDeviceRayTracingPipelineFeaturesKHR
-      ray_tracing_pipeline_features_khr{
-          VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_FEATURES_KHR};
+      ray_tracing_pipeline_features_khr{};
+  ray_tracing_pipeline_features_khr.sType =
+          VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_FEATURES_KHR;
   m_requested_extensions.push_back(
       {.m_name = VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME,
        .m_optional = false,
        .m_feature_struct = &ray_tracing_pipeline_features_khr});
 
-  static VkPhysicalDeviceRayTracingValidationFeaturesNV validationFeatures =
-    {.sType=VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_VALIDATION_FEATURES_NV,.rayTracingValidation = true};
+  static VkPhysicalDeviceRayTracingValidationFeaturesNV validationFeatures = {
+      .sType =
+          VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_VALIDATION_FEATURES_NV,
+      .pNext = VK_NULL_HANDLE,
+      .rayTracingValidation = true,
+  };
   m_requested_extensions.push_back(
       {.m_name = VK_NV_RAY_TRACING_VALIDATION_EXTENSION_NAME,
-        .m_optional = false,
-        .m_feature_struct = &validationFeatures});
-
+       .m_optional = false,
+       .m_feature_struct = &validationFeatures});
 }
 
 void device::create_logical_device() {
@@ -177,4 +182,4 @@ void device::destroy() {
   vkDestroyDevice(m_logical_device, nullptr);
 }
 
-}  // namespace wunder
+}  // namespace wunder::vulkan

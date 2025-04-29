@@ -44,7 +44,7 @@ buffer<base_buffer_type>::~buffer() {
 }
 
 template <typename base_buffer_type>
-void buffer<base_buffer_type>::update_data(void* data, size_t data_size) {}
+void buffer<base_buffer_type>::update_data(void* /*data*/, size_t /*data_size*/) {}
 
 template <typename base_buffer_type>
 void buffer<base_buffer_type>::free_staging_data(){}

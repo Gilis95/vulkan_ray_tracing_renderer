@@ -23,10 +23,8 @@ acceleration_structure_builder<build_info_type>::acceleration_structure_builder(
 template <derived<acceleration_structure_build_info> build_info_type>
 void acceleration_structure_builder<build_info_type>::create_scratch_buffer(
     std::uint32_t scratch_buffer_size) {
-  auto& build_infos = get_build_infos();
-
   m_scratch_buffer.reset(new storage_device_buffer(
-      descriptor_build_data{.m_enabled = false}, scratch_buffer_size,
+      descriptor_build_data{.m_enabled = false, .m_descriptor_name = ""}, scratch_buffer_size,
       VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT |
           VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
 }
@@ -60,7 +58,8 @@ void acceleration_structure_builder<build_info_type>::
       m_command_buffer, static_cast<uint32_t>(as_build_geometry_info.size()),
       as_build_geometry_info.data(), as_build_offset_info.data());
 
-  VkMemoryBarrier barrier{VK_STRUCTURE_TYPE_MEMORY_BARRIER};
+  VkMemoryBarrier barrier{};
+  barrier.sType = VK_STRUCTURE_TYPE_MEMORY_BARRIER;
   barrier.srcAccessMask = VK_ACCESS_ACCELERATION_STRUCTURE_WRITE_BIT_KHR;
   barrier.dstAccessMask = VK_ACCESS_ACCELERATION_STRUCTURE_READ_BIT_KHR;
   vkCmdPipelineBarrier(m_command_buffer,

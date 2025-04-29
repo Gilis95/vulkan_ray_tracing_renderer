@@ -1,8 +1,9 @@
 #include "gla/vulkan/vulkan_vertex_buffer.h"
 
+#include <cmath>
 #include <fstream>
 #include <vector>
-#include <cmath>
+
 #include "gla/vulkan/vulkan_device_buffer.h"
 #include "include/assets/mesh_asset.h"
 #include "resources/shaders/compress.glsl"
@@ -42,7 +43,8 @@ unique_ptr<storage_buffer> vertex_buffer::create(VkCommandBuffer command_buffer,
   }
 
   return std::make_unique<storage_device_buffer>(
-      command_buffer, descriptor_build_data{.m_enabled = false},
+      command_buffer,
+      descriptor_build_data{.m_enabled = false, .m_descriptor_name = ""},
       vertices.data(), vertices.size() * sizeof(VertexAttributes),
       VK_BUFFER_USAGE_STORAGE_BUFFER_BIT |
           VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT |

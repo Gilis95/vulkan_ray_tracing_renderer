@@ -27,7 +27,7 @@ class acceleration_structure
 
  public:
   void add_descriptor_to(descriptor_set_manager& target) override;
-  VkDeviceAddress get_address();
+  VkDeviceAddress get_address() const;
 
  protected:
   void create_acceleration_structure(

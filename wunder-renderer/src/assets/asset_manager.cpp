@@ -58,9 +58,9 @@ asset_serialization_result_codes asset_manager::import_environment_map(
                              &component, required_components);
 
   return environment_map_serializer::import_asset(
-      {.m_width = width,
-       .m_height = height,
-       .m_components = required_components,
+      {.m_width = static_cast<uint32_t>( width),
+       .m_height = static_cast<uint32_t>(height),
+       .m_components = static_cast<uint32_t>(required_components),
        .m_pixels_ptr = pixels},
       m_asset_storage);
 }

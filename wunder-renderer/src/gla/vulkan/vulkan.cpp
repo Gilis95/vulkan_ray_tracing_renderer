@@ -172,10 +172,12 @@ void instance::try_set_validation_message_callback() {
       (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(
           m_vk_instance, "vkCreateDebugUtilsMessengerEXT");
 
-  ReturnIf(m_createDebugUtilsMessengerEXT == nullptr)
+  ReturnIf(m_createDebugUtilsMessengerEXT == nullptr);
 
-      VkDebugUtilsMessengerCreateInfoEXT dbg_messenger_create_info{
-          VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT};
+  VkDebugUtilsMessengerCreateInfoEXT dbg_messenger_create_info{};
+
+  dbg_messenger_create_info.sType =
+      VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
   dbg_messenger_create_info.messageSeverity =
       VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT |
       VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT       // For debug printf

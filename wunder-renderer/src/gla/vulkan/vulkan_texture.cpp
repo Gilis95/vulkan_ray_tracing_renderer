@@ -108,9 +108,9 @@ template <typename base_texture>
 texture<base_texture>::texture(descriptor_build_data build_data,
                                VkFormat image_format, std::uint32_t width,
                                std::uint32_t height)
-    : m_descriptor_build_data(std::move(build_data)),
-      m_image_info(std::make_shared<vulkan_image_info>()),
-      m_image_size(width, height) {
+    : m_image_info(std::make_shared<vulkan_image_info>()),
+      m_image_size(width, height),
+      m_descriptor_build_data(std::move(build_data)) {
   std::string name = generate_next_texture_name();
   VkImageLayout target_layout = VK_IMAGE_LAYOUT_GENERAL;
   m_mip_levels = mip_levels({width, height});
@@ -126,9 +126,9 @@ texture<base_texture>::texture(descriptor_build_data build_data,
 template <typename base_texture>
 texture<base_texture>::texture(descriptor_build_data build_data,
                                const texture_asset& asset)
-    : m_descriptor_build_data(std::move(build_data)),
-      m_image_info(std::make_shared<vulkan_image_info>()),
-      m_image_size(asset.m_width, asset.m_height) {
+    : m_image_info(std::make_shared<vulkan_image_info>()),
+      m_image_size(asset.m_width, asset.m_height),
+      m_descriptor_build_data(std::move(build_data)) {
   std::string name = generate_next_texture_name();
   m_mip_levels = 1;
 
@@ -157,7 +157,8 @@ void texture<base_texture>::generate_mip_levels(
     VkCommandBuffer command_buffer) {
   // Transfer the top level image to a layout 'eTransferSrcOptimal` and its
   // access to 'eTransferRead'
-  VkImageMemoryBarrier barrier{VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER};
+  VkImageMemoryBarrier barrier{};
+  barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
   barrier.subresourceRange.baseArrayLayer = 0;
   barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
   barrier.subresourceRange.baseMipLevel = 0;

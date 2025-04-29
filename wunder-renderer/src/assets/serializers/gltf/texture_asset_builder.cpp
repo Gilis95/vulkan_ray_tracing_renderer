@@ -38,7 +38,9 @@ texture_asset_builder::texture_asset_builder(
 std::optional<texture_asset> texture_asset_builder::build() {
   std::vector<texture_asset> result;
   int gltf_source_image_idx = m_gltf_texture.source;
-  AssertReturnUnless(gltf_source_image_idx < m_gltf_scene_root.images.size(),
+
+  AssertReturnUnless(gltf_source_image_idx >= 0 &&
+    static_cast<size_t>(gltf_source_image_idx) < m_gltf_scene_root.images.size(),
                      std::nullopt);
 
   auto& gltf_source_image = m_gltf_scene_root.images[gltf_source_image_idx];

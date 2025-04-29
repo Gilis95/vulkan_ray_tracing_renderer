@@ -1,7 +1,8 @@
+#include "gla/vulkan/scene/vulkan_lights_resource_creator.h"
+
 #include "assets/asset_manager.h"
 #include "assets/light_asset.h"
 #include "core/project.h"
-#include "gla/vulkan/scene/vulkan_lights_resource_creator.h"
 #include "gla/vulkan/vulkan_device_buffer.h"
 #include "glm/ext/matrix_transform.hpp"
 #include "resources/shaders/host_device.h"
@@ -24,7 +25,7 @@ unique_ptr<storage_buffer> lights_resource_creator::create_light_buffer(
 
   out_lights_count = host_lights.size();
 
-  return std::move( std::make_unique<storage_device_buffer>(
+  return std::move(std::make_unique<storage_device_buffer>(
       descriptor_build_data{.m_enabled = true, .m_descriptor_name = "_Lights"},
       host_lights.data(),
       host_lights.size() * sizeof(host_light_array ::value_type),
@@ -58,7 +59,7 @@ assets<light_asset> lights_resource_creator::extract_scene_light_data(
                                      transform_component{});
   }
 
-  return std::move(result);
+  return result;
 }
 
 std::vector<Light> lights_resource_creator::create_host_light_array(
@@ -84,8 +85,8 @@ std::vector<Light> lights_resource_creator::create_host_light_array(
 }
 
 void lights_resource_creator::map_to_host_light(Light& host_light,
-                                      const light_asset& light,
-                                      glm::mat4 model_matrix) {
+                                                const light_asset& light,
+                                                glm::mat4 model_matrix) {
   host_light.range = static_cast<float>(light.range);
   host_light.intensity = static_cast<float>(light.intensity);
   host_light.color = light.color;
@@ -96,8 +97,8 @@ void lights_resource_creator::map_to_host_light(Light& host_light,
   map_host_light_specific_data(host_light, light);
 }
 
-void lights_resource_creator::map_host_light_specific_data(Light& host_light,
-                                                 const light_asset& light) {
+void lights_resource_creator::map_host_light_specific_data(
+    Light& host_light, const light_asset& light) {
   std::visit(overloaded{[&host_light](const spot_light& light) {
                           host_light.type = LightType_Spot;
                           host_light.innerConeCos =
@@ -105,17 +106,20 @@ void lights_resource_creator::map_host_light_specific_data(Light& host_light,
                           host_light.outerConeCos =
                               static_cast<float>(cos(light.outer_cone_angle));
                         },
-                        [&host_light](directional_light light) {
+                        [&host_light](directional_light /*light*/) {
                           host_light.type = LightType_Directional;
                         },
-                        [&host_light](point_light light) {
+                        [&host_light](point_light /*light*/) {
                           host_light.type = LightType_Point;
                         }},
              light.specific_data);
 }
 
 light_asset& lights_resource_creator::get_default_light_asset() {
-  static light_asset res{.intensity = 0.f, .specific_data = directional_light{}};
+  static light_asset res{.color = vec4{1.f},
+                         .intensity = 0.f,
+                         .range = 0.f,
+                         .specific_data = directional_light{}};
   return res;
 }
 

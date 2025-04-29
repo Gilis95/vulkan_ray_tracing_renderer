@@ -25,10 +25,7 @@ auto k_pressed_or_held_key = key_state::pressed | key_state::held;
 }
 
 camera::camera()
-    : event_handler<wunder::event::scene_activated>(),
-      event_handler<wunder::event::mouse::move>(),
-      event_handler<wunder::event::mouse::scroll>(),
-      m_action_fns(
+    : m_action_fns(
           {{camera::actions::orbit,
             [this](float dx, float dy) { orbit(dx, dy, false); }},
            {camera::actions::dolly,

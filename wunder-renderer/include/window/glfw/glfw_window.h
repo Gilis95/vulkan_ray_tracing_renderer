@@ -32,7 +32,7 @@ class glfw_window : public window {
   VkSurfaceKHR create_vulkan_surface() const override;
  private:
   GLFWwindow* m_window;
-  void init_input_event_listeners();
+  void init_input_event_listeners() const;
 };
 }  // namespace wunder
 

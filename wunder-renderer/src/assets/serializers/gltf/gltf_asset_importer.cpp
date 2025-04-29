@@ -162,8 +162,8 @@ gltf_asset_importer::import_meshes(
 
 asset_serialization_result_codes gltf_asset_importer::import_scenes(
     const tinygltf::Model& gltf_root_node,
-    const std::unordered_map<std::uint32_t /*mesh_id*/, std::vector<asset_handle>>&
-        mesh_id_to_primitive,
+    const std::unordered_map<std::uint32_t /*mesh_id*/,
+                             std::vector<asset_handle>>& mesh_id_to_primitive,
     const std::unordered_map<std::uint32_t, asset_handle>& cameras_map,
     const std::unordered_map<std::uint32_t, asset_handle>& lights_map) {
   std::queue<std::pair<std::uint32_t, glm::mat4 /*parent matrix*/>> nodes;
@@ -204,7 +204,10 @@ asset_serialization_result_codes gltf_asset_importer::import_scenes(
 
           scene_node node;
           node.add_component(
-              transform_component{.m_world_matrix = model_matrix});
+              transform_component{.m_translation = glm::vec3(0.f),
+                                  .m_scale = glm::vec3(0.f),
+                                  .m_rotation = glm::vec3(0.f),
+                                  .m_world_matrix = model_matrix});
           node.add_component(mesh_component);
 
           scene.add_node(std::move(node));
@@ -219,7 +222,10 @@ asset_serialization_result_codes gltf_asset_importer::import_scenes(
         camera_component.m_handle = primitives_it->second;
 
         scene_node node;
-        node.add_component(transform_component{.m_world_matrix = model_matrix});
+        node.add_component(transform_component{.m_translation = glm::vec3(0.f),
+                                               .m_scale = glm::vec3(0.f),
+                                               .m_rotation = glm::vec3(0.f),
+                                               .m_world_matrix = model_matrix});
         node.add_component(camera_component);
 
         scene.add_node(std::move(node));
@@ -239,7 +245,10 @@ asset_serialization_result_codes gltf_asset_importer::import_scenes(
         light_component.m_handle = primitives_it->second;
 
         scene_node node;
-        node.add_component(transform_component{.m_world_matrix = model_matrix});
+        node.add_component(transform_component{.m_translation = glm::vec3(0.f),
+                                               .m_scale = glm::vec3(0.f),
+                                               .m_rotation = glm::vec3(0.f),
+                                               .m_world_matrix = model_matrix});
         node.add_component(light_component);
 
         scene.add_node(std::move(node));

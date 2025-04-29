@@ -16,8 +16,8 @@
 #include "core/vector_map.h"
 #include "core/wunder_filesystem.h"
 #include "core/wunder_macros.h"
-#include "gla/vulkan/vulkan_context.h"
 #include "gla/vulkan/descriptors/vulkan_descriptor_set_manager.h"
+#include "gla/vulkan/vulkan_context.h"
 #include "gla/vulkan/vulkan_device.h"
 #include "gla/vulkan/vulkan_layer_abstraction_factory.h"
 #include "gla/vulkan/vulkan_macros.h"
@@ -25,7 +25,7 @@
 
 namespace {
 
-inline shaderc_shader_kind vulkan_shader_stage_to_shaderc(
+shaderc_shader_kind vulkan_shader_stage_to_shaderc(
     const VkShaderStageFlagBits stage) {
   switch (stage) {
     case VK_SHADER_STAGE_VERTEX_BIT:
@@ -37,23 +37,22 @@ inline shaderc_shader_kind vulkan_shader_stage_to_shaderc(
     case VK_SHADER_STAGE_RAYGEN_BIT_KHR:
       return shaderc_raygen_shader;
     case VK_SHADER_STAGE_ANY_HIT_BIT_KHR:
-      return shaderc_shader_kind::shaderc_anyhit_shader;
+      return shaderc_anyhit_shader;
     case VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR:
-      return shaderc_shader_kind::shaderc_closesthit_shader;
+      return shaderc_closesthit_shader;
     case VK_SHADER_STAGE_MISS_BIT_KHR:
-      return shaderc_shader_kind::shaderc_miss_shader;
+      return shaderc_miss_shader;
     case VK_SHADER_STAGE_INTERSECTION_BIT_KHR:
-      return shaderc_shader_kind::shaderc_intersection_shader;
+      return shaderc_intersection_shader;
     case VK_SHADER_STAGE_CALLABLE_BIT_KHR:
-      return shaderc_shader_kind::shaderc_callable_shader;
+      return shaderc_callable_shader;
+    default:
+      AssertLogIf(true, "Failed to parse shader type");
+      return {};
   }
-
-  AssertLogIf(true, "Failed to parse shader type");
-  return {};
 }
 
-inline std::string vulkan_shader_stage_to_string(
-    const VkShaderStageFlagBits stage) {
+std::string vulkan_shader_stage_to_string(const VkShaderStageFlagBits stage) {
   switch (stage) {
     case VK_SHADER_STAGE_VERTEX_BIT:
       return "VK_SHADER_STAGE_VERTEX_BIT";
@@ -73,10 +72,10 @@ inline std::string vulkan_shader_stage_to_string(
       return "VK_SHADER_STAGE_INTERSECTION_BIT_KHR";
     case VK_SHADER_STAGE_CALLABLE_BIT_KHR:
       return "VK_SHADER_STAGE_CALLABLE_BIT_KHR";
+    default:
+      AssertLogIf(true, "Failed to parse shader type");
+      return "";
   }
-
-  AssertLogIf(true, "Failed to parse shader type");
-  return "";
 }
 
 template <typename T>
@@ -100,13 +99,13 @@ void spirv_resources_to_descriptors_declarations(
   }
 }
 
-
 }  // namespace
 
 namespace wunder::vulkan {
 shader::shader(std::string&& shader_name,
                VkShaderStageFlagBits vulkan_shader_type)
     : m_shader_name(std::move(shader_name)),
+      m_reflection_data(),
       m_vulkan_shader_type(vulkan_shader_type) {}
 
 std::expected<unique_ptr<shader>, shader_operation_output_code> shader::create(
@@ -163,15 +162,15 @@ shader::compile_shader(std::ifstream& spirv_istream,
     return std::unexpected(shader_operation_output_code::CompilationFailed);
   }
 
-  std::vector<uint32_t> binary;
-  binary = std::vector<uint32_t>(module.begin(), module.end());
+  std::vector binary(module.begin(), module.end());
   return binary;
 }
 
 void shader::initialize(const std::vector<std::uint32_t>& debug_spirv) {
   AssertReturnIf(debug_spirv.empty());
-  auto& device =
-      layer_abstraction_factory::instance().get_vulkan_context().mutable_device();
+  auto& device = layer_abstraction_factory::instance()
+                     .get_vulkan_context()
+                     .mutable_device();
 
   VkShaderModuleCreateInfo moduleCreateInfo{};
 
@@ -192,8 +191,8 @@ void shader::initialize(const std::vector<std::uint32_t>& debug_spirv) {
 }
 
 VkPipelineShaderStageCreateInfo shader::get_shader_stage_info() const {
-  VkPipelineShaderStageCreateInfo result{
-      VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO};
+  VkPipelineShaderStageCreateInfo result{};
+  result.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
   result.stage = m_vulkan_shader_type;
   result.flags = 0;
   result.module = m_shader_module;
@@ -208,25 +207,25 @@ void shader::initialize_reflection_data(
   auto resources = compiler.get_shader_resources();
 
   spirv_resources_to_descriptors_declarations<
-      wunder::vulkan::shader_resource::declaration::uniform_buffer>(
+      shader_resource::declaration::uniform_buffer>(
       compiler, resources.uniform_buffers, m_reflection_data);
   spirv_resources_to_descriptors_declarations<
-      wunder::vulkan::shader_resource::declaration::storage_buffers>(
+      shader_resource::declaration::storage_buffers>(
       compiler, resources.storage_buffers, m_reflection_data);
   spirv_resources_to_descriptors_declarations<
-      wunder::vulkan::shader_resource::declaration::sampled_images>(
+      shader_resource::declaration::sampled_images>(
       compiler, resources.sampled_images, m_reflection_data);
   spirv_resources_to_descriptors_declarations<
-      wunder::vulkan::shader_resource::declaration::separate_images>(
+      shader_resource::declaration::separate_images>(
       compiler, resources.separate_images, m_reflection_data);
   spirv_resources_to_descriptors_declarations<
-      wunder::vulkan::shader_resource::declaration::separate_samplers>(
+      shader_resource::declaration::separate_samplers>(
       compiler, resources.separate_samplers, m_reflection_data);
   spirv_resources_to_descriptors_declarations<
-      wunder::vulkan::shader_resource::declaration::storage_images>(
+      shader_resource::declaration::storage_images>(
       compiler, resources.storage_images, m_reflection_data);
   spirv_resources_to_descriptors_declarations<
-      wunder::vulkan::shader_resource::declaration::acceleration_structures>(
+      shader_resource::declaration::acceleration_structures>(
       compiler, resources.acceleration_structures, m_reflection_data);
 
   ReturnIf(m_reflection_data.m_shader_resources_declaration.empty());
@@ -235,26 +234,23 @@ void shader::initialize_reflection_data(
       m_reflection_data.m_shader_resources_declaration.begin(),
       m_reflection_data.m_shader_resources_declaration.end(),
       [](const std::pair<vulkan_resource_identifier,
-                         wunder::vulkan::shader_resource::declaration::element>&
-             left_element,
+                         shader_resource::declaration::element>& left_element,
          const std::pair<vulkan_resource_identifier,
-                         wunder::vulkan::shader_resource::declaration::element>&
+                         shader_resource::declaration::element>&
              right_element) {
-        const wunder::vulkan::shader_resource::declaration::base&
-            left_resource_declaration = std::visit(
-                wunder::vulkan::shader_resource::declaration::downcast,
-                left_element.second);
-        const wunder::vulkan::shader_resource::declaration::base&
-            right_resource_declaration = std::visit(
-                wunder::vulkan::shader_resource::declaration::downcast,
-                right_element.second);
+        const shader_resource::declaration::base& left_resource_declaration =
+            std::visit(shader_resource::declaration::downcast,
+                       left_element.second);
+        const shader_resource::declaration::base& right_resource_declaration =
+            std::visit(shader_resource::declaration::downcast,
+                       right_element.second);
 
         return left_resource_declaration.m_set <
                right_resource_declaration.m_set;
       });
 
   m_reflection_data.m_descriptor_sets_count =
-      std::visit(wunder::vulkan::shader_resource::declaration::downcast,
+      std::visit(shader_resource::declaration::downcast,
                  resource_with_max_set->second)
           .m_set +
       1;

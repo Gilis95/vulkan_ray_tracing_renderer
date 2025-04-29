@@ -13,6 +13,7 @@ class shader;
 
 class base_pipeline {
  public:
+  virtual ~base_pipeline() = default;
   base_pipeline(VkPipelineBindPoint bind_point);
 
  public:

@@ -17,7 +17,7 @@ class vulkan_rasterize_pipeline_state {
   vulkan_rasterize_pipeline_state();
 
  protected:
-  void add_state_to(VkGraphicsPipelineCreateInfo& pipeline_create_info);
+  void add_state_to(VkGraphicsPipelineCreateInfo& pipeline_create_info) const;
 
  private:
   static inline VkPipelineColorBlendAttachmentState
@@ -47,27 +47,17 @@ class vulkan_rasterize_pipeline_state {
   }
 
  private:
-  VkPipelineInputAssemblyStateCreateInfo m_input_assembly_state{
-      VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO};
-  VkPipelineRasterizationStateCreateInfo m_rasterization_state{
-      VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO};
-  VkPipelineMultisampleStateCreateInfo m_multisample_state{
-      VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO};
-  VkPipelineDepthStencilStateCreateInfo m_depth_stencil_state{
-      VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO};
-  VkPipelineViewportStateCreateInfo m_viewport_state{
-      VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO};
-  VkPipelineDynamicStateCreateInfo m_dynamic_state{
-      VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO};
-  VkPipelineColorBlendStateCreateInfo m_color_blend_state{
-      VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO};
-  VkPipelineVertexInputStateCreateInfo m_vertex_input_state{
-      VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO};
+  VkPipelineInputAssemblyStateCreateInfo m_input_assembly_state;
+  VkPipelineRasterizationStateCreateInfo m_rasterization_state;
+  VkPipelineMultisampleStateCreateInfo m_multisample_state;
+  VkPipelineDepthStencilStateCreateInfo m_depth_stencil_state;
+  VkPipelineViewportStateCreateInfo m_viewport_state;
+  VkPipelineDynamicStateCreateInfo m_dynamic_state;
+  VkPipelineColorBlendStateCreateInfo m_color_blend_state;
+  VkPipelineVertexInputStateCreateInfo m_vertex_input_state;
 
-  std::vector<VkDynamicState> m_dynamic_state_enables = {
-      VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR};
-  std::vector<VkPipelineColorBlendAttachmentState> m_blend_attachment_states{
-      make_pipeline_color_blend_attachment_state()};
+  std::vector<VkDynamicState> m_dynamic_state_enables ;
+  std::vector<VkPipelineColorBlendAttachmentState> m_blend_attachment_states;
 };
 }  // namespace wunder::vulkan
 #endif  // WUNDER_VULKAN_RASTERIZE_PIPELINE_STATE_H

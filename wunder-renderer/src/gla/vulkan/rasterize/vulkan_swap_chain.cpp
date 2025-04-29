@@ -134,8 +134,8 @@ void swap_chain::begin_command_buffer() {
   auto command_buffer =
       m_queue_elements[m_current_queue_element].m_command_buffer;
 
-  VkCommandBufferBeginInfo beginInfo{
-      VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO};
+  VkCommandBufferBeginInfo beginInfo{};
+  beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
   beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
   vkBeginCommandBuffer(command_buffer, &beginInfo);
 }
@@ -400,46 +400,49 @@ void swap_chain::initialize_depth_buffer() {
   // Depth information
   const VkImageAspectFlags aspect =
       VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
-  VkImageCreateInfo depthStencilCreateInfo{VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO};
-  depthStencilCreateInfo.imageType = VK_IMAGE_TYPE_2D;
-  depthStencilCreateInfo.extent = VkExtent3D{m_width, m_height, 1};
-  depthStencilCreateInfo.format = physical_device.get_depth_format();
-  depthStencilCreateInfo.mipLevels = 1;
-  depthStencilCreateInfo.arrayLayers = 1;
-  depthStencilCreateInfo.samples = VK_SAMPLE_COUNT_1_BIT;
-  depthStencilCreateInfo.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT |
-                                 VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
+  VkImageCreateInfo depth_stencil_create_info{};
+  depth_stencil_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+  depth_stencil_create_info.imageType = VK_IMAGE_TYPE_2D;
+  depth_stencil_create_info.extent = VkExtent3D{m_width, m_height, 1};
+  depth_stencil_create_info.format = physical_device.get_depth_format();
+  depth_stencil_create_info.mipLevels = 1;
+  depth_stencil_create_info.arrayLayers = 1;
+  depth_stencil_create_info.samples = VK_SAMPLE_COUNT_1_BIT;
+  depth_stencil_create_info.usage =
+      VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT |
+      VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
   // Create the depth image
-  vkCreateImage(vk_device, &depthStencilCreateInfo, nullptr, &m_depth_image);
+  vkCreateImage(vk_device, &depth_stencil_create_info, nullptr, &m_depth_image);
 
   set_debug_utils_object_name(vk_device, "depth image", m_depth_image);
 
   // Allocate the memory
   VkMemoryRequirements memory_requirements;
   vkGetImageMemoryRequirements(vk_device, m_depth_image, &memory_requirements);
-  VkMemoryAllocateInfo memAllocInfo{VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO};
-  memAllocInfo.allocationSize = memory_requirements.size;
-  memAllocInfo.memoryTypeIndex = physical_device.get_memory_type_index(
+  VkMemoryAllocateInfo mem_alloc_info{};
+  mem_alloc_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+  mem_alloc_info.allocationSize = memory_requirements.size;
+  mem_alloc_info.memoryTypeIndex = physical_device.get_memory_type_index(
       memory_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-  vkAllocateMemory(vk_device, &memAllocInfo, nullptr, &m_depth_memory);
+  vkAllocateMemory(vk_device, &mem_alloc_info, nullptr, &m_depth_memory);
 
   // Bind image and memory
   vkBindImageMemory(vk_device, m_depth_image, m_depth_memory, 0);
 
   // Put barrier on top, Put barrier inside setup command buffer
-  VkImageSubresourceRange subresourceRange{};
-  subresourceRange.aspectMask = aspect;
-  subresourceRange.levelCount = 1;
-  subresourceRange.layerCount = 1;
-  VkImageMemoryBarrier imageMemoryBarrier{
-      VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER};
-  imageMemoryBarrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-  imageMemoryBarrier.newLayout =
+  VkImageSubresourceRange subresource_range{};
+  subresource_range.aspectMask = aspect;
+  subresource_range.levelCount = 1;
+  subresource_range.layerCount = 1;
+  VkImageMemoryBarrier image_memory_barrier{};
+  image_memory_barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+  image_memory_barrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+  image_memory_barrier.newLayout =
       VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-  imageMemoryBarrier.image = m_depth_image;
-  imageMemoryBarrier.subresourceRange = subresourceRange;
-  imageMemoryBarrier.srcAccessMask = VkAccessFlags();
-  imageMemoryBarrier.dstAccessMask =
+  image_memory_barrier.image = m_depth_image;
+  image_memory_barrier.subresourceRange = subresource_range;
+  image_memory_barrier.srcAccessMask = VkAccessFlags();
+  image_memory_barrier.dstAccessMask =
       VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
   const VkPipelineStageFlags srcStageMask = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
   const VkPipelineStageFlags destStageMask =
@@ -448,17 +451,17 @@ void swap_chain::initialize_depth_buffer() {
   vkCmdPipelineBarrier(
       device.get_command_pool().get_current_graphics_command_buffer(),
       srcStageMask, destStageMask, VK_FALSE, 0, nullptr, 0, nullptr, 1,
-      &imageMemoryBarrier);
+      &image_memory_barrier);
   device.get_command_pool().flush_graphics_command_buffer();
 
   // Setting up the view
-  VkImageViewCreateInfo depthStencilView{
-      VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO};
-  depthStencilView.viewType = VK_IMAGE_VIEW_TYPE_2D;
-  depthStencilView.format = physical_device.get_depth_format();
-  depthStencilView.subresourceRange = subresourceRange;
-  depthStencilView.image = m_depth_image;
-  vkCreateImageView(vk_device, &depthStencilView, nullptr, &m_depth_view);
+  VkImageViewCreateInfo depth_stencil_view{};
+  depth_stencil_view.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+  depth_stencil_view.viewType = VK_IMAGE_VIEW_TYPE_2D;
+  depth_stencil_view.format = physical_device.get_depth_format();
+  depth_stencil_view.subresourceRange = subresource_range;
+  depth_stencil_view.image = m_depth_image;
+  vkCreateImageView(vk_device, &depth_stencil_view, nullptr, &m_depth_view);
 }
 
 void swap_chain::initialize_queue_elements() {
@@ -530,7 +533,7 @@ void swap_chain::create_image_for_each_queue_element() {
 
 void swap_chain::create_image_barrier_for_each_queue_element() {
   for (auto& queue_element : m_queue_elements) {
-    VkImageSubresourceRange range = {0};
+    VkImageSubresourceRange range = {};
     range.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
     range.baseMipLevel = 0;
     range.levelCount = VK_REMAINING_MIP_LEVELS;
@@ -556,8 +559,8 @@ void swap_chain::create_command_buffer_for_each_queue_element() {
   auto& device = vulkan_context.mutable_device();
   auto vk_device = device.get_vulkan_logical_device();
 
-  VkCommandPoolCreateInfo poolCreateInfo{
-      VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO};
+  VkCommandPoolCreateInfo poolCreateInfo{};
+  poolCreateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
   poolCreateInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
   vkCreateCommandPool(vk_device, &poolCreateInfo, nullptr, &m_command_pool);
 
@@ -615,7 +618,8 @@ void swap_chain::create_fence_for_each_queue_element() {
   for (size_t i = 0; i < m_queue_elements.size(); i++) {
     auto& queue_element = m_queue_elements[i];
 
-    VkFenceCreateInfo fenceCreateInfo{VK_STRUCTURE_TYPE_FENCE_CREATE_INFO};
+    VkFenceCreateInfo fenceCreateInfo{};
+    fenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
     fenceCreateInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
     vkCreateFence(vk_device, &fenceCreateInfo, nullptr, &queue_element.m_fence);
   }

@@ -68,8 +68,8 @@ void render_pass::initialize() {
   subpass_description.pColorAttachments = &colorReference;
   subpass_description.pDepthStencilAttachment = &depthReference;
 
-  VkRenderPassCreateInfo render_pass_create_info{
-      VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO};
+  VkRenderPassCreateInfo render_pass_create_info{};
+  render_pass_create_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
   render_pass_create_info.attachmentCount =
       static_cast<uint32_t>(attachments.size());
   render_pass_create_info.pAttachments = attachments.data();
@@ -85,7 +85,7 @@ void render_pass::initialize() {
                               m_render_pass);
 }
 
-void render_pass::deallocate() {
+void render_pass::deallocate() const {
   context& vulkan_context =
       layer_abstraction_factory::instance().get_vulkan_context();
 
@@ -95,7 +95,7 @@ void render_pass::deallocate() {
   vkDestroyRenderPass(vk_device, m_render_pass, nullptr);
 }
 
-void render_pass::begin(VkFramebuffer framebuffer, VkExtent2D size) {
+void render_pass::begin(VkFramebuffer framebuffer, VkExtent2D size) const {
   context& vulkan_context =
       layer_abstraction_factory::instance().get_vulkan_context();
 
@@ -106,8 +106,8 @@ void render_pass::begin(VkFramebuffer framebuffer, VkExtent2D size) {
   clear_values[0].color = {{0.0f, 0.0f, 0.0f, 0.0f}};
   clear_values[1].depthStencil = {1.0f, 0};
 
-  VkRenderPassBeginInfo render_pass_begin_info{
-      VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO};
+  VkRenderPassBeginInfo render_pass_begin_info{};
+  render_pass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
   render_pass_begin_info.clearValueCount = 2;
   render_pass_begin_info.pClearValues = clear_values.data();
   render_pass_begin_info.renderPass = m_render_pass;

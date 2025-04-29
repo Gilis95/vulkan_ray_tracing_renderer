@@ -27,6 +27,7 @@ class shader_binding_table {
   ~shader_binding_table();
 
   static unique_ptr<shader_binding_table> create(const rtx_pipeline& pipeline);
+
  public:
   VkStridedDeviceAddressRegionKHR get_stage_address(
       shader_stage_type type) const;
@@ -58,8 +59,8 @@ class shader_binding_table {
       m_shader_group_buffers;  // buffer resembles handler to shader in group
                                // + data given to sbt
 
-  VkPhysicalDeviceRayTracingPipelinePropertiesKHR m_vulkan_pipeline_properties{
-      VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_PROPERTIES_KHR};
+  VkPhysicalDeviceRayTracingPipelinePropertiesKHR
+      m_vulkan_pipeline_properties{};
 };
 
 }  // namespace wunder::vulkan

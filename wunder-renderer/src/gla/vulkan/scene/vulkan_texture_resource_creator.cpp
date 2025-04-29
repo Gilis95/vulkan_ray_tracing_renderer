@@ -24,7 +24,7 @@ texture_resource_creator::create_texture_buffers(
         {.m_enabled = true, .m_descriptor_name = "texturesMap"}, asset.get()));
   }
 
-  return std::move(result);
+  return result;
 }
 
 void texture_resource_creator::extract_texture_assets(

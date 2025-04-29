@@ -155,7 +155,9 @@ VkFormat physical_device::find_depth_format() const {
                                          VK_FORMAT_D16_UNORM_S8_UINT};
 
   for (auto& format : depth_formats) {
-    VkFormatProperties format_props{VK_STRUCTURE_TYPE_FORMAT_PROPERTIES_2};
+    VkFormatProperties format_props{};
+    format_props.linearTilingFeatures = VK_STRUCTURE_TYPE_FORMAT_PROPERTIES_2;
+
     vkGetPhysicalDeviceFormatProperties(m_physical_device, format,
                                         &format_props);
     // Format must support depth stencil attachment for optimal tiling
