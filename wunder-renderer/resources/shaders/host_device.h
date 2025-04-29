@@ -114,7 +114,7 @@ struct SceneCamera {
   float focalDist;
   float aperture;
   // Extra
-  int nbLights;
+  uint nbLights;
 };
 
 struct VertexAttributes {

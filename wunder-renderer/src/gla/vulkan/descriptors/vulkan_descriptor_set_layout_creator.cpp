@@ -92,7 +92,7 @@ uint32_t descriptor_set_layout_creator::try_retrieve_binding_count(
       resource.m_set, resource.m_binding);
   uint32_t binding_count = 1;
   if (maybe_binding) {
-    binding_count = maybe_binding->get().size();
+    binding_count = static_cast<uint32_t>(maybe_binding->get().size());
   }
 
   return binding_count;

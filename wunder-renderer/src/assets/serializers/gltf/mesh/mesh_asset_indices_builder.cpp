@@ -55,7 +55,7 @@ bool mesh_asset_indices_builder::build() {
       m_gltf_scene_root
           .accessors[m_gltf_primitive.attributes.find("POSITION")->second];
   for (size_t i = 0; i < accessor.count; i++) {
-    m_mesh_asset.m_indices.push_back(i);
+    m_mesh_asset.m_indices.push_back(static_cast<uint32_t>(i));
   }
 
   return true;

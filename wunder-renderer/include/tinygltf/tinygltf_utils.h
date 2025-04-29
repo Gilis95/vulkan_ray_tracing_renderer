@@ -663,7 +663,7 @@ std::optional<T> vector_to_glm(const std::vector<double>& data) {
                      std::nullopt);
   T res;
   for (int i = 0; i < T::length(); ++i) {
-    res[i] = data[i];
+    res[i] = static_cast<typename T::value_type>( data[i]);
   }
 
   return res;

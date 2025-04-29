@@ -19,8 +19,7 @@ vulkan_rasterize_pipeline_state::vulkan_rasterize_pipeline_state()
       m_vertex_input_state{},
       m_dynamic_state_enables{VK_DYNAMIC_STATE_VIEWPORT,
                               VK_DYNAMIC_STATE_SCISSOR},
-      m_blend_attachment_states{make_pipeline_color_blend_attachment_state()}
-{
+      m_blend_attachment_states{make_pipeline_color_blend_attachment_state()} {
   m_input_assembly_state.sType =
       VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
   m_rasterization_state.sType =
@@ -58,14 +57,16 @@ vulkan_rasterize_pipeline_state::vulkan_rasterize_pipeline_state()
   m_color_blend_state.flags = {};
   m_color_blend_state.logicOpEnable = {};
   set_value(m_color_blend_state.logicOp, VK_LOGIC_OP_CLEAR);
-  m_color_blend_state.attachmentCount = m_blend_attachment_states.size();
+  m_color_blend_state.attachmentCount =
+      static_cast<uint32_t>(m_blend_attachment_states.size());
   m_color_blend_state.pAttachments = m_blend_attachment_states.data();
   for (int i = 0; i < 4; i++) {
     m_color_blend_state.blendConstants[i] = 0.f;
   }
 
   m_dynamic_state.flags = {};
-  m_dynamic_state.dynamicStateCount = m_dynamic_state_enables.size();
+  m_dynamic_state.dynamicStateCount =
+      static_cast<uint32_t>(m_dynamic_state_enables.size());
   m_dynamic_state.pDynamicStates = m_dynamic_state_enables.data();
 
   m_vertex_input_state.flags = {};

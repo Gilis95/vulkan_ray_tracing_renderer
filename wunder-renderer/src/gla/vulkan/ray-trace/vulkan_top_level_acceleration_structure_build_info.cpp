@@ -31,9 +31,9 @@ top_level_acceleration_structure_build_info::
   create_acceleration_structures_buffer(acceleration_structures_instances);
 
   clear_geometry_data();
-  create_geometry_data(acceleration_structures_instances.size());
+  create_geometry_data(static_cast<uint32_t>(acceleration_structures_instances.size()));
 
-  fill_range_info_data(acceleration_structures_instances.size());
+  fill_range_info_data(static_cast<uint32_t>(acceleration_structures_instances.size()));
 
   auto build_flags = VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR;
   create_build_info(build_flags);
@@ -103,11 +103,11 @@ bool top_level_acceleration_structure_build_info::
   out_acceleration_structure_instance.transform =
       to_transform_matrix_khr(mesh_node.m_model_matrix);
   out_acceleration_structure_instance.instanceCustomIndex =
-      mesh_node.m_mesh->m_idx;  // gl_InstanceCustomIndexEXT: to find
+      mesh_node.m_mesh->m_idx & 0xFFFFFF;  // gl_InstanceCustomIndexEXT: to find
                                 // which primitive
   out_acceleration_structure_instance.accelerationStructureReference =
       mesh_node.m_mesh->m_blas.get_address();
-  out_acceleration_structure_instance.flags = flags;
+  out_acceleration_structure_instance.flags = static_cast<uint8_t>(flags);
   out_acceleration_structure_instance.instanceShaderBindingTableRecordOffset =
       0;  // We will use the same hit group for all objects
   out_acceleration_structure_instance.mask = 0xFF;

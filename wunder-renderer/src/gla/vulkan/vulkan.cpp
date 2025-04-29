@@ -58,7 +58,7 @@ void instance::init(const renderer_properties &properties) {
   try_add_debug_extension(vulkan_extensions, supported_extensions, properties);
 
   instance_create_info.enabledExtensionCount =
-      vulkan_extensions.m_extensions.size();
+      static_cast<uint32_t>(vulkan_extensions.m_extensions.size());
   instance_create_info.ppEnabledExtensionNames =
       vulkan_extensions.m_extensions.data();
 

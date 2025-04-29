@@ -166,12 +166,13 @@ void rtx_pipeline::create_shader_group_info() {
         group.generalShader = VK_SHADER_UNUSED_KHR;
 
         if (closest_hit_begin != stages.end()) {
-          group.closestHitShader =
-              std::distance(stages.begin(), closest_hit_begin);
+          group.closestHitShader = static_cast<uint32_t>(
+              std::distance(stages.begin(), closest_hit_begin));
         }
 
         if (any_hit_begin != stages.end()) {
-          group.anyHitShader = std::distance(stages.begin(), any_hit_begin);
+          group.anyHitShader = static_cast<uint32_t>(
+              std::distance(stages.begin(), any_hit_begin));
         }
 
         groups.push_back(group);
@@ -184,7 +185,8 @@ void rtx_pipeline::create_shader_group_info() {
   for (size_t i = 0; i < m_shader_stage_create_infos.size(); ++i) {
     const auto& stage = m_shader_stage_create_infos[i];
     if (stage.stage & general_shader_type) {
-      add_group(VK_RAY_TRACING_SHADER_GROUP_TYPE_GENERAL_KHR, i);
+      add_group(VK_RAY_TRACING_SHADER_GROUP_TYPE_GENERAL_KHR,
+                static_cast<uint32_t>(i));
     }
   }
 

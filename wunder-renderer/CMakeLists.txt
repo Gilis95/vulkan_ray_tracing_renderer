@@ -76,6 +76,19 @@ target_compile_options(wunder-renderer PRIVATE
         -Wextra
         -Wpedantic
         -Werror
+        -Wconversion          # Warn on implicit type conversions (int to float, etc.)
+#        -Wsign-conversion     # Warn on signed/unsigned mismatches
+#        -Wshadow              # Warn when a variable declaration shadows another
+#        -Wnon-virtual-dtor    # Warn if a class with virtual functions has a non-virtual destructor
+#        -Wold-style-cast      # Warn on C-style casts (encourage C++-style casts)
+#        -Woverloaded-virtual  # Warn if a virtual function is hiding a base class overload
+#        -Wduplicated-cond     # Warn on repeated conditions in `if` or loops
+#        -Wduplicated-branches # Warn if branches of conditionals are identical
+#        -Wnull-dereference    # Warn on possible null pointer dereferencing
+#        -Wdouble-promotion    # Warn when `float` is implicitly promoted to `double`
+#        -Wmissing-declarations # Warn if non-`static` functions lack a declaration
+#        -fsanitize=address    # Detect memory errors (buffer overflows, use-after-free, etc.)
+#        -fsanitize=undefined  # Detect undefined behavior (signed overflows, etc.)
 )
 
 target_include_directories(wunder-renderer PUBLIC

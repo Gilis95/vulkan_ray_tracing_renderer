@@ -21,8 +21,7 @@ top_level_acceleration_structure_builder::
                                          .get_current_compute_command_buffer()),
       m_acceleration_structure(acceleration_structure),
       mesh_nodes(mesh_nodes),
-      m_build_infos(build_infos)
-{}
+      m_build_infos(build_infos) {}
 
 void top_level_acceleration_structure_builder::build() {
   m_build_infos.push_back(std::move(top_level_acceleration_structure_build_info(
@@ -30,8 +29,8 @@ void top_level_acceleration_structure_builder::build() {
 
   AssertReturnIf(m_build_infos.empty());
 
-  create_scratch_buffer(
-      m_build_infos.front().get_vulkan_as_build_sizes_info().buildScratchSize);
+  create_scratch_buffer(static_cast<uint32_t>(
+      m_build_infos.front().get_vulkan_as_build_sizes_info().buildScratchSize));
   build_info_set_scratch_buffer();
 
   wait_until_instances_buffer_is_available();

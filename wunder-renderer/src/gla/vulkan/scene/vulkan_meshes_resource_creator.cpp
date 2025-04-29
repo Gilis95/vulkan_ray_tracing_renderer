@@ -140,18 +140,21 @@ void meshes_resource_creator::create_index_and_vertex_buffer(
 
     auto mesh_asset = mesh_asset_ref.get();
     auto material_it = materials.find(mesh_asset.m_material_handle);
-    long material_idx = material_it == materials.end()
-                            ? 0
-                            : std::distance(materials.begin(), material_it);
+    std::uint32_t material_idx = material_it == materials.end()
+                                     ? 0u
+                                     : static_cast<uint32_t>(std::distance(
+                                           materials.begin(), material_it));
     auto& material = material_it->second.get();
 
     _vulkan_mesh = make_shared<vulkan_mesh>();
     _vulkan_mesh->m_vertex_buffer =
         std::move(vertex_buffer::create(command_buffer, mesh_asset));
-    _vulkan_mesh->m_vertices_count = mesh_asset.m_vertices.size();
+    _vulkan_mesh->m_vertices_count =
+        static_cast<uint32_t>(mesh_asset.m_vertices.size());
     _vulkan_mesh->m_index_buffer =
         std::move(index_buffer::create(command_buffer, mesh_asset));
-    _vulkan_mesh->m_indices_count = mesh_asset.m_indices.size();
+    _vulkan_mesh->m_indices_count =
+        static_cast<uint32_t>(mesh_asset.m_indices.size());
     _vulkan_mesh->m_idx = i;
     _vulkan_mesh->m_material_idx = material_idx;
     _vulkan_mesh->m_is_opaque = material.m_alpha_mode == 0 ||

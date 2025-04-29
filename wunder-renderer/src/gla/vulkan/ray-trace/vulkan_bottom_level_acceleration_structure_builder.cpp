@@ -37,8 +37,7 @@ void bottom_level_acceleration_structure_builder::build() {
           std::uint32_t current_accumulation,
           const acceleration_structure_build_info& right) {
         return current_accumulation +
-               align_up(right.get_vulkan_as_build_sizes_info()
-                            .buildScratchSize,
+               align_up(right.get_vulkan_as_build_sizes_info().buildScratchSize,
                         min_alignment);
       });
 
@@ -61,18 +60,18 @@ void bottom_level_acceleration_structure_builder::
   for (auto& build_info : m_build_infos) {
     auto& vk_acceleration_structure_build_geometry_info_khr =
         build_info.mutable_build_info();
-    vk_acceleration_structure_build_geometry_info_khr.scratchData.deviceAddress =
+    vk_acceleration_structure_build_geometry_info_khr.scratchData
+        .deviceAddress =
         m_scratch_buffer->get_address() + scratch_buffer_offset;
 
-    scratch_buffer_offset += align_up(
-        build_info.get_vulkan_as_build_sizes_info().buildScratchSize,
-        128);
+    scratch_buffer_offset += static_cast<uint32_t>(align_up(
+        build_info.get_vulkan_as_build_sizes_info().buildScratchSize, 128));
   }
 }
 
 void bottom_level_acceleration_structure_builder::
     create_acceleration_structures() {
-  for (auto& [mesh_instance_ptr,_ ] : m_mesh_nodes) {
+  for (auto& [mesh_instance_ptr, _] : m_mesh_nodes) {
     AssertContinueUnless(mesh_instance_ptr);
     vulkan_mesh& mesh_instance = *mesh_instance_ptr;
 

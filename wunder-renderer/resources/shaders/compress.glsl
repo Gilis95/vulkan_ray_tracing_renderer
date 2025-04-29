@@ -85,7 +85,7 @@ INLINE float roundEven(float x)
 {
   int   Integer        = static_cast<int>(x);
   float IntegerPart    = static_cast<float>(Integer);
-  float FractionalPart = (x - floor(x));
+  float FractionalPart = static_cast<float>(x - floor(x));
 
   if(FractionalPart > 0.5f || FractionalPart < 0.5f)
   {

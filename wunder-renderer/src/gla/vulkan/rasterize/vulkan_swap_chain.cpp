@@ -492,7 +492,7 @@ void swap_chain::create_image_for_each_queue_element() {
   auto& device = vulkan_context.mutable_device();
   auto vk_device = device.get_vulkan_logical_device();
 
-  std::uint32_t image_count = m_queue_elements.size();
+  std::uint32_t image_count = static_cast<uint32_t>(m_queue_elements.size());
 
   // Get the swap chain images
   std::vector<VkImage> images(image_count);
@@ -568,7 +568,8 @@ void swap_chain::create_command_buffer_for_each_queue_element() {
   commandBufferAllocateInfo.sType =
       VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
   commandBufferAllocateInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-  commandBufferAllocateInfo.commandBufferCount = m_queue_elements.size();
+  commandBufferAllocateInfo.commandBufferCount =
+      static_cast<uint32_t>(m_queue_elements.size());
   commandBufferAllocateInfo.commandPool = m_command_pool;
 
   std::vector<VkCommandBuffer> command_buffers(m_queue_elements.size());

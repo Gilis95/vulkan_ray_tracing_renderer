@@ -173,34 +173,30 @@ overloaded(Ts...) -> overloaded<Ts...>;
 inline double get_system_time() {
   auto now(std::chrono::system_clock::now());
   auto duration = now.time_since_epoch();
-  return std::chrono::duration_cast<std::chrono::microseconds>(duration)
-             .count() /
-         1000.0;
+  double miliseconds = static_cast<double>(
+      std::chrono::duration_cast<std::chrono::microseconds>(duration).count());
+  return miliseconds / 1000.0;
 }
 
-template<class child_class_type, class parent_class_type>
+template <class child_class_type, class parent_class_type>
 concept derived = std::is_base_of_v<parent_class_type, child_class_type>;
 
 }  // namespace wunder
 
-
 #if defined(__GNUC__) || defined(__clang__)
-#   define BEGIN_IGNORE_WARNINGS \
-_Pragma("GCC diagnostic push") \
-_Pragma("GCC diagnostic ignored \"-Wall\"") \
-_Pragma("GCC diagnostic ignored \"-Wextra\"") \
-_Pragma("GCC diagnostic ignored \"-Wpedantic\"") 
-#   define END_IGNORE_WARNINGS \
-_Pragma("GCC diagnostic pop")
+#define BEGIN_IGNORE_WARNINGS                                                \
+_Pragma("GCC diagnostic push") _Pragma("GCC diagnostic ignored \"-Wall\"") \
+_Pragma("GCC diagnostic ignored \"-Wextra\"")                          \
+_Pragma("GCC diagnostic ignored \"-Wpedantic\"")                   \
+_Pragma("GCC diagnostic ignored \"-Wconversion\"")
+#define END_IGNORE_WARNINGS _Pragma("GCC diagnostic pop")
 #elif defined(_MSC_VER)
-#   define BEGIN_IGNORE_WARNINGS \
-__pragma(warning(push)) \
-__pragma(warning(disable: 4996))
-#   define END_IGNORE_WARNINGS \
-__pragma(warning(pop))
+#define BEGIN_IGNORE_WARNINGS \
+  __pragma(warning(push)) __pragma(warning(disable : 4996))
+#define END_IGNORE_WARNINGS __pragma(warning(pop))
 #else
-#   define BEGIN_IGNORE_WARNINGS
-#   define END_IGNORE_WARNINGS
+#define BEGIN_IGNORE_WARNINGS
+#define END_IGNORE_WARNINGS
 #endif
 
 #endif

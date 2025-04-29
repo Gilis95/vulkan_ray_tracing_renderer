@@ -8,7 +8,7 @@
 
 namespace wunder {
 
-using scene_node_id = std::uint32_t;
+using scene_node_id = std::uint64_t;
 
 class scene_asset {
  public:

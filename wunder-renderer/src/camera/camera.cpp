@@ -72,7 +72,7 @@ void camera::update_movement(time_unit dt) {
 
   ReturnIf(is_control_pressed || is_alt_pressed || is_shift_pressed);
 
-  auto factor = static_cast<float>(dt.m_miliseconds * 0.1f);
+  auto factor = static_cast<float>(dt.m_miliseconds) * 0.1f;
   m_camera_position_difference = {0, 0, 0};
 
   if (input_manager.is_key_in_state(wunder::keyboard::key_code::w,
@@ -205,7 +205,7 @@ void camera::fit(const glm::vec3& boxMin, const glm::vec3& boxMax,
   // Calculate the center of the bounding box
   const glm::vec3 boxCenter = 0.5f * (boxMin + boxMax);
 
-  const float yfov = tan(glm::radians(m_current.fov * 0.5f));
+  const float yfov = std::tan(glm::radians(m_current.fov * 0.5f));
   const float xfov = yfov * aspect;
 
   // Calculate the ideal distance for a tight fit or fit to radius
@@ -634,7 +634,7 @@ SceneCamera camera::create_host_camera() {
   glm::vec3 eye, center, up;
   get_lookat(eye, center, up);
   camera.focalDist = glm::length(center - eye);
-  camera.nbLights = m_lights_count;
+  camera.nbLights = static_cast<uint32_t>(m_lights_count);
   return camera;
 }
 }  // namespace wunder
