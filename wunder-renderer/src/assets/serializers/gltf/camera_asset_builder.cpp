@@ -3,14 +3,10 @@
 #include <algorithm>
 #include <cctype>
 
-#include "include/assets/camera_asset.h"
+#include "core/string_utils.h"
+#include "assets/camera_asset.h"
 #include "tiny_gltf.h"
 #include "tinygltf/tinygltf_utils.h"
-
-bool ichar_equals(char a, char b) {
-  return std::tolower(static_cast<unsigned char>(a)) ==
-         std::tolower(static_cast<unsigned char>(b));
-}
 
 namespace wunder {
 
@@ -21,7 +17,8 @@ camera_asset_builder::camera_asset_builder(
 
 std::optional<camera_asset> camera_asset_builder::build() {
   ReturnUnless(std::ranges::equal(gltf_camera.type,
-                                  GLTF_PERSPECTIVE_CAMERA_TYPE, ichar_equals),
+                                  GLTF_PERSPECTIVE_CAMERA_TYPE,
+                         string::utils::ichar_equals),
                std::nullopt);
 
   camera_asset camera{};

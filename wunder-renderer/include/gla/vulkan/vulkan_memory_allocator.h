@@ -35,7 +35,7 @@ class memory_allocator : public non_copyable{
   T* map_memory(VmaAllocation allocation) {
     T* mappedMemory;
     vmaMapMemory(memory_allocator::get_vma_allocator(), allocation,
-                 (void**)&mappedMemory);
+                 reinterpret_cast<void**>(&mappedMemory));
     return mappedMemory;
   }
 

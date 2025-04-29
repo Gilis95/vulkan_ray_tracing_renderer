@@ -7,6 +7,7 @@
 namespace wunder::string::utils {
 
 std::string bytes_to_string(std::uint64_t bytes);
+bool ichar_equals(char a, char b);
 
 }
 

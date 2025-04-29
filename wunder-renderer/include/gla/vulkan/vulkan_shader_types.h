@@ -63,6 +63,7 @@ const auto downcast = [](const auto& x) -> const base& { return x; };
 
 namespace instance {
 struct base {
+  virtual ~base() = default;
   virtual void add_descriptor_to(descriptor_set_manager& target) = 0;
 };
 

@@ -23,6 +23,7 @@ struct shader_to_compile {
 
 class base_renderer {
  public:
+  virtual ~base_renderer() = default;
   descriptor_set_manager& mutable_descriptor_set_manager();
  protected:
   void initialize_shaders();

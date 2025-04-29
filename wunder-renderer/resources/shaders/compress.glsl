@@ -39,6 +39,8 @@ using std::isinf;
 using std::abs;
 using glm::normalize;
 
+vec3 decompress_unit_vec(uint packed);
+
 INLINE float uintBitsToFloat(uint32_t const& v)
 {
   union
