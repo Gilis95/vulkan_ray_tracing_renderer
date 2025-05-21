@@ -24,8 +24,16 @@ wunder_application::~wunder_application() /*override*/ = default;
 
 void wunder_application::initialize_internal() {
   asset_manager& asset_manager = project::instance().get_asset_manager();
-  asset_manager.import_environment_map("wunder-renderer/resources/std_env.hdr");
-  asset_manager.import_asset("wunder-sandbox/resources/cube.gltf");
+  // asset_manager.import_environment_map("wunder-renderer/resources/std_env.hdr");
+  asset_manager.import_environment_map("wunder-sandbox/resources/golden_gate.hdr");
+
+  // asset_manager.import_asset("wunder-sandbox/resources/dragon/DragonAttenuation.gltf");
+  // asset_manager.import_asset("wunder-sandbox/resources/sponza-gltf-pbr/Sponza.gltf");
+  // asset_manager.import_asset("wunder-sandbox/resources/helmet/DamagedHelmet.gltf");
+  // asset_manager.import_asset("wunder-sandbox/resources/box/glTF/Box.gltf");
+  // asset_manager.import_asset("wunder-sandbox/resources/E39M5/scene.gltf");
+   // asset_manager.import_asset("wunder-sandbox/resources/test/SpecularTest.gltf");
+   // asset_manager.import_asset("wunder-sandbox/resources/test/untitled.gltf");
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -36,9 +44,9 @@ application* create_application() {
 
   auto app_properties = application_properties{
       "wunder", "123",
-      window_properties{"Wunder Application", 1500, 750, window_type::glfw},
-      renderer_properties{.m_width = 1500,
-                          .m_height = 750,
+      window_properties{"Wunder Application", 1980, 1020, window_type::glfw},
+      renderer_properties{.m_width = 1980,
+                          .m_height = 1020,
                           .m_driver = driver::Vulkan,
                           .m_renderer = renderer_type::RAY_TRACE,
                           .m_gpu_to_use = gpu_to_use::Dedicated,

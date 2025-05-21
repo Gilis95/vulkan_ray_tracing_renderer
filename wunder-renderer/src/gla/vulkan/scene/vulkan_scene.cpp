@@ -1,6 +1,7 @@
 #include "gla/vulkan/scene/vulkan_scene.h"
 
 #include <functional>
+#include <ranges>
 
 #include "assets/asset_manager.h"
 #include "assets/scene_asset.h"

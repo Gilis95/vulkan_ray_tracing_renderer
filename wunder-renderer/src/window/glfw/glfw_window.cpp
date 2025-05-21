@@ -7,6 +7,7 @@
 #include "core/wunder_logger.h"
 #include "core/wunder_macros.h"
 #include "event/event_controller.h"
+#include "event/file_events.h"
 #include "event/input_events.h"
 #include "event/window_events.h"
 #include "gla/vulkan/vulkan.h"
@@ -158,5 +159,11 @@ void glfw_window::init_input_event_listeners() const {
             break;
         }
       });
+
+  glfwSetDropCallback(m_window, [](GLFWwindow */*window*/, int pathsCount ,const char** paths) {
+    ReturnUnless(pathsCount > 0);
+
+    event_controller::on_event(event::file_dropped( paths[0]));
+  });
 }
 }  // namespace wunder

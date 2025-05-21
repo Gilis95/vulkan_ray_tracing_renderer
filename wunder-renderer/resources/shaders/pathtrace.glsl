@@ -1,22 +1,3 @@
-/*
- * Copyright (c) 2021, NVIDIA CORPORATION.  All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- * SPDX-FileCopyrightText: Copyright (c) 2021 NVIDIA CORPORATION
- * SPDX-License-Identifier: Apache-2.0
- */
-
 //-------------------------------------------------------------------------------------------------
 // This file is the main function for the path tracer.
 // * `samplePixel()` is setting a ray from the camera origin through a pixel (jitter)
@@ -29,32 +10,10 @@
 
 
 #include "pbr_disney.glsl"
-#include "pbr_gltf.glsl"
 #include "gltf_material.glsl"
 #include "punctual.glsl"
 #include "env_sampling.glsl"
 #include "shade_state.glsl"
-
-//-----------------------------------------------------------------------
-//-----------------------------------------------------------------------
-vec3 Eval(in State state, in vec3 V, in vec3 N, in vec3 L, inout float pdf)
-{
-  if(rtxState.pbrMode == 0)
-    return DisneyEval(state, V, N, L, pdf);
-  else
-    return PbrEval(state, V, N, L, pdf);
-}
-
-//-----------------------------------------------------------------------
-//-----------------------------------------------------------------------
-vec3 Sample(in State state, in vec3 V, in vec3 N, inout vec3 L, inout float pdf, inout RngStateType seed)
-{
-  if(rtxState.pbrMode == 0)
-    return DisneySample(state, V, N, L, pdf, seed);
-  else
-    return PbrSample(state, V, N, L, pdf, seed);
-}
-
 
 //-----------------------------------------------------------------------
 //-----------------------------------------------------------------------
@@ -171,7 +130,7 @@ VisibilityContribution DirectLight(in Ray r, in State state)
     {
       BsdfSampleRec bsdfSampleRec;
 
-      bsdfSampleRec.f = Eval(state, -r.direction, state.ffnormal, lightDir, bsdfSampleRec.pdf);
+      bsdfSampleRec.f = DisneyEval(state, -r.direction, state.ffnormal, lightDir, bsdfSampleRec.pdf);
 
       float misWeight = isLight ? 1.0 : max(0.0, powerHeuristic(lightPdf, bsdfSampleRec.pdf));
 
@@ -278,7 +237,7 @@ vec3 PathTrace(Ray r)
     vcontrib.radiance *= throughput;
 
     // Sampling for the next ray
-    bsdfSampleRec.f = Sample(state, -r.direction, state.ffnormal, bsdfSampleRec.L, bsdfSampleRec.pdf, prd.seed);
+    bsdfSampleRec.f = DisneySample(state, -r.direction, state.ffnormal, bsdfSampleRec.L, bsdfSampleRec.pdf, prd.seed);
 
     // Set absorption only if the ray is currently inside the object.
     if(dot(state.ffnormal, bsdfSampleRec.L) < 0.0)

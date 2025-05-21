@@ -11,6 +11,8 @@
 #include "assets/asset_types.h"
 #include "core/time_unit.h"
 #include "core/vector_map.h"
+#include "event/event_handler.h"
+#include "event/file_events.h"
 
 namespace tinygltf {
 class TinyGLTF;
@@ -20,10 +22,10 @@ class Model;
 namespace wunder {
 class task_executor;
 class gltf_asset_importer;
-class asset_manager {
+class asset_manager : protected event_handler<event::file_dropped> {
  public:
   asset_manager();
-  ~asset_manager();
+  ~asset_manager() override;
 
  public:
   asset_serialization_result_codes import_asset(
@@ -31,8 +33,10 @@ class asset_manager {
 
   asset_serialization_result_codes import_environment_map(
       const std::filesystem::path& asset);
-public:
+
+ public:
   void update(time_unit dt);
+
  public:
   template <typename asset_type>
   optional_const_ref<asset_type> find_asset(asset_handle handle) const;
@@ -43,6 +47,9 @@ public:
 
   template <typename asset_type>
   [[nodiscard]] assets<asset_type> find_assets() const;
+
+ protected:
+  void on_event(const event::file_dropped&) override;
 
  private:
   unique_ptr<tinygltf::TinyGLTF> m_gltf;

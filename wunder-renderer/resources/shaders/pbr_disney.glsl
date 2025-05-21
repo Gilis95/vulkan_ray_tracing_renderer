@@ -1,22 +1,3 @@
-/*
- * Copyright (c) 2021, NVIDIA CORPORATION.  All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- * SPDX-FileCopyrightText: Copyright (c) 2021 NVIDIA CORPORATION
- * SPDX-License-Identifier: Apache-2.0
- */
-
 //-------------------------------------------------------------------------------------------------
 // This file has all the Disney evaluation and sampling methods.
 //
@@ -232,41 +213,6 @@ float powerHeuristic(float a, float b)
   float t = a * a;
   return t / (b * b + t);
 }
-
-//const int numOfLights = 0;
-////-----------------------------------------------------------------------
-////-----------------------------------------------------------------------
-//void sampleSphereLight(in Light light, inout LightSampleRec lightSampleRec, in vec2 rand)
-//{
-//  float r1 = rand.x;
-//  float r2 = rand.y;
-//
-//  lightSampleRec.surfacePos = light.position + UniformSampleSphere(r1, r2) * light.radius;
-//  lightSampleRec.normal     = normalize(lightSampleRec.surfacePos - light.position);
-//  lightSampleRec.emission   = light.emission * float(numOfLights);
-//}
-//
-////-----------------------------------------------------------------------
-////-----------------------------------------------------------------------
-//void sampleRectLight(in Light light, inout LightSampleRec lightSampleRec, in vec2 rand)
-//{
-//  float r1 = rand.x;
-//  float r2 = rand.y;
-//
-//  lightSampleRec.surfacePos = light.position + light.u * r1 + light.v * r2;
-//  lightSampleRec.normal     = normalize(cross(light.u, light.v));
-//  lightSampleRec.emission   = light.emission * float(numOfLights);
-//}
-//
-////-----------------------------------------------------------------------
-////-----------------------------------------------------------------------
-//void sampleLight(in Light light, inout LightSampleRec lightSampleRec, in vec2 rand)
-//{
-//  if(int(light.type) == 0)  // Rect Light
-//    sampleRectLight(light, lightSampleRec, rand);
-//  else
-//    sampleSphereLight(light, lightSampleRec, rand);
-//}
 
 #ifdef _ENVMAP_
 #ifndef CONSTANT_BG

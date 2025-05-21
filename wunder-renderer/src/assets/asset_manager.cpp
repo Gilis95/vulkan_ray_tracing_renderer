@@ -8,11 +8,13 @@
 #include "assets/serializers/gltf/gltf_asset_importer.h"
 #include "core/task_executor.h"
 #include "core/wunder_filesystem.h"
+#include "event/event_handler.hpp"
 
 namespace wunder {
 
 asset_manager::asset_manager()
-    : m_gltf(std::make_unique<tinygltf::TinyGLTF>()),
+    : event_handler(),
+      m_gltf(std::make_unique<tinygltf::TinyGLTF>()),
       m_asset_importer(std::make_unique<gltf_asset_importer>(m_asset_storage)),
       m_asset_importer_executor(make_unique<task_executor>(1)) {}
 
@@ -58,12 +60,15 @@ asset_serialization_result_codes asset_manager::import_environment_map(
                              &component, required_components);
 
   return environment_map_serializer::import_asset(
-      {.m_width = static_cast<uint32_t>( width),
+      {.m_width = static_cast<uint32_t>(width),
        .m_height = static_cast<uint32_t>(height),
        .m_components = static_cast<uint32_t>(required_components),
        .m_pixels_ptr = pixels},
       m_asset_storage);
 }
 
+void asset_manager::on_event(const event::file_dropped &event) {
+  import_asset(event.m_path);
+}
 
 }  // namespace wunder

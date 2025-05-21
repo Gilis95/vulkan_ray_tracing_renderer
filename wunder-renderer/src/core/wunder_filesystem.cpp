@@ -16,6 +16,8 @@ void wunder_filesystem::set_work_dir(std::filesystem::path work_dir) {
 
 std::filesystem::path wunder_filesystem::resolve_path(
     const std::filesystem::path& resource_path) {
+  ReturnIf(resource_path.has_root_directory(), resource_path);
+
   ReturnIf(m_work_dir.empty(), std::filesystem::absolute(resource_path));
   // failsafe path has been already resolved or it has been provided as a full
   // path
