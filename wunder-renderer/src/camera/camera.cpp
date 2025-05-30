@@ -41,7 +41,11 @@ camera::camera()
       sizeof(SceneCamera), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT));
 }
 
-camera::~camera() = default;
+camera::~camera() {
+  if (m_camera_buffer) {
+    m_camera_buffer.reset();
+  }
+}
 
 void camera::update(time_unit dt) {
   update_camera_position_smoothly();

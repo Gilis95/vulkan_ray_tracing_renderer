@@ -13,8 +13,8 @@ class shader;
 
 class base_pipeline {
  public:
-  virtual ~base_pipeline() = default;
-  base_pipeline(VkPipelineBindPoint bind_point);
+  explicit base_pipeline(VkPipelineBindPoint bind_point);
+  virtual ~base_pipeline();
 
  public:
   [[nodiscard]] VkPipelineLayout get_vulkan_pipeline_layout() const {

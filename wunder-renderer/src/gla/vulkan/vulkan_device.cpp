@@ -24,7 +24,16 @@ namespace wunder::vulkan {
 
 device::device(VkPhysicalDeviceFeatures /*enabled_features*/) {}
 
-device::~device() { destroy(); }
+device::~device() = default;
+
+void device::shutdown() {
+  if (m_command_pool) {
+    m_command_pool.reset();
+  }
+
+  VK_CHECK_RESULT(vkDeviceWaitIdle(m_logical_device));
+  vkDestroyDevice(m_logical_device, nullptr);
+}
 
 void device::initialize() {
   auto& physical_device = layer_abstraction_factory::instance()
@@ -77,7 +86,7 @@ void device::create_extensions_list() {
   static VkPhysicalDeviceAccelerationStructureFeaturesKHR
       acceleration_structure_features_khr{};
   acceleration_structure_features_khr.sType =
-          VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR;
+      VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR;
   m_requested_extensions.push_back(
       {.m_name = VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME,
        .m_optional = false,
@@ -86,7 +95,7 @@ void device::create_extensions_list() {
   static VkPhysicalDeviceRayTracingPipelineFeaturesKHR
       ray_tracing_pipeline_features_khr{};
   ray_tracing_pipeline_features_khr.sType =
-          VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_FEATURES_KHR;
+      VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_FEATURES_KHR;
   m_requested_extensions.push_back(
       {.m_name = VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME,
        .m_optional = false,
@@ -154,7 +163,7 @@ void device::append_used_device_features(
 
   if (!used_features.empty()) {
     // build up chain of all used extension features
-    for (size_t i = 0; i < used_features.size(); i++) {
+    for (size_t i = 0; i < used_features.size(); ++i) {
       auto* header = reinterpret_cast<ExtensionHeader*>(used_features[i]);
       header->pNext =
           i < used_features.size() - 1 ? used_features[i + 1] : nullptr;
@@ -175,11 +184,6 @@ void device::append_used_device_features(
   out_device_create_info.pNext = &physical_device_info.m_features_10;
   vkGetPhysicalDeviceFeatures2(physical_device.get_vulkan_physical_device(),
                                &physical_device_info.m_features_10);
-}
-
-void device::destroy() {
-  VK_CHECK_RESULT(vkDeviceWaitIdle(m_logical_device));
-  vkDestroyDevice(m_logical_device, nullptr);
 }
 
 }  // namespace wunder::vulkan

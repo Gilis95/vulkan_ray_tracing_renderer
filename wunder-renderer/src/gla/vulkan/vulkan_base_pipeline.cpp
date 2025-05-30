@@ -11,6 +11,17 @@ namespace wunder::vulkan {
 base_pipeline::base_pipeline(VkPipelineBindPoint bind_point)
     : m_bind_point(bind_point) {}
 
+base_pipeline::~base_pipeline() {
+  auto& device = layer_abstraction_factory::instance()
+                     .get_vulkan_context()
+                     .mutable_device();
+
+  vkDestroyPipelineLayout(device.get_vulkan_logical_device(),
+                          m_vulkan_pipeline_layout, VK_NULL_HANDLE);
+  vkDestroyPipeline(device.get_vulkan_logical_device(), m_vulkan_pipeline,
+                    VK_NULL_HANDLE);
+}
+
 void base_pipeline::initialize_pipeline_layout(
     const descriptor_set_manager& descriptor_declaring_shader) {
   auto& device = layer_abstraction_factory::instance()
@@ -21,7 +32,7 @@ void base_pipeline::initialize_pipeline_layout(
       descriptor_declaring_shader.get_descriptor_set_layout();
 
   vkDestroyPipelineLayout(device.get_vulkan_logical_device(),
-                          m_vulkan_pipeline_layout, nullptr);
+                          m_vulkan_pipeline_layout, VK_NULL_HANDLE);
 
   // TODO:: This must be comming from shader reflect data!!!
   VkPushConstantRange push_constants = get_push_constant_range();
@@ -35,7 +46,7 @@ void base_pipeline::initialize_pipeline_layout(
       static_cast<uint32_t>(descriptor_sets_layout.size());
   pipeline_layout_create_info.pSetLayouts = descriptor_sets_layout.data();
   vkCreatePipelineLayout(device.get_vulkan_logical_device(),
-                         &pipeline_layout_create_info, nullptr,
+                         &pipeline_layout_create_info, VK_NULL_HANDLE,
                          &m_vulkan_pipeline_layout);
 }
 

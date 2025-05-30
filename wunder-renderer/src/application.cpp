@@ -23,11 +23,15 @@ application::application(application_properties &&properties)
           std::make_unique<application_properties>(std::move(properties))) {}
 
 /////////////////////////////////////////////////////////////////////////////////////////
-application::~application() {
+application::~application() = default;
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void application::shutdown() {
   project::instance().shutdown();
   service_factory::instance().shutdown();
   window_factory::instance().shutdown();
   vulkan::layer_abstraction_factory::instance().shutdown();
+  m_properties.reset();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -59,7 +63,7 @@ void application::run() {
   m_is_running = true;
   auto &window = window_factory::instance().get_window();
   auto &gla = vulkan::layer_abstraction_factory::instance();
-  auto &renderers = gla.get_renderers();
+  auto &renderer = gla.get_renderers();
   auto &project = project::instance();
 
   time_unit frame_end = time_unit::from_current_time_in_miliseconds();
@@ -70,9 +74,8 @@ void application::run() {
     time_unit frame_duration = frame_start - frame_end;
 
     window.update(frame_duration);
-    for (auto &[_, renderer] : renderers) {
-      renderer->update(frame_duration);
-    }
+
+    renderer.update(frame_duration);
 
     project.update(frame_duration);
 

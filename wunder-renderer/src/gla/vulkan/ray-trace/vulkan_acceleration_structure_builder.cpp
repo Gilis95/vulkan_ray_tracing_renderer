@@ -21,6 +21,11 @@ acceleration_structure_builder<build_info_type>::acceleration_structure_builder(
     : m_command_buffer(command_buffer) {}
 
 template <derived<acceleration_structure_build_info> build_info_type>
+acceleration_structure_builder<build_info_type>::~acceleration_structure_builder() {
+  m_scratch_buffer.reset();
+}
+
+template <derived<acceleration_structure_build_info> build_info_type>
 void acceleration_structure_builder<build_info_type>::create_scratch_buffer(
     std::uint32_t scratch_buffer_size) {
   m_scratch_buffer.reset(new storage_device_buffer(

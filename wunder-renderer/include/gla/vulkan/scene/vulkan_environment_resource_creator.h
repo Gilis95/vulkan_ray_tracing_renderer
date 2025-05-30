@@ -20,7 +20,7 @@ namespace wunder::vulkan {
 class vulkan_environment_resource_creator final {
  public:
   static unique_ptr<uniform_buffer>  create_sky_and_sun_properties();
-  static vulkan_environment create_environment_texture();
+  static unique_ptr<vulkan_environment> create_environment_texture();
 
  private:
   static float build_alias_map(const std::vector<float>& data,

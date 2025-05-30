@@ -1,3 +1,5 @@
+#include "gla/vulkan/scene/vulkan_environment_resource_creator.h"
+
 #include <numeric>
 
 #include "assets/asset_manager.h"
@@ -5,7 +7,6 @@
 #include "core/project.h"
 #include "core/wunder_macros.h"
 #include "gla/vulkan/scene/vulkan_environment.h"
-#include "gla/vulkan/scene/vulkan_environment_resource_creator.h"
 #include "gla/vulkan/vulkan_device_buffer.h"
 #include "gla/vulkan/vulkan_texture.h"
 #include "resources/shaders/host_device.h"
@@ -46,25 +47,26 @@ vulkan_environment_resource_creator::create_sky_and_sun_properties() {
       &sun_and_sky, sizeof(SunAndSky), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT);
 }
 
-vulkan_environment vulkan_environment_resource_creator::create_environment_texture() {
-  vulkan_environment environment{};
-
+unique_ptr<vulkan_environment>
+vulkan_environment_resource_creator::create_environment_texture() {
   // TODO:: first asset is being retrieved, it should be pointed out in the
   // scene, which one to be used
   auto& asset_manager = project::instance().get_asset_manager();
   assets<environment_texture_asset> assets =
       asset_manager.find_assets<environment_texture_asset>();
 
-  AssertReturnIf(assets.empty(), environment);
+  AssertReturnIf(assets.empty(), nullptr);
+
+  unique_ptr<vulkan_environment> environment(new vulkan_environment());
 
   const_ref<environment_texture_asset>& first_environment_texture =
       assets.begin()->second;
-  environment.m_image = std::make_unique<sampled_texture>(
+  environment->m_image = std::make_unique<sampled_texture>(
       descriptor_build_data{.m_enabled = true,
                             .m_descriptor_name = "environmentTexture"},
       first_environment_texture.get());
   // Needed acceleration metadata
-  create_environment_accel(first_environment_texture.get(), environment);
+  create_environment_accel(first_environment_texture.get(), *environment);
 
   return environment;
 }
@@ -175,8 +177,8 @@ void vulkan_environment_resource_creator::create_environment_accel(
 // sampling shader to uniformly select a texel in the environment, and select
 // either that texel or its alias depending on their relative intensities
 //
-float vulkan_environment_resource_creator::build_alias_map(const std::vector<float>& data,
-                                                 std::vector<EnvAccel>& accel) {
+float vulkan_environment_resource_creator::build_alias_map(
+    const std::vector<float>& data, std::vector<EnvAccel>& accel) {
   auto size = static_cast<uint32_t>(data.size());
 
   // Compute the integral of the emitted radiance of the environment map

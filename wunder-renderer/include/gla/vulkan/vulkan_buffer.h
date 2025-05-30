@@ -15,7 +15,7 @@ template <typename base_buffer_type>
 class buffer : public non_copyable, public base_buffer_type {
  public:
   explicit buffer(descriptor_build_data descriptor_build_data);
-  virtual ~buffer();
+  ~buffer() override;
 
  public:
   buffer(buffer&&) noexcept;

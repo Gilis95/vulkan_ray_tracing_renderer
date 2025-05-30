@@ -4,38 +4,46 @@
 #include "core/wunder_macros.h"
 #include "gla/renderer_capabilities .h"
 #include "gla/renderer_properties.h"
+#include "gla/vulkan/rasterize/vulkan_render_pass.h"
+#include "gla/vulkan/rasterize/vulkan_swap_chain.h"
 #include "gla/vulkan/vulkan.h"
 #include "gla/vulkan/vulkan_command_pool.h"
 #include "gla/vulkan/vulkan_device.h"
 #include "gla/vulkan/vulkan_macros.h"
 #include "gla/vulkan/vulkan_memory_allocator.h"
 #include "gla/vulkan/vulkan_physical_device.h"
-#include "gla/vulkan/rasterize/vulkan_render_pass.h"
-#include "gla/vulkan/rasterize/vulkan_swap_chain.h"
 #include "window/window_factory.h"
 
 namespace wunder::vulkan {
 context::context() = default;
 
-context::~context() {
+context::~context() = default;
+
+void context::shutdown() {
   // release them in reverse order
   if (m_renderer_capabilities.get()) {
-    AssertLogUnless(m_renderer_capabilities.release());
+    m_renderer_capabilities.reset();
   }
-  if (m_logical_device.get()) {
-    AssertLogUnless(m_logical_device.release());
-  }
-  if (m_physical_device.get()) {
-    AssertLogUnless(m_physical_device.release());
-  }
-  if (m_vulkan.get()) {
-    AssertLogUnless(m_vulkan.release());
+
+  if (m_swap_chain) {
+    m_swap_chain.reset();
   }
 
   if (m_resource_allocator.get()) {
-    AssertLogUnless(m_resource_allocator.release());
+    m_resource_allocator.reset();
   }
 
+  if (m_logical_device.get()) {
+    m_logical_device->shutdown();
+  }
+
+  if (m_physical_device.get()) {
+    m_physical_device.reset();
+  }
+
+  if (m_vulkan.get()) {
+    m_vulkan.reset();
+  }
 }
 
 void context::init(const wunder::renderer_properties &properties) {
@@ -103,12 +111,13 @@ const renderer_capabilities &context::get_capabilities() const {
 
 instance &context::mutable_vulkan() { return *m_vulkan; }
 
-physical_device &context::mutable_physical_device() { return *m_physical_device; }
+physical_device &context::mutable_physical_device() {
+  return *m_physical_device;
+}
 
 device &context::mutable_device() { return *m_logical_device; }
 
-swap_chain& context::mutable_swap_chain(){return *m_swap_chain;}
-
+swap_chain &context::mutable_swap_chain() { return *m_swap_chain; }
 
 memory_allocator &context::mutable_resource_allocator() {
   return *m_resource_allocator;

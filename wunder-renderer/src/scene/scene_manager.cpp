@@ -19,6 +19,11 @@ scene_manager::scene_manager() : event_handler<asset_loaded>() {}
 
 scene_manager::~scene_manager() /*override*/ = default;
 
+void scene_manager::shutdown() {
+  m_active_scenes.clear();
+  m_loaded_scenes.clear();
+}
+
 void scene_manager::update(wunder::time_unit dt) {
   m_executor.update(dt);
 }

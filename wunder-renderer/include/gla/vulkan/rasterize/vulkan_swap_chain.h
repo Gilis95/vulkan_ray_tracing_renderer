@@ -40,7 +40,7 @@ class swap_chain : public non_copyable {
 
  public:
   swap_chain(std::uint32_t width, std::uint32_t height);
-
+  ~swap_chain() override;
  public:
   void resize(uint32_t width, uint32_t height);
 

@@ -29,9 +29,10 @@ class context final : public non_copyable {
 
  public:
   context();
-  ~context();
+  ~context() override;
 
  private:
+  void shutdown();
   void init(const renderer_properties& properties);
 
  public:

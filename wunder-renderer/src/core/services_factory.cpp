@@ -23,8 +23,8 @@ void service_factory::initialize() {
 }
 
 void service_factory::shutdown() {
-  m_input_manager.release();
-  m_camera.release();
+  m_input_manager.reset();
+  m_camera.reset();
 }
 
 

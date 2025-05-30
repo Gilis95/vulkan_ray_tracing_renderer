@@ -19,6 +19,8 @@ class application : private event_handler<wunder::event::window_close_event>{
   explicit application(application_properties&& properties);
   ~application() override;
 
+  void shutdown();
+
   /**
    * This is second function called after class creation.
    * It's used for initializing debugger, logger and window.

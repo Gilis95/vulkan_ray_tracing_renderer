@@ -11,6 +11,7 @@
 #include "gla/vulkan/descriptors/vulkan_descriptor_set_manager.h"
 #include "gla/vulkan/rasterize/vulkan_rasterize_renderer.h"
 #include "gla/vulkan/rasterize/vulkan_swap_chain.h"
+#include "gla/vulkan/scene/vulkan_environment.h"
 #include "gla/vulkan/scene/vulkan_scene.h"
 #include "gla/vulkan/vulkan_context.h"
 #include "gla/vulkan/vulkan_device.h"
@@ -29,12 +30,23 @@ rtx_renderer::rtx_renderer(const renderer_properties &renderer_properties)
       m_renderer_properties(renderer_properties),
       m_have_active_scene(false) {}
 
-rtx_renderer::~rtx_renderer() {
+rtx_renderer::~rtx_renderer() = default;
+
+void rtx_renderer::shutdown_internal() /*override*/ {
   if (m_rtx_pipeline.get()) {
-    AssertLogUnless(m_rtx_pipeline.release());
+    m_rtx_pipeline.reset();
   }
   if (m_shader_binding_table.get()) {
-    AssertLogUnless(m_shader_binding_table.release());
+    m_shader_binding_table.reset();
+  }
+
+  if (m_rasterize_renderer) {
+    m_rasterize_renderer->shutdown();
+    m_rasterize_renderer.reset();
+  }
+
+  if (m_state) {
+    m_state.reset();
   }
 }
 
@@ -49,8 +61,6 @@ void rtx_renderer::init_internal(const renderer_properties &properties) {
   m_state->maxHeatmap = 65000;
   m_state->pbrMode = 0;
   m_state->debugging_mode = DebugMode::eNoDebug;
-
-  initialize_shaders();
 }
 
 vector_map<VkShaderStageFlagBits, std::vector<shader_to_compile>>
@@ -155,8 +165,6 @@ void rtx_renderer::on_event(
   AssertReturnUnless(api_scene.has_value());
   auto &scene = api_scene->get();
   const auto &environment_texture = scene.get_environment_texture();
-  AssertReturnUnless(environment_texture.m_acceleration_data.m_buffer);
-  AssertReturnUnless(environment_texture.m_image);
 
   auto &camera = service_factory::instance().get_camera();
 
@@ -182,7 +190,7 @@ void rtx_renderer::on_event(
 
   m_shader_binding_table = shader_binding_table::create(*m_rtx_pipeline);
 
-  m_rasterize_renderer->initialize();
+  m_rasterize_renderer->init(m_renderer_properties);
   m_state->frame = 0;
   m_state->fireflyClampThreshold =
       environment_texture.m_acceleration_data.m_integral;
@@ -191,13 +199,5 @@ void rtx_renderer::on_event(
 
 void rtx_renderer::on_event(const wunder::event::camera_moved &) /*override*/ {
   m_state->frame = 0;
-}
-
-const renderer_capabilities &rtx_renderer::get_capabilities() const /*override*/
-{
-  static renderer_capabilities s_empty;
-  return layer_abstraction_factory::instance()
-      .get_vulkan_context()
-      .get_capabilities();
 }
 }  // namespace wunder::vulkan

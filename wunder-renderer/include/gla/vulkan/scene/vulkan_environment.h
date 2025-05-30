@@ -20,11 +20,13 @@ struct vulkan_environment : public non_copyable {
     float m_average_luminance;
   };
 
+  ~vulkan_environment();
+  void add_descriptor_to(descriptor_set_manager& target) const;
+
  public:
   unique_ptr<sampled_texture> m_image;
   acceleration_data m_acceleration_data;
 
-  void add_descriptor_to(descriptor_set_manager& target);
 };
 }  // namespace wunder::vulkan
 

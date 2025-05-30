@@ -12,7 +12,7 @@ template <derived<acceleration_structure_build_info> build_info_type>
 class acceleration_structure_builder {
  public:
   acceleration_structure_builder(VkCommandBuffer command_buffer);
-  virtual ~acceleration_structure_builder() = default;
+  virtual ~acceleration_structure_builder();
 
  protected:
   void create_scratch_buffer(std::uint32_t scratch_buffer_size);

@@ -20,7 +20,7 @@ project& project::instance() {
 /////////////////////////////////////////////////////////////////////////////////////////
 void project::update(time_unit dt) {
   m_asset_manager->update(dt);
-m_scene_manager->update(dt);
+  m_scene_manager->update(dt);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -31,17 +31,18 @@ void project::initialize() {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void project::shutdown() {
-  AssertLogUnless(m_asset_manager.release());
-  AssertLogUnless(m_scene_manager.release());
+  if (m_asset_manager) {
+    m_asset_manager.reset();
+  }
+  if (m_scene_manager) {
+    m_scene_manager->shutdown();
+    m_scene_manager.reset();
+  }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-asset_manager& project::get_asset_manager() {
-  return *m_asset_manager;
-}
+asset_manager& project::get_asset_manager() { return *m_asset_manager; }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-scene_manager& project::get_scene_manager() {
-  return *m_scene_manager;
-}
+scene_manager& project::get_scene_manager() { return *m_scene_manager; }
 }  // namespace wunder

@@ -13,6 +13,7 @@
 #include "gla/vulkan/ray-trace/vulkan_top_level_acceleration_structure.h"
 #include "gla/vulkan/ray-trace/vulkan_top_level_acceleration_structure_build_info.h"
 #include "gla/vulkan/ray-trace/vulkan_top_level_acceleration_structure_builder.h"
+#include "gla/vulkan/scene/vulkan_environment.h"
 #include "gla/vulkan/scene/vulkan_environment_resource_creator.h"
 #include "gla/vulkan/scene/vulkan_lights_resource_creator.h"
 #include "gla/vulkan/scene/vulkan_materials_resource_creator.h"
@@ -29,7 +30,49 @@
 
 namespace wunder::vulkan {
 scene::scene() = default;
-scene::~scene() = default;
+scene::~scene() {
+  m_bound_textures.clear();
+
+  if (m_material_buffer) {
+    m_material_buffer.reset();
+  }
+  if (m_light_buffer) {
+    m_light_buffer.reset();
+  }
+
+  if (m_mesh_instance_data_buffer) {
+    m_mesh_instance_data_buffer.reset();
+  }
+
+  if (m_sun_and_sky_properties_buffer) {
+    m_sun_and_sky_properties_buffer.reset();
+  }
+
+  if (m_environment_textures) {
+    m_environment_textures.reset();
+  }
+
+  if (m_acceleration_structure) {
+    m_acceleration_structure.reset();
+  }
+
+  m_acceleration_structure_build_info.clear();
+
+  for (auto& [mesh, _] : m_mesh_nodes) {
+    ContinueUnless(mesh);
+
+    if (mesh->m_index_buffer) {
+      mesh->m_index_buffer.reset();
+    }
+
+    if (mesh->m_vertex_buffer) {
+      mesh->m_vertex_buffer.reset();
+    }
+
+    mesh.reset();
+  }
+  m_mesh_nodes.clear();
+}
 
 scene::scene(scene&&) = default;
 scene& scene::operator=(scene&&) noexcept = default;
@@ -55,8 +98,8 @@ void scene::load_scene(const scene_asset& asset) {
   m_material_buffer =
       std::move(materials_resource_creator.create_material_buffer(
           texture_helper.get_texture_assets()));
-  m_light_buffer = std::move(
-      lights_resource_creator::create_light_buffer(light_entities, m_lights_count));
+  m_light_buffer = std::move(lights_resource_creator::create_light_buffer(
+      light_entities, m_lights_count));
 
   _mesh_helper.create_mesh_scene_nodes(material_assets);
   AssertReturnIf(m_mesh_nodes.empty());
@@ -72,8 +115,9 @@ void scene::load_scene(const scene_asset& asset) {
 
   m_sun_and_sky_properties_buffer =
       vulkan_environment_resource_creator::create_sky_and_sun_properties();
-  m_environment_textures =
-      std::move(vulkan_environment_resource_creator::create_environment_texture());
+  m_environment_textures = std::move(
+      vulkan_environment_resource_creator::create_environment_texture());
+  AssertReturnUnless(m_environment_textures);
 }
 
 void scene::collect_descriptors(descriptor_set_manager& target) {
@@ -86,7 +130,10 @@ void scene::collect_descriptors(descriptor_set_manager& target) {
   m_mesh_instance_data_buffer->add_descriptor_to(target);
   m_acceleration_structure->add_descriptor_to(target);
   m_sun_and_sky_properties_buffer->add_descriptor_to(target);
-  m_environment_textures.add_descriptor_to(target);
+  m_environment_textures->add_descriptor_to(target);
 }
 
+const vulkan_environment& scene::get_environment_texture() const {
+  return *m_environment_textures;
+}
 }  // namespace wunder::vulkan

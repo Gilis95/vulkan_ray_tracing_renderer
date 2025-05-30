@@ -31,9 +31,11 @@ top_level_acceleration_structure_build_info::
   create_acceleration_structures_buffer(acceleration_structures_instances);
 
   clear_geometry_data();
-  create_geometry_data(static_cast<uint32_t>(acceleration_structures_instances.size()));
+  create_geometry_data(
+      static_cast<uint32_t>(acceleration_structures_instances.size()));
 
-  fill_range_info_data(static_cast<uint32_t>(acceleration_structures_instances.size()));
+  fill_range_info_data(
+      static_cast<uint32_t>(acceleration_structures_instances.size()));
 
   auto build_flags = VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR;
   create_build_info(build_flags);
@@ -58,7 +60,11 @@ top_level_acceleration_structure_build_info::operator=(
 }
 
 top_level_acceleration_structure_build_info::
-    ~top_level_acceleration_structure_build_info() = default;
+    ~top_level_acceleration_structure_build_info() {
+  if (m_acceleration_structures_buffer) {
+    m_acceleration_structures_buffer.reset();
+  }
+}
 
 std::vector<VkAccelerationStructureInstanceKHR>
 top_level_acceleration_structure_build_info::
@@ -104,7 +110,7 @@ bool top_level_acceleration_structure_build_info::
       to_transform_matrix_khr(mesh_node.m_model_matrix);
   out_acceleration_structure_instance.instanceCustomIndex =
       mesh_node.m_mesh->m_idx & 0xFFFFFF;  // gl_InstanceCustomIndexEXT: to find
-                                // which primitive
+                                           // which primitive
   out_acceleration_structure_instance.accelerationStructureReference =
       mesh_node.m_mesh->m_blas.get_address();
   out_acceleration_structure_instance.flags = static_cast<uint8_t>(flags);

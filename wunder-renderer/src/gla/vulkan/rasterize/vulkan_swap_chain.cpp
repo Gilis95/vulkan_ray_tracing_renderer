@@ -1,5 +1,7 @@
 #include "gla/vulkan/rasterize/vulkan_swap_chain.h"
 
+#include <oneapi/tbb/task_group.h>
+
 #include "gla/vulkan/rasterize/vulkan_render_pass.h"
 #include "gla/vulkan/vulkan_command_pool.h"
 #include "gla/vulkan/vulkan_context.h"
@@ -36,7 +38,7 @@ swap_chain::queue_element::~queue_element() {
   auto& device = vulkan_context.mutable_device();
   auto vk_device = device.get_vulkan_logical_device();
 
-  //  vkDestroyImage(vk_device, m_image, nullptr);
+  vkDestroyImage(vk_device, m_image, nullptr);
   vkDestroyImageView(vk_device, m_image_view, nullptr);
   vkDestroySemaphore(vk_device, m_semaphore_entry.read_semaphore, nullptr);
   vkDestroySemaphore(vk_device, m_semaphore_entry.written_semaphore, nullptr);
@@ -59,6 +61,10 @@ swap_chain::swap_chain(std::uint32_t width, std::uint32_t height)
       m_depth_view(VK_NULL_HANDLE),
       m_colour_format{VK_FORMAT_B8G8R8A8_UNORM},
       m_color_space{VK_COLOR_SPACE_SRGB_NONLINEAR_KHR} {}
+
+swap_chain::~swap_chain() {
+  deallocate();
+}
 
 void swap_chain::resize(uint32_t width, uint32_t height) {
   wait_idle();
@@ -85,17 +91,17 @@ void swap_chain::deallocate() {
   auto& device = vulkan_context.mutable_device();
   auto vk_device = device.get_vulkan_logical_device();
 
+  /*if (m_swap_chain) {
+    vkDestroySwapchainKHR(vk_device, m_swap_chain, nullptr);
+    m_swap_chain = VK_NULL_HANDLE;
+  }*/
+
   m_queue_elements.clear();
 
   vkDestroyCommandPool(vk_device, m_command_pool, nullptr);
 
   vkDestroyImage(vk_device, m_depth_image, nullptr);
   vkDestroyImageView(vk_device, m_depth_view, nullptr);
-
-  if (m_swap_chain) {
-    vkDestroySwapchainKHR(vk_device, m_swap_chain, nullptr);
-    m_swap_chain = VK_NULL_HANDLE;
-  }
 }
 
 std::optional<std::uint32_t> swap_chain::acquire() {

@@ -44,8 +44,6 @@ meshes_resource_creator::extract_mesh_assets() {
 
 void meshes_resource_creator::create_mesh_scene_nodes(
     const assets<material_asset>& materials) {
-  std::vector<bottom_level_acceleration_structure_build_info> build_infos;
-
   // we first go through unique meshes and create them an instance
   vector_map<asset_handle, shared_ptr<vulkan_mesh>> mesh_instances;
   create_index_and_vertex_buffer(materials, mesh_instances);

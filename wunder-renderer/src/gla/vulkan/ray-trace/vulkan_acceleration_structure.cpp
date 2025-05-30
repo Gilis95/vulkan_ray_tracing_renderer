@@ -44,6 +44,10 @@ acceleration_structure::~acceleration_structure() {
 
   vkDestroyAccelerationStructureKHR(device.get_vulkan_logical_device(),
                                     m_descriptor, VK_NULL_HANDLE);
+
+  if (m_acceleration_structure_buffer) {
+    m_acceleration_structure_buffer.reset();
+  }
 }
 
 void acceleration_structure::create_acceleration_structure(

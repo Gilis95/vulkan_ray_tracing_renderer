@@ -4,7 +4,6 @@
 #include <glad/vulkan.h>
 
 #include "core/wunder_memory.h"
-#include "gla/renderer_api.h"
 #include "gla/vulkan/vulkan_base_renderer.h"
 #include "gla/vulkan/vulkan_texture_fwd.h"
 #include "resources/shaders/host_device.h"
@@ -23,7 +22,9 @@ class rasterize_renderer : public base_renderer {
   ~rasterize_renderer();
 
  public:
-  void initialize();
+  void shutdown_internal() override;
+
+  void init_internal(const renderer_properties& properties) override;
 
   storage_texture& get_output_image();
 

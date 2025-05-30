@@ -29,7 +29,11 @@ shader_binding_table::shader_binding_table() noexcept {
                                  &device_properties);
 }
 
-shader_binding_table::~shader_binding_table() = default;
+shader_binding_table::~shader_binding_table() {
+  for ( auto& shader : m_shader_group_buffers) {
+    shader.reset();
+  }
+};
 
 unique_ptr<shader_binding_table> shader_binding_table::create(
     const rtx_pipeline& pipeline) {

@@ -54,7 +54,7 @@ unique_ptr<storage_buffer> materials_resource_creator::create_material_buffer(
                                     const material_asset& asset,
                                     GltfShadeMaterial& out_shader_material) {
     auto get_texture_idx = [&texture_assets](asset_handle handle) {
-      if (!handle.is_valid()) {
+      if (!handle) {
         WUNDER_DEBUG_TAG("vulkan_scene", "Handle is invalid skipping",
                          handle.value());
         return -1;

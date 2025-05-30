@@ -41,11 +41,10 @@ void mesh_asset_normals_builder::create_normals(
     const auto& pos1 = m_out_mesh_asset.m_vertices[ind1].m_position;
     const auto& pos2 = m_out_mesh_asset.m_vertices[ind2].m_position;
 
-    const auto v1 = glm::normalize(
-        pos1 - pos0);  // Many normalize, but when objects are really small the
-    const auto v2 = glm::normalize(
-        pos2 -
-        pos0);  // cross will go below nv_eps and the normal will be (0,0,0)
+    // Many normalize, but when objects are really small the
+    // cross will go below nv_eps and the normal will be (0,0,0)
+    const auto v1 = glm::normalize(pos1 - pos0);
+    const auto v2 = glm::normalize(pos2 - pos0);
     const auto n = glm::cross(v1, v2);
     geo_normal[ind0] += n;
     geo_normal[ind1] += n;

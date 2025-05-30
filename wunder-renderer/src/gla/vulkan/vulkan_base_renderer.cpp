@@ -1,12 +1,43 @@
 #include "gla/vulkan/vulkan_base_renderer.h"
 
 #include "core/wunder_macros.h"
+#include "gla/vulkan/descriptors/vulkan_descriptor_set_manager.h"
+#include "gla/vulkan/vulkan_context.h"
+#include "gla/vulkan/vulkan_layer_abstraction_factory.h"
 #include "gla/vulkan/vulkan_shader.h"
 
 namespace wunder::vulkan {
 
+base_renderer::~base_renderer() = default;
+
 descriptor_set_manager &base_renderer::mutable_descriptor_set_manager() {
   return *m_descriptor_set_manager;
+}
+
+const renderer_capabilities &base_renderer::get_capabilities() const {
+  return layer_abstraction_factory::instance()
+      .get_vulkan_context()
+      .get_capabilities();
+}
+
+void base_renderer::shutdown() {
+  shutdown_internal();
+
+  if (m_descriptor_set_manager) {
+    m_descriptor_set_manager.reset();
+  }
+
+  for (auto &[_, shaders] : m_shaders) {
+    for (auto &shader : shaders) {
+      ContinueUnless(shader);
+      shader.reset();
+    }
+  }
+}
+
+void base_renderer::init(const renderer_properties &properties) {
+  initialize_shaders();
+  init_internal(properties);
 }
 
 void base_renderer::initialize_shaders() {

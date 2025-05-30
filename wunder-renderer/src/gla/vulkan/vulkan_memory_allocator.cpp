@@ -1,6 +1,5 @@
 #include "gla/vulkan/vulkan_memory_allocator.h"
 
-
 #include <vk_mem_alloc.h>
 
 #include <map>
@@ -27,6 +26,12 @@ static std::map<VmaAllocation, AllocInfo> k_allocation_map;
 memory_allocator::memory_allocator(std::string tag) : m_tag(std::move(tag)) {}
 
 memory_allocator::~memory_allocator() {
+  char* statsString = nullptr;
+  vmaBuildStatsString(m_resource_allocator, &statsString,
+                      VK_TRUE);  // VK_TRUE = detailed
+  WUNDER_WARN("{0}\n", statsString);
+  vmaFreeStatsString(m_resource_allocator, statsString);
+
   vmaDestroyAllocator(m_resource_allocator);
 }
 
@@ -70,10 +75,8 @@ VmaAllocation memory_allocator::allocate_buffer(
 
   VmaAllocationInfo allocation_info{};
   vmaGetAllocationInfo(m_resource_allocator, allocation, &allocation_info);
-  WUNDER_WARN_TAG(
-      "Renderer",
-      "vulkan_memory_allocator ({0}): allocating buffer; size = {1}", m_tag,
-      string::utils::bytes_to_string(allocation_info.size));
+  WUNDER_WARN_TAG(m_tag, "allocating buffer; size = {0}",
+                  string::utils::bytes_to_string(allocation_info.size));
 
   return allocation;
 }
@@ -89,10 +92,9 @@ VmaAllocation memory_allocator::allocate_image(
                  &outImage, &allocation, nullptr);
   if (allocation == nullptr) {
     WUNDER_ERROR_TAG(m_tag, "Failed to allocate GPU image!");
-    WUNDER_ERROR_TAG(m_tag, "  Requested size: {}x{}x{}",
-                     image_create_info.extent.width,
-                     image_create_info.extent.height,
-                     image_create_info.extent.depth);
+    WUNDER_ERROR_TAG(
+        m_tag, "  Requested size: {}x{}x{}", image_create_info.extent.width,
+        image_create_info.extent.height, image_create_info.extent.depth);
     WUNDER_ERROR_TAG(m_tag, "  Mips: {}", image_create_info.mipLevels);
     WUNDER_ERROR_TAG(m_tag, "  Layers: {}", image_create_info.arrayLayers);
   }
@@ -103,8 +105,8 @@ VmaAllocation memory_allocator::allocate_image(
     *allocatedSize = allocInfo.size;
   }
 
-  WUNDER_TRACE_TAG(m_tag, "Allocating image; size = {}",
-                   string::utils::bytes_to_string(allocInfo.size));
+  WUNDER_WARN_TAG(m_tag, "Allocating image; size = {}",
+                  string::utils::bytes_to_string(allocInfo.size));
 
   return allocation;
 }
@@ -116,6 +118,13 @@ void memory_allocator::free(VmaAllocation allocation) {
 void memory_allocator::destroy_image(VkImage image, VmaAllocation allocation) {
   AssertReturnUnless(image);
   AssertReturnUnless(allocation);
+
+  VmaAllocationInfo allocInfo;
+  vmaGetAllocationInfo(m_resource_allocator, allocation, &allocInfo);
+
+  WUNDER_WARN_TAG(m_tag, "Deallocating image; size = {}",
+                  string::utils::bytes_to_string(allocInfo.size));
+
   vmaDestroyImage(m_resource_allocator, image, allocation);
 }
 
@@ -123,6 +132,13 @@ void memory_allocator::destroy_buffer(VkBuffer buffer,
                                       VmaAllocation allocation) {
   AssertReturnUnless(buffer);
   AssertReturnUnless(allocation);
+
+  VmaAllocationInfo allocInfo;
+  vmaGetAllocationInfo(m_resource_allocator, allocation, &allocInfo);
+
+  WUNDER_WARN_TAG(m_tag, "Deallocating buffer; size = {}",
+                  string::utils::bytes_to_string(allocInfo.size));
+
   vmaDestroyBuffer(m_resource_allocator, buffer, allocation);
 }
 

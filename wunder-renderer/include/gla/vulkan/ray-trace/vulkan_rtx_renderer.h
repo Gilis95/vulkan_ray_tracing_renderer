@@ -10,8 +10,6 @@
 #include "core/vector_map.h"
 #include "core/wunder_memory.h"
 #include "event/event_handler.h"
-#include "gla/renderer_api.h"
-#include "gla/vulkan/vulkan_texture_fwd.h"
 #include "gla/vulkan/vulkan_base_renderer.h"
 #include "glad/vulkan.h"
 
@@ -20,7 +18,7 @@ struct RtxState;
 namespace wunder::event {
 struct scene_activated;
 struct camera_moved;
-}
+}  // namespace wunder::event
 
 namespace wunder::vulkan {
 
@@ -30,11 +28,10 @@ class rtx_pipeline;
 class shader_binding_table;
 class rasterize_renderer;
 
-class rtx_renderer : public renderer_api,
-                     public base_renderer,
-                 public event_handler<wunder::event::scene_activated>,
-                 public event_handler<wunder::event::camera_moved>,
-                 public non_copyable {
+class rtx_renderer : public base_renderer,
+                     public event_handler<wunder::event::scene_activated>,
+                     public event_handler<wunder::event::camera_moved>,
+                     public non_copyable {
  public:
   explicit rtx_renderer(const renderer_properties&);
 
@@ -42,11 +39,10 @@ class rtx_renderer : public renderer_api,
   ~rtx_renderer() override;
 
  public:
-  [[nodiscard]] const renderer_capabilities& get_capabilities() const override;
-
-  void update(time_unit dt) override;
+  void update(time_unit dt);
 
  protected:
+  void shutdown_internal() override;
   void init_internal(const renderer_properties& properties) override;
 
   vector_map<VkShaderStageFlagBits, std::vector<shader_to_compile>>

@@ -7,7 +7,6 @@
 
 #include "core/wunder_logger.h"
 #include "core/wunder_macros.h"
-#include "gla/renderer_api.h"
 #include "gla/renderer_capabilities .h"
 #include "gla/vulkan/vulkan_context.h"
 #include "gla/vulkan/vulkan_layer_abstraction_factory.h"

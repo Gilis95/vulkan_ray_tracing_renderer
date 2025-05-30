@@ -39,9 +39,9 @@ void mesh_asset_uvs_builder::create_texcoords(
     float absY = std::abs(pos.y);
     float absZ = std::abs(pos.z);
 
-    int isXPositive = pos.x > 0 ? 1 : 0;
-    int isYPositive = pos.y > 0 ? 1 : 0;
-    int isZPositive = pos.z > 0 ? 1 : 0;
+    bool isXPositive = pos.x > 0;
+    bool isYPositive = pos.y > 0;
+    bool isZPositive = pos.z > 0;
 
     float maxAxis{}, uc{},
         vc{};  // Zero-initialize in case pos = {NaN, NaN, NaN}

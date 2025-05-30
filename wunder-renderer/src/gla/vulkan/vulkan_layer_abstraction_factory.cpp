@@ -7,11 +7,11 @@
 #include "core/vector_map.h"
 #include "gla/renderer_capabilities .h"
 #include "gla/renderer_properties.h"
-#include "gla/vulkan/vulkan_context.h"
 #include "gla/vulkan/descriptors/vulkan_descriptor_set_manager.h"
+#include "gla/vulkan/ray-trace/vulkan_rtx_renderer.h"
+#include "gla/vulkan/vulkan_context.h"
 #include "gla/vulkan/vulkan_physical_device.h"
 #include "gla/vulkan/vulkan_shader.h"
-#include "gla/vulkan/ray-trace/vulkan_rtx_renderer.h"
 
 namespace {
 std::unique_ptr<wunder::vulkan::rtx_renderer> create_ray_trace_vulkan_render(
@@ -56,7 +56,7 @@ void layer_abstraction_factory::create_renderer(
   auto create_fn_it = renderer_creation_fns.find(properties.m_renderer);
   AssertReturnIf(create_fn_it == renderer_creation_fns.end());
 
-  m_renderers.emplace_back(create_fn_it->first, create_fn_it->second(properties));
+  m_renderer = create_fn_it->second(properties);
 }
 
 void layer_abstraction_factory::create_vulkan_context(
@@ -65,31 +65,20 @@ void layer_abstraction_factory::create_vulkan_context(
   m_context->init(properties);
 }
 
-optional_ref<rtx_renderer> layer_abstraction_factory::get_renderer_api(renderer_type type) {
-  static optional_ref<rtx_renderer> s_empty = std::nullopt;
+rtx_renderer &layer_abstraction_factory::get_renderers() { return *m_renderer; }
 
-  auto found_renderer_it = m_renderers.find(type);
-  return found_renderer_it == m_renderers.end() ? s_empty
-                                                : *found_renderer_it->second;
-}
-
-vector_map<renderer_type, unique_ptr<rtx_renderer>> &
-layer_abstraction_factory::get_renderers() {
-  return m_renderers;
-}
-
-context &layer_abstraction_factory::get_vulkan_context() {
-  return *m_context;
-}
+context &layer_abstraction_factory::get_vulkan_context() { return *m_context; }
 
 void layer_abstraction_factory::shutdown() {
-  for (auto &[identifier, renderer] : m_renderers) {
-    AssertLogUnless(renderer.release());
+  if (m_renderer) {
+    m_renderer->shutdown();
+    m_renderer.reset();
   }
 
   if (m_context.get()) {
-    AssertLogUnless(m_context.release());
+    m_context->shutdown();
+    m_context.reset();
   }
 }
 
-}  // namespace wunder
+}  // namespace wunder::vulkan

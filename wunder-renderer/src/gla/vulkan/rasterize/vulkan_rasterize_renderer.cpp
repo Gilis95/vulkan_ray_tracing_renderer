@@ -38,9 +38,15 @@ rasterize_renderer::rasterize_renderer(
 
 rasterize_renderer::~rasterize_renderer() = default;
 
-void rasterize_renderer::initialize() {
-  initialize_shaders();
+void rasterize_renderer::shutdown_internal() /*override*/ {
+  m_output_image.reset();
+  m_input_image.reset();
+  m_pipeline.reset();
+  m_shaders.clear();
+}
 
+void rasterize_renderer::init_internal(
+    const renderer_properties &/*properties*/) /*override*/ {
   m_input_image->add_descriptor_to(*m_descriptor_set_manager);
   m_descriptor_set_manager->build();
 
@@ -90,7 +96,6 @@ void rasterize_renderer::begin_frame() {
 
   swap_chain.begin_render_pass();
 
-
   VkViewport viewport{static_cast<float>(m_render_region.offset.x),
                       static_cast<float>(m_render_region.offset.y),
                       static_cast<float>(m_renderer_properties.m_width),
@@ -98,20 +103,18 @@ void rasterize_renderer::begin_frame() {
                       0.0f,
                       1.0f};
   VkRect2D scissor{
-    m_render_region.offset,
-    {m_render_region.extent.width, m_render_region.extent.height}};
+      m_render_region.offset,
+      {m_render_region.extent.width, m_render_region.extent.height}};
 
   vkCmdSetViewport(graphic_command_buffer, 0, 1, &viewport);
   vkCmdSetScissor(graphic_command_buffer, 0, 1, &scissor);
 }
 
 void rasterize_renderer::draw_frame() {
-
   auto graphic_command_buffer = layer_abstraction_factory::instance()
                                     .get_vulkan_context()
                                     .mutable_swap_chain()
                                     .get_current_command_buffer();
-
 
   vkCmdPushConstants(
       graphic_command_buffer, m_pipeline->get_vulkan_pipeline_layout(),

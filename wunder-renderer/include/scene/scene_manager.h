@@ -26,6 +26,8 @@ class scene_manager : public event_handler<asset_loaded> {
   scene_manager();
   ~scene_manager() override;
 public:
+  void shutdown();
+
   void update(wunder::time_unit dt);
  public:
   [[nodiscard]] optional_ref<vulkan::scene> mutable_api_scene(scene_id id);

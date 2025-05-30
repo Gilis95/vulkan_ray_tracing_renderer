@@ -99,9 +99,19 @@ namespace wunder::vulkan {
 vulkan_image_info::~vulkan_image_info() {
   auto& vulkan_context =
       layer_abstraction_factory::instance().get_vulkan_context();
+  auto& device = vulkan_context.mutable_device();
+  auto vulkan_logical_device = device.get_vulkan_logical_device();
   auto& allocator = vulkan_context.mutable_resource_allocator();
 
   allocator.destroy_image(m_image, m_memory_alloc);
+
+  if (m_image_view) {
+    vkDestroyImageView(vulkan_logical_device, m_image_view, VK_NULL_HANDLE);
+  }
+
+  if (m_sampler) {
+    vkDestroySampler(vulkan_logical_device, m_sampler, VK_NULL_HANDLE);
+  }
 }
 
 template <typename base_texture>
@@ -144,7 +154,11 @@ texture<base_texture>::texture(descriptor_build_data build_data,
 }
 
 template <typename base_texture>
-texture<base_texture>::~texture() = default;
+texture<base_texture>::~texture() {
+  if (m_image_info) {
+    m_image_info.reset();
+  }
+}
 
 template <typename base_texture>
 void texture<base_texture>::add_descriptor_to(descriptor_set_manager& target) {
@@ -437,12 +451,12 @@ void texture<base_texture>::bind_texture_data(const texture_asset& asset,
   buffer_create_info.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
   buffer_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
   VkBuffer staging_buffer;
-  VmaAllocation stagingBufferAllocation = allocator.allocate_buffer(
+  VmaAllocation staging_buffer_allocation = allocator.allocate_buffer(
       buffer_create_info, VMA_MEMORY_USAGE_CPU_TO_GPU, staging_buffer);
 
   // Copy data to staging buffer
-  texture_data.copy_to(stagingBufferAllocation);
-  allocator.unmap_memory(stagingBufferAllocation);
+  texture_data.copy_to(staging_buffer_allocation);
+  allocator.unmap_memory(staging_buffer_allocation);
 
   VkCommandBuffer command_buffer =
       command_pool.get_current_compute_command_buffer();
@@ -470,6 +484,8 @@ void texture<base_texture>::bind_texture_data(const texture_asset& asset,
                        target_layout);
 
   command_pool.flush_compute_command_buffer();
+
+  allocator.destroy_buffer(staging_buffer, staging_buffer_allocation);
 }
 
 template <typename base_texture>

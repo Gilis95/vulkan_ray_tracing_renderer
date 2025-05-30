@@ -27,6 +27,7 @@ class device : public non_copyable {
   ~device();
 
  public:
+  void shutdown();
   void initialize();
 
   [[nodiscard]] VkDevice get_vulkan_logical_device() const {
@@ -51,7 +52,6 @@ class device : public non_copyable {
       const std::vector<void *> &used_features,
       VkDeviceCreateInfo &out_device_create_info);
 
-  void destroy();
 
  private:
   VkDevice m_logical_device = VK_NULL_HANDLE;
