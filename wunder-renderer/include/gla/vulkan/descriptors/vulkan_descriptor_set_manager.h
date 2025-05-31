@@ -25,7 +25,7 @@ class descriptor_set_manager : public non_copyable {
 
  public:
   descriptor_set_manager(const vulkan_shader_reflection_data& reflection_data);
-
+~descriptor_set_manager();
  public:
   build_error_code build();
 
@@ -58,10 +58,9 @@ class descriptor_set_manager : public non_copyable {
   std::map<vulkan_descriptor_set_identifier, vulkan_descriptor_bindings>
       m_input_resources;
   const vulkan_shader_reflection_data& m_shader_reflection_data;
-  std::vector<VkDescriptorSet> m_descriptor_sets;
 
   std::vector<VkDescriptorSetLayout> m_descriptor_set_layout;
-
+  std::vector<VkDescriptorSet> m_descriptor_sets;
   VkDescriptorPool m_descriptor_pool;
 };
 }  // namespace wunder::vulkan

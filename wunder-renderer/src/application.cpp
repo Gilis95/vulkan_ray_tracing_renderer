@@ -8,6 +8,8 @@
 #include "core/services_factory.h"
 #include "core/wunder_macros.h"
 #include "event/event_handler.hpp"
+#include "gla/vulkan/rasterize/vulkan_swap_chain.h"
+#include "gla/vulkan/vulkan_context.h"
 #include "gla/vulkan/vulkan_layer_abstraction_factory.h"
 #include "include/gla/vulkan/ray-trace/vulkan_rtx_renderer.h"
 #include "include/gla/vulkan/scene/vulkan_scene.h"
@@ -27,10 +29,17 @@ application::~application() = default;
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void application::shutdown() {
+
+  auto& graphic_abstraction_factory =
+      vulkan::layer_abstraction_factory::instance();
+
+  graphic_abstraction_factory.get_vulkan_context().mutable_swap_chain().shutdown();
+  graphic_abstraction_factory.get_renderers().shutdown();
+
   project::instance().shutdown();
   service_factory::instance().shutdown();
   window_factory::instance().shutdown();
-  vulkan::layer_abstraction_factory::instance().shutdown();
+  graphic_abstraction_factory.shutdown();
   m_properties.reset();
 }
 

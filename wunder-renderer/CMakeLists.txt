@@ -94,6 +94,7 @@ target_compile_options(wunder-renderer PRIVATE
 target_include_directories(wunder-renderer PUBLIC
         $<BUILD_INTERFACE: ${HDR_DIR}>
         $<INSTALL_INTERFACE:include>
+        ${shaderc_SOURCE_DIR}/glslc/src
 )
 
 target_link_libraries(wunder-renderer PUBLIC

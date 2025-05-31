@@ -42,7 +42,6 @@ void rasterize_renderer::shutdown_internal() /*override*/ {
   m_output_image.reset();
   m_input_image.reset();
   m_pipeline.reset();
-  m_shaders.clear();
 }
 
 void rasterize_renderer::init_internal(

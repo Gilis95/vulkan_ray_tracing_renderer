@@ -28,24 +28,25 @@ class swap_chain : public non_copyable {
     ~queue_element();
 
    public:
-    VkImage m_image;
-    VkImageView m_image_view;
-    VkCommandBuffer m_command_buffer;
-    VkFramebuffer m_framebuffer;
+    VkImage m_image = VK_NULL_HANDLE;
+    VkImageView m_image_view = VK_NULL_HANDLE;
+    VkCommandBuffer m_command_buffer = VK_NULL_HANDLE;
+    VkFramebuffer m_framebuffer = VK_NULL_HANDLE;
 
-    VkImageMemoryBarrier m_barrier;
-    VkFence m_fence;
+    VkImageMemoryBarrier m_barrier{};
+    VkFence m_fence = VK_NULL_HANDLE;
     semaphore_entry m_semaphore_entry;
   };
 
  public:
   swap_chain(std::uint32_t width, std::uint32_t height);
   ~swap_chain() override;
+
  public:
   void resize(uint32_t width, uint32_t height);
 
   void initialize();
-  void deallocate();
+  void shutdown();
 
  public:
   std::optional<std::uint32_t> acquire();

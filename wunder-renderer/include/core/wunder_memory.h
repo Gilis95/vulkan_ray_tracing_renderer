@@ -5,6 +5,7 @@
 #include <iostream>
 #endif
 #include <memory>
+#include <optional>
 
 namespace wunder {
 template <typename T>

@@ -33,6 +33,7 @@ void base_renderer::shutdown() {
       shader.reset();
     }
   }
+  m_shaders.clear();
 }
 
 void base_renderer::init(const renderer_properties &properties) {

@@ -1,9 +1,8 @@
-cmake_minimum_required(VERSION 3.2 FATAL_ERROR)
-cmake_policy(VERSION 3.2)
+cmake_minimum_required(VERSION 3.6 FATAL_ERROR)
+cmake_policy(VERSION 3.6)
 
 #set(STINKY_VERSION ${GLM_VERSION_MAJOR}.${GLM_VERSION_MINOR}.${GLM_VERSION_PATCH}.${GLM_VERSION_REVISION})
 project(wunder VERSION 1.0.0 LANGUAGES CXX C)
-#message(STATUS "Stinky : Version " ${STINKY_VERSION})
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)

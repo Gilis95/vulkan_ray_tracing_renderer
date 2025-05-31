@@ -53,7 +53,7 @@ class scene : public non_copyable {
   unique_ptr<top_level_acceleration_structure> m_acceleration_structure;
   std::vector<top_level_acceleration_structure_build_info> m_acceleration_structure_build_info;
 
-  std::uint64_t m_lights_count;
+  std::uint64_t m_lights_count = 0;
 };
 }  // namespace vulkan
 }  // namespace wunder

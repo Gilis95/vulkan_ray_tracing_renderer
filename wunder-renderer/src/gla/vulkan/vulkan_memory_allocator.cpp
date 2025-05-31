@@ -26,11 +26,11 @@ static std::map<VmaAllocation, AllocInfo> k_allocation_map;
 memory_allocator::memory_allocator(std::string tag) : m_tag(std::move(tag)) {}
 
 memory_allocator::~memory_allocator() {
-  char* statsString = nullptr;
-  vmaBuildStatsString(m_resource_allocator, &statsString,
-                      VK_TRUE);  // VK_TRUE = detailed
-  WUNDER_WARN("{0}\n", statsString);
-  vmaFreeStatsString(m_resource_allocator, statsString);
+  // char* statsString = nullptr;
+  // vmaBuildStatsString(m_resource_allocator, &statsString,
+  //                     VK_TRUE);  // VK_TRUE = detailed
+  // WUNDER_WARN("{0}\n", statsString);
+  // vmaFreeStatsString(m_resource_allocator, statsString);
 
   vmaDestroyAllocator(m_resource_allocator);
 }

@@ -46,9 +46,12 @@ void device::initialize() {
   vkGetDeviceQueue(m_logical_device,
                    physical_device.m_queue_family_indices.Graphics, 0,
                    &m_graphics_queue);
+  set_debug_utils_object_name(m_logical_device, "graphic queue", m_graphics_queue);
+
   vkGetDeviceQueue(m_logical_device,
                    physical_device.m_queue_family_indices.Compute, 0,
                    &m_compute_queue);
+  set_debug_utils_object_name(m_logical_device, "compute queue", m_graphics_queue);
 
   m_command_pool = std::make_unique<command_pool>();
 }

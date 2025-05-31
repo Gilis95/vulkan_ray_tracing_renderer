@@ -1,9 +1,5 @@
-//
-// Created by christian on 8/12/24.
-//
 #include "gla/vulkan/vulkan_shader.h"
 
-#include <file_includer.h>
 #include <libshaderc_util/file_finder.h>
 
 #include <filesystem>
@@ -16,6 +12,7 @@
 #include "core/vector_map.h"
 #include "core/wunder_filesystem.h"
 #include "core/wunder_macros.h"
+#include "file_includer.h"
 #include "gla/vulkan/descriptors/vulkan_descriptor_set_manager.h"
 #include "gla/vulkan/vulkan_context.h"
 #include "gla/vulkan/vulkan_device.h"
@@ -107,6 +104,17 @@ shader::shader(std::string&& shader_name,
     : m_shader_name(std::move(shader_name)),
       m_reflection_data(),
       m_vulkan_shader_type(vulkan_shader_type) {}
+
+shader::~shader() {
+  auto& device = layer_abstraction_factory::instance()
+                     .get_vulkan_context()
+                     .mutable_device();
+
+  if (m_shader_module != VK_NULL_HANDLE) {
+    vkDestroyShaderModule(device.get_vulkan_logical_device(), m_shader_module,
+                          VK_NULL_HANDLE);
+  }
+}
 
 std::expected<unique_ptr<shader>, shader_operation_output_code> shader::create(
     const std::filesystem::path& spirv_path,

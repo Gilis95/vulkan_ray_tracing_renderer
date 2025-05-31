@@ -20,6 +20,10 @@
 
 #include "tinygltf/tinygltf_utils.h"
 
+#define GLM_ENABLE_EXPERIMENTAL 1
+#include <glm/gtx/matrix_decompose.hpp>
+
+
 namespace tinygltf::utils {
 
 KHR_materials_displacement get_displacement(const Material& tmat) {

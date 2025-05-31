@@ -103,14 +103,16 @@ vulkan_image_info::~vulkan_image_info() {
   auto vulkan_logical_device = device.get_vulkan_logical_device();
   auto& allocator = vulkan_context.mutable_resource_allocator();
 
-  allocator.destroy_image(m_image, m_memory_alloc);
-
-  if (m_image_view) {
+  if (m_image_view != VK_NULL_HANDLE) {
     vkDestroyImageView(vulkan_logical_device, m_image_view, VK_NULL_HANDLE);
   }
 
-  if (m_sampler) {
+  if (m_sampler != VK_NULL_HANDLE) {
     vkDestroySampler(vulkan_logical_device, m_sampler, VK_NULL_HANDLE);
+  }
+
+  if (m_image != VK_NULL_HANDLE) {
+    allocator.destroy_image(m_image, m_memory_alloc);
   }
 }
 

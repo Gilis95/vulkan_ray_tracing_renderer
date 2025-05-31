@@ -1,93 +1,97 @@
 #ifndef WUNDER_LOGGER_H
 #define WUNDER_LOGGER_H
-
-#include <spdlog/spdlog.h>
-
 #include "core/wunder_memory.h"
 
-/////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////
-namespace wunder {
-/////////////////////////////////////////////////////////////////////////////////////////
-class log {
- public:
-  static void init();
+_Pragma("GCC diagnostic ignored \"-Wdeprecated-literal-operator\"")
+#include <spdlog/spdlog.h>
+_Pragma("GCC diagnostic pop")
 
-  static spdlog::logger& get_logger() { return *s_logger; }
+    /////////////////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////////////////////
+    namespace wunder {
+  /////////////////////////////////////////////////////////////////////////////////////////
+  class log {
+   public:
+    static void init();
+
+    static spdlog::logger& get_logger() { return *s_logger; }
+
+    template <typename... Args>
+    static void trace_tag(std::string_view tag,
+                          std::format_string<Args...> format, Args&&... args);
+    template <typename... Args>
+    static void debug_tag(std::string_view tag,
+                          std::format_string<Args...> format, Args&&... args);
+    template <typename... Args>
+    static void info_tag(std::string_view tag,
+                         std::format_string<Args...> format, Args&&... args);
+    template <typename... Args>
+    static void warn_tag(std::string_view tag,
+                         std::format_string<Args...> format, Args&&... args);
+    template <typename... Args>
+    static void error_tag(std::string_view tag,
+                          std::format_string<Args...> format, Args&&... args);
+    template <typename... Args>
+    static void fatal_tag(std::string_view tag,
+                          std::format_string<Args...> format, Args&&... args);
+
+    static void trace_tag(std::string_view tag, std::string_view message);
+    static void debug_tag(std::string_view tag, std::string_view message);
+    static void info_tag(std::string_view tag, std::string_view message);
+    static void warn_tag(std::string_view tag, std::string_view message);
+    static void error_tag(std::string_view tag, std::string_view message);
+    static void fatal_tag(std::string_view tag, std::string_view message);
+
+   private:
+    log() = default;
+    static shared_ptr<spdlog::logger> s_logger;
+  };
 
   template <typename... Args>
-  static void trace_tag(std::string_view tag,
-                        std::format_string<Args...> format, Args&&... args);
+  void log::trace_tag(std::string_view tag,
+                      const std::format_string<Args...> format,
+                      Args&&... args) {
+    std::string formatted = std::format(format, std::forward<Args>(args)...);
+    trace_tag(tag, formatted);
+  }
+
   template <typename... Args>
-  static void debug_tag(std::string_view tag,
-                        std::format_string<Args...> format, Args&&... args);
+  void log::debug_tag(std::string_view tag,
+                      const std::format_string<Args...> format,
+                      Args&&... args) {
+    std::string formatted = std::format(format, std::forward<Args>(args)...);
+    debug_tag(tag, formatted);
+  }
+
   template <typename... Args>
-  static void info_tag(std::string_view tag, std::format_string<Args...> format,
-                       Args&&... args);
+  void log::warn_tag(std::string_view tag,
+                     const std::format_string<Args...> format, Args&&... args) {
+    std::string formatted = std::format(format, std::forward<Args>(args)...);
+    warn_tag(tag, formatted);
+  }
+
   template <typename... Args>
-  static void warn_tag(std::string_view tag, std::format_string<Args...> format,
-                       Args&&... args);
+  void log::info_tag(std::string_view tag,
+                     const std::format_string<Args...> format, Args&&... args) {
+    std::string formatted = std::format(format, std::forward<Args>(args)...);
+    info_tag(tag, formatted);
+  }
+
   template <typename... Args>
-  static void error_tag(std::string_view tag,
-                        std::format_string<Args...> format, Args&&... args);
+  void log::error_tag(std::string_view tag,
+                      const std::format_string<Args...> format,
+                      Args&&... args) {
+    std::string formatted = std::format(format, std::forward<Args>(args)...);
+    error_tag(tag, formatted);
+  }
+
   template <typename... Args>
-  static void fatal_tag(std::string_view tag,
-                        std::format_string<Args...> format, Args&&... args);
-
-  static void trace_tag(std::string_view tag, std::string_view message);
-  static void debug_tag(std::string_view tag, std::string_view message);
-  static void info_tag(std::string_view tag, std::string_view message);
-  static void warn_tag(std::string_view tag, std::string_view message);
-  static void error_tag(std::string_view tag, std::string_view message);
-  static void fatal_tag(std::string_view tag, std::string_view message);
-
- private:
-  log() = default;
-  static shared_ptr<spdlog::logger> s_logger;
-};
-
-template <typename... Args>
-void log::trace_tag(std::string_view tag,
-                    const std::format_string<Args...> format, Args&&... args) {
-  std::string formatted = std::format(format, std::forward<Args>(args)...);
-  trace_tag(tag, formatted);
-}
-
-template <typename... Args>
-void log::debug_tag(std::string_view tag,
-                    const std::format_string<Args...> format, Args&&... args) {
-  std::string formatted = std::format(format, std::forward<Args>(args)...);
-  debug_tag(tag, formatted);
-}
-
-template <typename... Args>
-void log::warn_tag(std::string_view tag,
-                   const std::format_string<Args...> format, Args&&... args) {
-  std::string formatted = std::format(format, std::forward<Args>(args)...);
-  warn_tag(tag, formatted);
-}
-
-template <typename... Args>
-void log::info_tag(std::string_view tag,
-                   const std::format_string<Args...> format, Args&&... args) {
-  std::string formatted = std::format(format, std::forward<Args>(args)...);
-  info_tag(tag, formatted);
-}
-
-template <typename... Args>
-void log::error_tag(std::string_view tag,
-                    const std::format_string<Args...> format, Args&&... args) {
-  std::string formatted = std::format(format, std::forward<Args>(args)...);
-  error_tag(tag, formatted);
-}
-
-template <typename... Args>
-void log::fatal_tag(std::string_view tag,
-                    const std::format_string<Args...> format, Args&&... args) {
-  std::string formatted = std::format(format, std::forward<Args>(args)...);
-  fatal_tag(tag, formatted);
-}
-
+  void log::fatal_tag(std::string_view tag,
+                      const std::format_string<Args...> format,
+                      Args&&... args) {
+    std::string formatted = std::format(format, std::forward<Args>(args)...);
+    fatal_tag(tag, formatted);
+  }
 
 }  // namespace wunder
 

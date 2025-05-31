@@ -26,6 +26,8 @@ class shader : public non_copyable {
   explicit shader(std::string&& shader_name,
                          VkShaderStageFlagBits vulkan_shader_type);
 
+  ~shader() override;
+
  public:
   static std::expected<unique_ptr<shader>, shader_operation_output_code>
   create(const std::filesystem::path& spirv, const VkShaderStageFlagBits stage);

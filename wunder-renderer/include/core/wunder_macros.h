@@ -2,6 +2,9 @@
 #define WUNDER_MACROS_H
 
 #include "core/wunder_logger.h"
+#include <type_traits>
+#include <tuple>
+#include <chrono>
 
 #ifdef WANDER_LINUX
 #include <signal.h>
@@ -190,6 +193,7 @@ _Pragma("GCC diagnostic ignored \"-Wextra\"")                          \
 _Pragma("GCC diagnostic ignored \"-Wpedantic\"")                   \
 _Pragma("GCC diagnostic ignored \"-Wconversion\"")
 _Pragma("GCC diagnostic ignored \"-Wmissing-declarations\"")
+_Pragma("GCC diagnostic ignored \"-Wdeprecated-literal-operator\"")
 #define END_IGNORE_WARNINGS _Pragma("GCC diagnostic pop")
 #elif defined(_MSC_VER)
 #define BEGIN_IGNORE_WARNINGS \

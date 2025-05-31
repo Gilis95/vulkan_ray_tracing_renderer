@@ -3,6 +3,8 @@
 
 #include <glad/vulkan.h>
 
+#include <string>
+
 #include "core/non_copyable.h"
 
 namespace wunder::vulkan {
@@ -34,7 +36,7 @@ class command_pool : public non_copyable {
   VkCommandBuffer allocate_compute_command_buffer(bool begin);
 
   VkCommandBuffer allocate_command_buffer(bool begin, VkCommandPool& out_pool,
-                                          VkCommandBuffer& out_buffer);
+                                          VkCommandBuffer& out_buffer, std::string name);
   void flush_command_buffer(VkCommandBuffer& command_buffer,
                             VkCommandPool source_pool, VkQueue queue);
 

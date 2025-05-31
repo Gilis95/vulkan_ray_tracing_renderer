@@ -31,6 +31,24 @@ descriptor_set_manager::descriptor_set_manager(
     : m_shader_reflection_data(reflection_data),
       m_descriptor_pool(VK_NULL_HANDLE) {}
 
+descriptor_set_manager::~descriptor_set_manager() {
+  context& context = layer_abstraction_factory::instance().get_vulkan_context();
+  auto* const device = context.mutable_device().get_vulkan_logical_device();
+
+  for (auto dsl : m_descriptor_set_layout) {
+    ContinueIf(dsl == VK_NULL_HANDLE);
+    vkDestroyDescriptorSetLayout(device, dsl, VK_NULL_HANDLE);
+  }
+
+  for (auto descriptor_set : m_descriptor_sets) {
+    vkFreeDescriptorSets(device, m_descriptor_pool, 1, &descriptor_set);
+  }
+
+  if (m_descriptor_pool != VK_NULL_HANDLE) {
+    vkDestroyDescriptorPool(device, m_descriptor_pool, VK_NULL_HANDLE);
+  }
+}
+
 void descriptor_set_manager::clear_resources() {
   for (auto& [_, input_resource] : m_input_resources) {
     for (auto& [_, binding] : input_resource.m_bindings) {
@@ -113,8 +131,8 @@ descriptor_set_manager::find_resource_declaration(
   return resource_declaration;
 }
 
-
-optional_const_ref<vulkan_descriptor_binding> descriptor_set_manager::find_resource_binding(
+optional_const_ref<vulkan_descriptor_binding>
+descriptor_set_manager::find_resource_binding(
     vulkan_descriptor_set_identifier set,
     vulkan_descriptor_set_bind_identifier bind) const {
   auto set_it = m_input_resources.find(set);
@@ -247,7 +265,7 @@ void descriptor_set_manager::write_descriptors_data() {
       result.dstArrayElement = 0;
 
       write_descriptors.emplace_back(std::move(result));
-         }
+    }
 
     if (!write_descriptors.empty()) {
       WUNDER_INFO_TAG("Renderer", "Render pass update {} descriptors in set {}",
@@ -256,7 +274,7 @@ void descriptor_set_manager::write_descriptors_data() {
                              static_cast<uint32_t>(write_descriptors.size()),
                              write_descriptors.data(), 0, nullptr);
     }
-       }
+  }
 }
 
 }  // namespace wunder::vulkan

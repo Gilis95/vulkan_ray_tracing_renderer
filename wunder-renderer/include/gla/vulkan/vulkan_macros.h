@@ -140,7 +140,8 @@ inline void vulkan_check_result(VkResult result, const char* file, int line) {
   }
 }
 
-[[maybe_unused]] static const char* vulkan_vendor_id_to_string(uint32_t vendorID) {
+[[maybe_unused]] static const char* vulkan_vendor_id_to_string(
+    uint32_t vendorID) {
   switch (vendorID) {
     case 0x10DE:
       return "NVIDIA";
@@ -156,9 +157,9 @@ inline void vulkan_check_result(VkResult result, const char* file, int line) {
 }
 
 static void set_debug_utils_object_name(VkDevice device,
-                                               const VkObjectType objectType,
-                                               const std::string& name,
-                                               const void* handle) {
+                                        const VkObjectType objectType,
+                                        const std::string& name,
+                                        const void* handle) {
   ReturnUnless(vkSetDebugUtilsObjectNameEXT);
 
   VkDebugUtilsObjectNameInfoEXT nameInfo;
@@ -209,6 +210,34 @@ inline static void set_debug_utils_object_name(VkDevice device,
                                                VkFramebuffer handle) {
   set_debug_utils_object_name(device, VkObjectType::VK_OBJECT_TYPE_FRAMEBUFFER,
                               name, handle);
+}
+
+inline static void set_debug_utils_object_name(VkDevice device,
+                                               const std::string& name,
+                                               VkQueue handle) {
+  set_debug_utils_object_name(device, VkObjectType::VK_OBJECT_TYPE_QUEUE, name,
+                              handle);
+}
+
+inline static void set_debug_utils_object_name(VkDevice device,
+                                               const std::string& name,
+                                               VkCommandPool handle) {
+  set_debug_utils_object_name(device, VkObjectType::VK_OBJECT_TYPE_COMMAND_POOL, name,
+                              handle);
+}
+
+inline static void set_debug_utils_object_name(VkDevice device,
+                                               const std::string& name,
+                                               VkCommandBuffer handle) {
+  set_debug_utils_object_name(device, VkObjectType::VK_OBJECT_TYPE_COMMAND_BUFFER, name,
+                              handle);
+}
+
+inline static void set_debug_utils_object_name(VkDevice device,
+                                               const std::string& name,
+                                               VkDeviceMemory handle) {
+  set_debug_utils_object_name(device, VkObjectType::VK_OBJECT_TYPE_DEVICE_MEMORY, name,
+                              handle);
 }
 
 }  // namespace wunder::vulkan

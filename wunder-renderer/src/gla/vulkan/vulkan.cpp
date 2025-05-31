@@ -14,7 +14,16 @@ const char *s_validation_layer_name = "VK_LAYER_KHRONOS_validation";
 
 namespace wunder::vulkan {
 
-instance::~instance() { vkDestroyInstance(m_vk_instance, VK_NULL_HANDLE); }
+instance::~instance() {
+  if (m_dbg_messenger != VK_NULL_HANDLE) {
+    vkDestroyDebugUtilsMessengerEXT(m_vk_instance, m_dbg_messenger,
+                                    VK_NULL_HANDLE);
+  }
+
+  if (m_vk_instance != VK_NULL_HANDLE) {
+    vkDestroyInstance(m_vk_instance, VK_NULL_HANDLE);
+  }
+}
 
 void instance::init(const renderer_properties &properties) {
   m_api_major_version = 1;

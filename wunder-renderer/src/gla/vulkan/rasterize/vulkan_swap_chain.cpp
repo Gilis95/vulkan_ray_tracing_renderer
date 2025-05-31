@@ -3,6 +3,7 @@
 #include <oneapi/tbb/task_group.h>
 
 #include "gla/vulkan/rasterize/vulkan_render_pass.h"
+#include "gla/vulkan/vulkan.h"
 #include "gla/vulkan/vulkan_command_pool.h"
 #include "gla/vulkan/vulkan_context.h"
 #include "gla/vulkan/vulkan_device.h"
@@ -38,12 +39,31 @@ swap_chain::queue_element::~queue_element() {
   auto& device = vulkan_context.mutable_device();
   auto vk_device = device.get_vulkan_logical_device();
 
-  vkDestroyImage(vk_device, m_image, nullptr);
-  vkDestroyImageView(vk_device, m_image_view, nullptr);
-  vkDestroySemaphore(vk_device, m_semaphore_entry.read_semaphore, nullptr);
-  vkDestroySemaphore(vk_device, m_semaphore_entry.written_semaphore, nullptr);
-  vkDestroyFramebuffer(vk_device, m_framebuffer, nullptr);
-  vkDestroyFence(vk_device, m_fence, nullptr);
+  if (m_image_view != VK_NULL_HANDLE) {
+    vkDestroyImageView(vk_device, m_image_view, VK_NULL_HANDLE);
+  }
+
+  if (m_semaphore_entry.read_semaphore != VK_NULL_HANDLE) {
+    vkDestroySemaphore(vk_device, m_semaphore_entry.read_semaphore,
+                       VK_NULL_HANDLE);
+  }
+
+  if (m_semaphore_entry.written_semaphore != VK_NULL_HANDLE) {
+    vkDestroySemaphore(vk_device, m_semaphore_entry.written_semaphore,
+                       VK_NULL_HANDLE);
+  }
+
+  if (m_framebuffer != VK_NULL_HANDLE) {
+    vkDestroyFramebuffer(vk_device, m_framebuffer, VK_NULL_HANDLE);
+  }
+
+  if (m_fence != VK_NULL_HANDLE) {
+    vkDestroyFence(vk_device, m_fence, VK_NULL_HANDLE);
+  }
+
+  // if (m_image != VK_NULL_HANDLE) {
+  //   vkDestroyImage(vk_device, m_image, VK_NULL_HANDLE);
+  // }
 }
 
 swap_chain::swap_chain(std::uint32_t width, std::uint32_t height)
@@ -62,14 +82,12 @@ swap_chain::swap_chain(std::uint32_t width, std::uint32_t height)
       m_colour_format{VK_FORMAT_B8G8R8A8_UNORM},
       m_color_space{VK_COLOR_SPACE_SRGB_NONLINEAR_KHR} {}
 
-swap_chain::~swap_chain() {
-  deallocate();
-}
+swap_chain::~swap_chain() = default;
 
 void swap_chain::resize(uint32_t width, uint32_t height) {
   wait_idle();
 
-  deallocate();
+  shutdown();
 
   m_width = width;
   m_height = height;
@@ -85,23 +103,45 @@ void swap_chain::initialize() {
   initialize_queue_elements();
 }
 
-void swap_chain::deallocate() {
+void swap_chain::shutdown() {
   context& vulkan_context =
       layer_abstraction_factory::instance().get_vulkan_context();
   auto& device = vulkan_context.mutable_device();
   auto vk_device = device.get_vulkan_logical_device();
 
-  /*if (m_swap_chain) {
+  wait_idle();
+
+  if (m_swap_chain) {
     vkDestroySwapchainKHR(vk_device, m_swap_chain, nullptr);
     m_swap_chain = VK_NULL_HANDLE;
-  }*/
+  }
+
+  if (m_command_pool != VK_NULL_HANDLE) {
+    vkDestroyCommandPool(vk_device, m_command_pool, VK_NULL_HANDLE);
+  }
+
+  if (m_depth_image != VK_NULL_HANDLE) {
+    vkDestroyImage(vk_device, m_depth_image, VK_NULL_HANDLE);
+  }
+
+  if (m_depth_memory != VK_NULL_HANDLE) {
+    vkDestroyImageView(vk_device, m_depth_view, VK_NULL_HANDLE);
+  }
+
+  if (m_depth_memory != VK_NULL_HANDLE) {
+    vkFreeMemory(vk_device, m_depth_memory, nullptr);
+  }
 
   m_queue_elements.clear();
 
-  vkDestroyCommandPool(vk_device, m_command_pool, nullptr);
+  if (m_render_pass) {
+    m_render_pass.reset();
+  }
 
-  vkDestroyImage(vk_device, m_depth_image, nullptr);
-  vkDestroyImageView(vk_device, m_depth_view, nullptr);
+  if (m_surface != VK_NULL_HANDLE) {
+    vkDestroySurfaceKHR(vulkan_context.mutable_vulkan().get_instance(),
+                        m_surface, VK_NULL_HANDLE);
+  }
 }
 
 std::optional<std::uint32_t> swap_chain::acquire() {
@@ -431,6 +471,7 @@ void swap_chain::initialize_depth_buffer() {
   mem_alloc_info.memoryTypeIndex = physical_device.get_memory_type_index(
       memory_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
   vkAllocateMemory(vk_device, &mem_alloc_info, nullptr, &m_depth_memory);
+  set_debug_utils_object_name(vk_device, "depth image memory", m_depth_memory);
 
   // Bind image and memory
   vkBindImageMemory(vk_device, m_depth_image, m_depth_memory, 0);
@@ -529,6 +570,9 @@ void swap_chain::create_image_for_each_queue_element() {
     auto& queue_element = m_queue_elements[i];
 
     queue_element.m_image = image;
+    set_debug_utils_object_name(vk_device, std::format("swap chain image", i),
+                                m_depth_image);
+
     VK_CHECK_RESULT(vkCreateImageView(vk_device, &colorAttachmentView, nullptr,
                                       &queue_element.m_image_view));
     set_debug_utils_object_name(vk_device,

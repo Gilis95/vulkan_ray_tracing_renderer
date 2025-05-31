@@ -24,12 +24,15 @@ command_pool::command_pool() {
   AssertReturnUnless(vkCreateCommandPool(vulkan_logical_device, &cmd_pool_info,
                                          nullptr, &m_graphics_command_pool) ==
                      VkResult::VK_SUCCESS);
+  set_debug_utils_object_name(vulkan_logical_device, "graphic command pool", m_graphics_command_pool);
 
   cmd_pool_info.queueFamilyIndex =
       physical_device.get_queue_family_indices().Compute;
   AssertReturnUnless(vkCreateCommandPool(vulkan_logical_device, &cmd_pool_info,
                                          nullptr, &m_compute_command_pool) ==
                      VkResult::VK_SUCCESS);
+  set_debug_utils_object_name(vulkan_logical_device, "compute command pool", m_compute_command_pool);
+
 }
 
 command_pool::~command_pool() {
@@ -38,6 +41,9 @@ command_pool::~command_pool() {
                              .mutable_device();
 
   auto vulkanDevice = logical_device.get_vulkan_logical_device();
+
+  vkFreeCommandBuffers(vulkanDevice, m_graphics_command_pool, 1, &m_current_graphics_command_buffer);
+  vkFreeCommandBuffers(vulkanDevice, m_compute_command_pool, 1, &m_current_compute_command_buffer);
 
   vkDestroyCommandPool(vulkanDevice, m_graphics_command_pool, nullptr);
   vkDestroyCommandPool(vulkanDevice, m_compute_command_pool, nullptr);
@@ -122,15 +128,15 @@ void command_pool::flush_command_buffer(VkCommandBuffer& command_buffer,
 
 VkCommandBuffer command_pool::allocate_graphics_command_buffer(bool begin) {
   return allocate_command_buffer(begin, m_graphics_command_pool,
-                                 m_current_graphics_command_buffer);
+                                 m_current_graphics_command_buffer, "graphics command buffer");
 }
 VkCommandBuffer command_pool::allocate_compute_command_buffer(bool begin) {
   return allocate_command_buffer(begin, m_compute_command_pool,
-                                 m_current_compute_command_buffer);
+                                 m_current_compute_command_buffer, "compute command buffer");
 }
 
 VkCommandBuffer command_pool::allocate_command_buffer(
-    bool begin, VkCommandPool& out_pool, VkCommandBuffer& out_buffer) {
+    bool begin, VkCommandPool& out_pool, VkCommandBuffer& out_buffer, std::string name) {
   AssertReturnUnless(out_buffer == VK_NULL_HANDLE, out_buffer);
 
   auto& logical_device = layer_abstraction_factory::instance()
@@ -150,6 +156,8 @@ VkCommandBuffer command_pool::allocate_command_buffer(
                          vulkan_logical_device, &command_buffer_allocate_info,
                          &out_buffer) == VkResult::VK_SUCCESS,
                      nullptr);
+  set_debug_utils_object_name(vulkan_logical_device, name, out_buffer);
+
 
   // If requested, also start the new command buffer
   ReturnUnless(begin, out_buffer);
