@@ -61,17 +61,33 @@ vec3 ImportanceSampleGTR1(float rgh, float r1, float r2)
   return vec3(sinTheta * cosPhi, sinTheta * sinPhi, cosTheta);
 }
 
+
 //-----------------------------------------------------------------------
+// http://jcgt.org/published/0007/04/01/
+// Input V: view direction
+// Input alpha_x, alpha_y: roughness parameters
+// Input r1, r2: uniform random numbers
+// Output Ne: normal sampled with PDF D_Ve(Ne) = G1(Ve) * max(0, dot(Ve, Ne)) * D(Ne) / Ve.z
 //-----------------------------------------------------------------------
-vec3 ImportanceSampleGTR2_aniso(float ax, float ay, float r1, float r2)
+vec3 ImportanceSampleGGX_VNDF(vec3 V, float alpha_x, float alpha_y, float r1, float r2)
 {
-  float phi = r1 * TWO_PI;
-
-  float sinPhi = ay * sin(phi);
-  float cosPhi = ax * cos(phi);
-  float tanTheta = sqrt(r2 / (1 - r2));
-
-  return vec3(tanTheta * cosPhi, tanTheta * sinPhi, 1.0);
+  // Section 3.2: transforming the view direction to the hemisphere configuration
+  vec3 Vh = normalize(vec3(alpha_x * V.x, alpha_y * V.y, V.z));
+  // Section 4.1: orthonormal basis (with special case if cross product is zero)
+  float lensq = Vh.x * Vh.x + Vh.y * Vh.y;
+  vec3 T1 = lensq > 0 ? vec3(-Vh.y, Vh.x, 0) * inversesqrt(lensq) : vec3(1, 0, 0);
+  vec3 T2 = cross(Vh, T1);
+  // Section 4.2: parameterization of the projected area
+  float r = sqrt(r1);
+  float phi = 2.0 * M_PI * r2;
+  float t1 = r * cos(phi);
+  float t2 = r * sin(phi);
+  float s = 0.5 * (1.0 + Vh.z);
+  t2 = (1.0 - s) * sqrt(1.0 - t1 * t1) + s * t2;
+  // Section 4.3: reprojection onto hemisphere
+  vec3 Nh = t1 * T1 + t2 * T2 + sqrt(max(0.0, 1.0 - t1 * t1 - t2 * t2)) * Vh;
+  // Section 3.4: transforming the normal back to the ellipsoid configuration
+  return normalize(vec3(alpha_x * Nh.x, alpha_y * Nh.y, max(0.0, Nh.z)));
 }
 
 //-----------------------------------------------------------------------
@@ -196,17 +212,6 @@ vec3 UniformSampleHemisphere(float r1, float r2)
 }
 
 //-----------------------------------------------------------------------
-//-----------------------------------------------------------------------
-vec3 UniformSampleSphere(float r1, float r2)
-{
-  float z = 1.0 - 2.0 * r1;
-  float r = sqrt(max(0.0, 1.0 - z * z));
-  float phi = TWO_PI * r2;
-
-  return vec3(r * cos(phi), r * sin(phi), z);
-}
-
-//-----------------------------------------------------------------------
 float powerHeuristic(float a, float b)
 //-----------------------------------------------------------------------
 {
@@ -214,63 +219,6 @@ float powerHeuristic(float a, float b)
   return t / (b * b + t);
 }
 
-#ifdef _ENVMAP_
-#ifndef CONSTANT_BG
-
-//-----------------------------------------------------------------------
-//-----------------------------------------------------------------------
-float EnvPdf(in Ray r)
-{
-  float theta = acos(clamp(r.direction.y, -1.0, 1.0));
-  vec2 uv = vec2((PI + atan(r.direction.z, r.direction.x)) * (1.0 / TWO_PI), theta * (1.0 / PI));
-  float pdf = texture(hdrCondDistTex, uv).y * texture(hdrMarginalDistTex, vec2(uv.y, 0.)).y;
-  return (pdf * hdrResolution) / (2.0 * PI * PI * sin(theta));
-}
-
-//-----------------------------------------------------------------------
-//-----------------------------------------------------------------------
-vec4 EnvSample(inout vec3 color)
-{
-  float r1 = rand();
-  float r2 = rand();
-
-  float v = texture(hdrMarginalDistTex, vec2(r1, 0.)).x;
-  float u = texture(hdrCondDistTex, vec2(r2, v)).x;
-
-  color = texture(hdrTex, vec2(u, v)).xyz * hdrMultiplier;
-  float pdf = texture(hdrCondDistTex, vec2(u, v)).y * texture(hdrMarginalDistTex, vec2(v, 0.)).y;
-
-  float phi = u * TWO_PI;
-  float theta = v * PI;
-
-  if (sin(theta) == 0.0)
-  {
-    pdf = 0.0;
-  }
-
-  return vec4(-sin(theta) * cos(phi), cos(theta), -sin(theta) * sin(phi), (pdf * hdrResolution) / (2.0 * PI * PI * sin(theta)));
-}
-
-#endif
-#endif
-
-//-----------------------------------------------------------------------
-//-----------------------------------------------------------------------
-vec3 EmitterSample(in Ray r, in State state, in LightSampleRec lightSampleRec, in BsdfSampleRec bsdfSampleRec)
-{
-  vec3 Le;
-
-  if (state.depth == 0 || state.specularBounce)
-  {
-    Le = lightSampleRec.emission;
-  }
-  else
-  {
-    Le = powerHeuristic(bsdfSampleRec.pdf, lightSampleRec.pdf) * lightSampleRec.emission;
-  }
-
-  return Le;
-}
 
 //-----------------------------------------------------------------------
 //-----------------------------------------------------------------------
@@ -282,11 +230,13 @@ vec3 EvalDielectricReflection(State state, vec3 V, vec3 N, vec3 L, vec3 H, inout
     return vec3(0.0);
   }
 
-  float F = DielectricFresnel(dot(V, H), state.eta);
+  float vDotH = dot(V, H);
+
+  float F = DielectricFresnel(vDotH, state.eta);
   //Calculate Normal Distribution
   float D = GTR2(dot(N, H), state.mat.roughness);
 
-  pdf = D * dot(N, H) * F / (4.0 * dot(V, H));
+  pdf = D * dot(N, H) * F / (4.0 * vDotH);
 
   // Calculate Reflectance coefficient
   float G = SmithG_GGX(abs(dot(N, L)), state.mat.roughness) * SmithG_GGX(dot(N, V), state.mat.roughness);
@@ -297,15 +247,20 @@ vec3 EvalDielectricReflection(State state, vec3 V, vec3 N, vec3 L, vec3 H, inout
 //-----------------------------------------------------------------------
 vec3 EvalDielectricRefraction(State state, vec3 V, vec3 N, vec3 L, vec3 H, inout float pdf)
 {
-  float F = DielectricFresnel(abs(dot(V, H)), state.eta);
+  float vDotH = dot(V, H);
+  float lDotH = dot(L, H);
+
+  float F = DielectricFresnel(abs(vDotH), state.eta);
   float D = GTR2(dot(N, H), state.mat.roughness);
-
-  float denomSqrt = dot(L, H) * state.eta + dot(V, H);
-  pdf = D * dot(N, H) * (1.0 - F) * abs(dot(L, H)) / (denomSqrt * denomSqrt);
-
   float G = SmithG_GGX(abs(dot(N, L)), state.mat.roughness) * SmithG_GGX(dot(N, V), state.mat.roughness);
-  return state.mat.albedo * (1.0 - F) * D * G * abs(dot(V, H)) * abs(dot(L, H)) * 4.0 * state.eta * state.eta
-  / (denomSqrt * denomSqrt);
+
+  float denomSqrt = lDotH * state.eta + vDotH;
+  float denom = (denomSqrt * denomSqrt);
+
+  pdf = D * dot(N, H) * (1.0 - F) * abs(lDotH) / denom;
+
+  return state.mat.albedo * (1.0 - F) * D * G * abs(vDotH) * abs(lDotH) * 4.0 * state.eta * state.eta
+  / denom;
 }
 
 //-----------------------------------------------------------------------
@@ -469,9 +424,10 @@ vec3 DisneySample(inout State state, vec3 V, vec3 N, inout vec3 L, inout float p
       // Sample primary specular lobe
       if (rand(seed) < primarySpecRatio)
       {
-        // TODO: Implement http://jcgt.org/published/0007/04/01/
-        vec3 H = ImportanceSampleGTR2_aniso(state.mat.ax, state.mat.ay, r1, r2);
+        vec3 V_tangent = vec3(dot(V, state.tangent), dot(V, state.bitangent), dot(V, N));
+        vec3 H = ImportanceSampleGGX_VNDF(V_tangent, state.mat.ax, state.mat.ay, r1, r2);
         H = state.tangent * H.x + state.bitangent * H.y + N * H.z;
+
         L = normalize(reflect(-V, H));
 
         f = EvalSpecular(state, Cspec0, V, N, L, H, pdf);

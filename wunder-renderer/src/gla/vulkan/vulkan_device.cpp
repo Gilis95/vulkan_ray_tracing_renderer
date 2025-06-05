@@ -167,15 +167,15 @@ void device::append_used_device_features(
   if (!used_features.empty()) {
     // build up chain of all used extension features
     for (size_t i = 0; i < used_features.size(); ++i) {
-      auto* header = reinterpret_cast<ExtensionHeader*>(used_features[i]);
+      auto* header = static_cast<ExtensionHeader*>(used_features[i]);
       header->pNext =
           i < used_features.size() - 1 ? used_features[i + 1] : nullptr;
     }
 
     auto* last_core_feature =
-        (ExtensionHeader*)&physical_device_info.m_features_10;
+        reinterpret_cast<ExtensionHeader*>(&physical_device_info.m_features_10);
     while (last_core_feature->pNext != nullptr) {
-      last_core_feature = (ExtensionHeader*)last_core_feature->pNext;
+      last_core_feature = static_cast<ExtensionHeader*>(last_core_feature->pNext);
     }
 
     // append required features to the end of physical device info

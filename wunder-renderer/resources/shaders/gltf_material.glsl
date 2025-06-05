@@ -73,7 +73,7 @@ void GetMetallicRoughness(inout State state, in GltfShadeMaterial material)
 
     vec3 Ctint = Cdlum > 0.0 ? Cdlin / Cdlum : vec3(1.0f);  // normalize lum. to isolate hue+sat
 
-    f0 = mix(state.mat.specular * 0.08 * mix(vec3(1.0), Ctint, state.mat.specularTint), Cdlin, state.mat.metallic);
+    f0 *= mix(state.mat.specular * 0.08 * mix(vec3(1.0), Ctint, state.mat.specularTint), Cdlin, state.mat.metallic);
   }
 
   state.mat.albedo    = baseColor.xyz;
@@ -97,7 +97,7 @@ void GetMaterialsAndTextures(inout State state, in Ray r)
   GltfShadeMaterial material = materials[state.matID];
 
   state.mat.specular = material.specularFactor;
-  state.mat.subsurface   = 0;
+  state.mat.subsurface   = material.thicknessFactor;
   state.mat.specularTint = 1;
   state.mat.sheen        = 0;
   state.mat.sheenTint    = vec3(0);
