@@ -656,7 +656,7 @@ template <typename T>
 std::optional<T> vector_to_glm(const std::vector<double>& data) {
   auto target_length = T::length();
 
-  AssertReturnUnless(target_length > 0 && static_cast<decltype(data.size())>(
+  ReturnUnless(target_length > 0 && static_cast<decltype(data.size())>(
                                               target_length) < data.size(),
                      std::nullopt);
   T res;

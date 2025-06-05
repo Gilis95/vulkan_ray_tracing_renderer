@@ -11,7 +11,9 @@ light_asset_builder::light_asset_builder(const tinygltf::Light& gltf_light)
 std::optional<light_asset> light_asset_builder::build() {
   auto maybe_colour =
       tinygltf::utils::vector_to_glm<glm::vec4>(gltf_light.color);
-  AssertReturnUnless(maybe_colour.has_value(), std::nullopt);
+  if(!maybe_colour.has_value()) {
+    maybe_colour = glm::vec4(1.f);
+  }
   specific_light_type_data light_specific_data;
   if (gltf_light.type == "point") {
     light_specific_data = point_light{};

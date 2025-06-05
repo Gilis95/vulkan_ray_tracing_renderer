@@ -5,14 +5,14 @@
 
 
 #version 460
-#extension GL_GOOGLE_include_directive : enable
-#extension GL_EXT_ray_tracing : require                 // This is about ray tracing
-#extension GL_EXT_nonuniform_qualifier : enable         // To access unsized descriptor arrays
-#extension GL_EXT_scalar_block_layout : enable          // Align structure layout to scalar
-#extension GL_EXT_shader_image_load_formatted : enable  // The folowing extension allow to pass images as function parameters
+#extension GL_GOOGLE_include_directive: enable
+#extension GL_EXT_ray_tracing: require                 // This is about ray tracing
+#extension GL_EXT_nonuniform_qualifier: enable         // To access unsized descriptor arrays
+#extension GL_EXT_scalar_block_layout: enable          // Align structure layout to scalar
+#extension GL_EXT_shader_image_load_formatted: enable  // The folowing extension allow to pass images as function parameters
 
-#extension GL_EXT_shader_explicit_arithmetic_types_int64 : require
-#extension GL_EXT_buffer_reference2 : require
+#extension GL_EXT_shader_explicit_arithmetic_types_int64: require
+#extension GL_EXT_buffer_reference2: require
 
 #include "globals.glsl"
 #include "layouts.glsl"
@@ -22,27 +22,24 @@
 hitAttributeEXT vec2 bary;
 
 // Payloads
-layout(location = 0) rayPayloadInEXT PtPayload prd;
+layout (location = 0) rayPayloadInEXT PtPayload prd;
 
 // Push Constant
-layout(push_constant) uniform _RtxState
+layout (push_constant) uniform _RtxState
 {
   RtxState rtxState;
 };
 
-
-void main()
+float getOpacity(InstanceData pinfo)
 {
-  // Retrieve the Primitive mesh buffer information
-  InstanceData      pinfo    = geoInfo[gl_InstanceCustomIndexEXT];
-  const uint        matIndex = max(0, pinfo.materialIndex);  // material of primitive mesh
-  GltfShadeMaterial mat      = materials[matIndex];
+  const uint matIndex = max(0, pinfo.materialIndex);  // material of primitive mesh
+  GltfShadeMaterial mat = materials[matIndex];
 
   float baseColorAlpha = mat.pbrBaseColorFactor.a;
-  if(mat.pbrBaseColorTexture > -1)
+  if (mat.pbrBaseColorTexture > -1)
   {
     // Primitive buffer addresses
-    Indices  indices  = Indices(pinfo.indexAddress);
+    Indices indices = Indices(pinfo.indexAddress);
     Vertices vertices = Vertices(pinfo.vertexAddress);
 
     // Indices of this triangle primitive.
@@ -55,10 +52,10 @@ void main()
 
     // Get the texture coordinate
     const vec3 barycentrics = vec3(1.0 - bary.x - bary.y, bary.x, bary.y);
-    const vec2 uv0          = attr0.texcoord;
-    const vec2 uv1          = attr1.texcoord;
-    const vec2 uv2          = attr2.texcoord;
-    vec2       texcoord0    = uv0 * barycentrics.x + uv1 * barycentrics.y + uv2 * barycentrics.z;
+    const vec2 uv0 = attr0.texcoord;
+    const vec2 uv1 = attr1.texcoord;
+    const vec2 uv2 = attr2.texcoord;
+    vec2 texcoord0 = uv0 * barycentrics.x + uv1 * barycentrics.y + uv2 * barycentrics.z;
 
     // Uv Transform
     texcoord0 = (vec4(texcoord0.xy, 1, 1) * mat.uvTransform).xy;
@@ -67,16 +64,24 @@ void main()
   }
 
   float opacity;
-  if(mat.alphaMode == ALPHA_MASK)
+  if (mat.alphaMode == ALPHA_MASK)
   {
-    opacity = baseColorAlpha > mat.alphaCutoff ? 1.0 : 0.0;
-  }
-  else
-  {
-    opacity = baseColorAlpha;
+    return baseColorAlpha > mat.alphaCutoff ? 1.0 : 0.0;
   }
 
-  // Do alpha blending the stochastically way
-  if(rand(prd.seed) > opacity)
+  return opacity = baseColorAlpha;
+
+}
+
+void main()
+{
+  // Retrieve the Primitive mesh buffer information
+  InstanceData pinfo = geoInfo[gl_InstanceCustomIndexEXT];
+
+  float opacity = getOpacity(pinfo);
+
+  if (rand(prd.seed) > opacity)
+  {
     ignoreIntersectionEXT;
+  }
 }

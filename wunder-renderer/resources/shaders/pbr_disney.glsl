@@ -65,29 +65,32 @@ vec3 ImportanceSampleGTR1(float rgh, float r1, float r2)
 //-----------------------------------------------------------------------
 // http://jcgt.org/published/0007/04/01/
 // Input V: view direction
-// Input alpha_x, alpha_y: roughness parameters
+// Input ax, ay: roughness parameters
 // Input r1, r2: uniform random numbers
 // Output Ne: normal sampled with PDF D_Ve(Ne) = G1(Ve) * max(0, dot(Ve, Ne)) * D(Ne) / Ve.z
 //-----------------------------------------------------------------------
-vec3 ImportanceSampleGGX_VNDF(vec3 V, float alpha_x, float alpha_y, float r1, float r2)
+vec3 ImportanceSampleGGX_VNDF(vec3 V, float ax, float ay, float r1, float r2)
 {
   // Section 3.2: transforming the view direction to the hemisphere configuration
-  vec3 Vh = normalize(vec3(alpha_x * V.x, alpha_y * V.y, V.z));
+  vec3 Z_elipsoid = normalize(vec3(ax * V.x, ay * V.y, V.z));
   // Section 4.1: orthonormal basis (with special case if cross product is zero)
-  float lensq = Vh.x * Vh.x + Vh.y * Vh.y;
-  vec3 T1 = lensq > 0 ? vec3(-Vh.y, Vh.x, 0) * inversesqrt(lensq) : vec3(1, 0, 0);
-  vec3 T2 = cross(Vh, T1);
+  float lensq = Z_elipsoid.x * Z_elipsoid.x + Z_elipsoid.y * Z_elipsoid.y;
+  vec3 X_elipsoid = lensq > 0 ? vec3(-Z_elipsoid.y, Z_elipsoid.x, 0) * inversesqrt(lensq) : vec3(1, 0, 0);
+  vec3 Y_elipsoid = cross(Z_elipsoid, X_elipsoid);
+
   // Section 4.2: parameterization of the projected area
   float r = sqrt(r1);
   float phi = 2.0 * M_PI * r2;
-  float t1 = r * cos(phi);
-  float t2 = r * sin(phi);
-  float s = 0.5 * (1.0 + Vh.z);
-  t2 = (1.0 - s) * sqrt(1.0 - t1 * t1) + s * t2;
+
+  float x = r * cos(phi);
+  float y = r * sin(phi);
+  float s = 0.5 * (1.0 + Z_elipsoid.z);
+  y = (1.0 - s) * sqrt(1.0 - x * x) + s * y;
+
   // Section 4.3: reprojection onto hemisphere
-  vec3 Nh = t1 * T1 + t2 * T2 + sqrt(max(0.0, 1.0 - t1 * t1 - t2 * t2)) * Vh;
+  vec3 Nh = x * X_elipsoid + y * Y_elipsoid + sqrt(max(0.0, 1.0 - x * x - y * y)) * Z_elipsoid;
   // Section 3.4: transforming the normal back to the ellipsoid configuration
-  return normalize(vec3(alpha_x * Nh.x, alpha_y * Nh.y, max(0.0, Nh.z)));
+  return normalize(vec3(ax * Nh.x, ay * Nh.y, max(0.0, Nh.z)));
 }
 
 //-----------------------------------------------------------------------
@@ -299,8 +302,8 @@ vec3 EvalClearcoat(State state, vec3 V, vec3 N, vec3 L, vec3 H, inout float pdf)
   float D = GTR1(dot(N, H), state.mat.clearcoatRoughness);
   pdf = D * dot(N, H) / (4.0 * dot(V, H));
 
-  float FH = SchlickFresnel(dot(L, H));
-  float F = mix(0.04, 1.0, FH);
+  float F = DielectricFresnel(dot(L, H), 0.04);
+//  float F = mix(0.04, 1.0, FH);
   float G = SmithG_GGX(dot(N, L), 0.25) * SmithG_GGX(dot(N, V), 0.25);
   return vec3(0.25 * state.mat.clearcoat * F * D * G);
 }
@@ -318,7 +321,7 @@ vec3 EvalDiffuse(State state, vec3 Csheen, vec3 V, vec3 N, vec3 L, vec3 H, inout
 
   float FL = SchlickFresnel(dot(N, L));
   float FV = SchlickFresnel(dot(N, V));
-  float FH = SchlickFresnel(dot(L, H));
+  float FH = SchlickFresnel(dot(-V, H));
   float Fd90 = 0.5 + 2.0 * dot(L, H) * dot(L, H) * state.mat.roughness;
   float Fd = mix(1.0, Fd90, FL) * mix(1.0, Fd90, FV);
   vec3 Fsheen = FH * state.mat.sheen * Csheen;
@@ -523,13 +526,13 @@ vec3 DisneyEval(State state, vec3 V, vec3 N, vec3 L, inout float pdf)
       brdf += EvalDiffuse(state, Csheen, V, N, L, H, m_pdf);
       brdfPdf += m_pdf * (1.0 - state.mat.subsurface) * diffuseRatio;
 
-      // Specular
-      brdf += EvalSpecular(state, Cspec0, V, N, L, H, m_pdf);
-      brdfPdf += m_pdf * primarySpecRatio * (1.0 - diffuseRatio);
-
-      // Clearcoat
-      brdf += EvalClearcoat(state, V, N, L, H, m_pdf);
-      brdfPdf += m_pdf * (1.0 - primarySpecRatio) * (1.0 - diffuseRatio);
+//      // Specular
+//      brdf += EvalSpecular(state, Cspec0, V, N, L, H, m_pdf);
+//      brdfPdf += m_pdf * primarySpecRatio * (1.0 - diffuseRatio);
+//
+//      // Clearcoat
+//      brdf += EvalClearcoat(state, V, N, L, H, m_pdf);
+//      brdfPdf += m_pdf * (1.0 - primarySpecRatio) * (1.0 - diffuseRatio);
     }
   }
 

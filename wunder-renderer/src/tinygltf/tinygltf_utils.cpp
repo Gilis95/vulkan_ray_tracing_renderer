@@ -287,26 +287,27 @@ std::string generate_primitive_key(const Primitive& primitive) {
 }
 
 glm::mat4 getLocalMatrix(const Node& tnode) {
-  glm::mat4 mtranslation{1};
-  glm::mat4 mscale{1};
-  glm::mat4 mrot{1};
-  glm::mat4 matrix{1};
+  glm::mat4 translation{1};
+  glm::mat4 scale{1};
+  glm::mat4 rotation{1};
   glm::quat mrotation;
 
+
+  if (!tnode.matrix.empty()) {
+    return glm::make_mat4(tnode.matrix.data());
+  }
+
   if (!tnode.translation.empty())
-    mtranslation = translate(
+    translation = translate(
         glm::mat4(1), glm::vec3(tnode.translation[0], tnode.translation[1],
                                 tnode.translation[2]));
   if (!tnode.scale.empty())
-    mscale = scale(glm::mat4(1), glm::vec3(tnode.scale[0], tnode.scale[1],
+    scale = glm::scale(glm::mat4(1), glm::vec3(tnode.scale[0], tnode.scale[1],
                                                 tnode.scale[2]));
   if (!tnode.rotation.empty()) {
     mrotation = glm::make_quat(tnode.rotation.data());
-    mrot = mat4_cast(mrotation);
+    rotation = mat4_cast(mrotation);
   }
-  if (!tnode.matrix.empty()) {
-    matrix = glm::make_mat4(tnode.matrix.data());
-  }
-  return mtranslation * mrot * mscale * matrix;
+  return translation * rotation * scale;
 }
 }  // namespace tinygltf::utils
