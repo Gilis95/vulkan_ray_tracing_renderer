@@ -526,13 +526,13 @@ vec3 DisneyEval(State state, vec3 V, vec3 N, vec3 L, inout float pdf)
       brdf += EvalDiffuse(state, Csheen, V, N, L, H, m_pdf);
       brdfPdf += m_pdf * (1.0 - state.mat.subsurface) * diffuseRatio;
 
-//      // Specular
-//      brdf += EvalSpecular(state, Cspec0, V, N, L, H, m_pdf);
-//      brdfPdf += m_pdf * primarySpecRatio * (1.0 - diffuseRatio);
-//
-//      // Clearcoat
-//      brdf += EvalClearcoat(state, V, N, L, H, m_pdf);
-//      brdfPdf += m_pdf * (1.0 - primarySpecRatio) * (1.0 - diffuseRatio);
+      // Specular
+      brdf += EvalSpecular(state, Cspec0, V, N, L, H, m_pdf);
+      brdfPdf += m_pdf * primarySpecRatio * (1.0 - diffuseRatio);
+
+      // Clearcoat
+      brdf += EvalClearcoat(state, V, N, L, H, m_pdf);
+      brdfPdf += m_pdf * (1.0 - primarySpecRatio) * (1.0 - diffuseRatio);
     }
   }
 

@@ -20,4 +20,4 @@ add_executable(wunder-sandbox ${SRC_FILES} ${HDR_FILES})
 
 target_include_directories(wunder-sandbox PRIVATE ${wunder-renderer_INCLUDES} ${HDR_DIR})
 
-target_link_libraries(wunder-sandbox PRIVATE glfw glm spdlog wunder::wunder-renderer TracyClient)
+target_link_libraries(wunder-sandbox PRIVATE glfw glm spdlog wunder::wunder-renderer)

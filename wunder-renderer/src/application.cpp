@@ -1,7 +1,5 @@
 #include "application.h"
 
-#include <tracy/Tracy.hpp>
-
 #include "application_properties.h"
 #include "assets/scene_asset.h"
 #include "core/project.h"
@@ -45,15 +43,7 @@ void application::shutdown() {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void application::initialize() {
-  std::string application_revision("Revision: 1234");
-  std::string application_name("application Name: wunder");
-
   log::init();
-
-  TracyAppInfo(m_properties->m_debug_name.c_str(),
-               m_properties->m_debug_name.size());
-  TracyAppInfo(m_properties->m_debug_version.c_str(),
-               m_properties->m_debug_version.size());
 
   AssertReturnUnless(
       window_factory::instance().initialize(m_properties->m_window_properties));
@@ -87,8 +77,6 @@ void application::run() {
     renderer.update(frame_duration);
 
     project.update(frame_duration);
-
-    FrameMark;
 
     frame_end = frame_start;
   }

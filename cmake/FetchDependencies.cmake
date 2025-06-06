@@ -26,12 +26,6 @@ FetchContent_Declare(
 )
 
 FetchContent_Declare(
-        tracy
-        GIT_REPOSITORY https://github.com/Gilis95/tracy.git
-        GIT_TAG 747a3cd
-)
-
-FetchContent_Declare(
         tinygltf
         GIT_REPOSITORY git@github.com:syoyo/tinygltf.git
         GIT_TAG v2.9.3
@@ -42,7 +36,7 @@ set(TINYGLTF_HEADER_ONLY ON CACHE INTERNAL "" FORCE)
 set(TINYGLTF_INSTALL OFF CACHE INTERNAL "" FORCE)
 set(GLFW_BUILD_X11 ON CACHE INTERNAL "" FORCE)
 
-FetchContent_MakeAvailable(glad glfw glm spdlog tracy tinygltf)
+FetchContent_MakeAvailable(glad glfw glm spdlog tinygltf)
 
 include(cmake/FetchShadercDependency.cmake)
 include(cmake/FetchSPIRVCrossDependency.cmake)

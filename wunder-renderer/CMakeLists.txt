@@ -103,7 +103,6 @@ target_link_libraries(wunder-renderer PUBLIC
         glfw
         glm
         spdlog
-        TracyClient
         GPUOpen::VulkanMemoryAllocator
         glslang
         shaderc
