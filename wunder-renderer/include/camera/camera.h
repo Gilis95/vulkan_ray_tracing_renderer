@@ -169,6 +169,7 @@ class camera : private event_handler<wunder::event::mouse::move>,
   void update_camera_buffer();
   SceneCamera create_host_camera();
 
+  void print_camera_angles();
  protected:
   glm::mat4 m_view_matrix = glm::mat4(1);
 

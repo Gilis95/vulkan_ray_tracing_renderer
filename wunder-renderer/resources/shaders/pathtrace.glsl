@@ -212,8 +212,9 @@ vec3 PathTrace(Ray r)
 
     // Debugging info
     if (rtxState.debugging_mode != eNoDebug && rtxState.debugging_mode < eRadiance)
-    return DebugInfo(state);
-
+    {
+      return DebugInfo(state);
+    }
     // KHR_materials_unlit
     if (state.mat.unlit)
     {
@@ -241,7 +242,6 @@ vec3 PathTrace(Ray r)
 
     // Sampling for the next ray
     bsdfSampleRec.f = DisneySample(state, -r.direction, state.ffnormal, bsdfSampleRec.L, bsdfSampleRec.pdf, prd.seed);
-
 
     if (bsdfSampleRec.pdf > 0.0)
     {

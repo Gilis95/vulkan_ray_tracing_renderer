@@ -54,6 +54,10 @@ class rtx_renderer : public base_renderer,
   void on_event(const wunder::event::scene_activated&) override;
   void on_event(const wunder::event::camera_moved&) override;
 
+  // debug features
+ private:
+  void log_current_sate_frame();
+  void log_loaded_scene_size();
  private:
   const renderer_properties& m_renderer_properties;
   bool m_have_active_scene;

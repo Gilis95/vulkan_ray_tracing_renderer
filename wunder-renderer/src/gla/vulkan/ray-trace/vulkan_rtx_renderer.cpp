@@ -5,6 +5,7 @@
 #include "camera/camera.h"
 #include "core/project.h"
 #include "core/services_factory.h"
+#include "core/wunder_features.h"
 #include "event/event_handler.hpp"
 #include "event/scene_events.h"
 #include "gla/renderer_capabilities .h"
@@ -16,6 +17,7 @@
 #include "gla/vulkan/vulkan_context.h"
 #include "gla/vulkan/vulkan_device.h"
 #include "gla/vulkan/vulkan_layer_abstraction_factory.h"
+#include "gla/vulkan/vulkan_memory_allocator.h"
 #include "gla/vulkan/vulkan_shader.h"
 #include "gla/vulkan/vulkan_shader_binding_table.h"
 #include "gla/vulkan/vulkan_texture.h"
@@ -59,7 +61,6 @@ void rtx_renderer::init_internal(const renderer_properties &properties) {
   m_state->size = {properties.m_width, properties.m_height};
   m_state->minHeatmap = 0;
   m_state->maxHeatmap = 65000;
-  m_state->pbrMode = 0;
   m_state->debugging_mode = DebugMode::eNoDebug;
 }
 
@@ -146,7 +147,6 @@ void rtx_renderer::update(time_unit dt) /*override*/
                     &hit_address, &callable_address,
                     m_renderer_properties.m_width,
                     m_renderer_properties.m_height, 1);
-  ++m_state->frame;
 
   m_rasterize_renderer->begin_frame();
   m_rasterize_renderer->draw_frame();
@@ -154,6 +154,7 @@ void rtx_renderer::update(time_unit dt) /*override*/
 
   swap_chain.flush_current_command_buffer();
 
+  log_current_sate_frame();
   ++m_state->frame;
 }
 
@@ -195,9 +196,27 @@ void rtx_renderer::on_event(
   m_state->fireflyClampThreshold =
       environment_texture.m_acceleration_data.m_integral;
   m_have_active_scene = true;
+  log_loaded_scene_size();
 }
 
 void rtx_renderer::on_event(const wunder::event::camera_moved &) /*override*/ {
   m_state->frame = 0;
 }
+
+void rtx_renderer::log_current_sate_frame() {
+#if PRINT_STATE_FRAME
+  WUNDER_TRACE_TAG("Rtx Renderer", "Frame {0}", m_state->frame);
+#endif
+}
+
+void rtx_renderer::log_loaded_scene_size() {
+#if PRINT_ALLOCATED_SCENE_SIZE
+  auto &memory_allocator = layer_abstraction_factory::instance()
+                               .get_vulkan_context()
+                               .mutable_resource_allocator();
+
+  memory_allocator.dump_stats();
+#endif
+}
+
 }  // namespace wunder::vulkan

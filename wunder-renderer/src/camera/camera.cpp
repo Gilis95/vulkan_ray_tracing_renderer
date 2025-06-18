@@ -18,6 +18,7 @@
 #include "gla/vulkan/vulkan_device_buffer.h"
 #include "resources/shaders/host_device.h"
 #include "scene/scene_manager.h"
+#include "core/wunder_features.h"
 
 namespace wunder {
 namespace {
@@ -301,6 +302,8 @@ void camera::update_camera_position_smoothly() {
 /////////////////////////////////////////////////////////////////////////////////////////
 void camera::update_view_matrix() {
   m_view_matrix = glm::lookAt(m_current.eye, m_current.ctr, m_current.up);
+  print_camera_angles();
+
   event_controller::on_event(event::camera_moved{});
 }
 
@@ -641,4 +644,15 @@ SceneCamera camera::create_host_camera() {
   camera.nbLights = static_cast<uint32_t>(m_lights_count);
   return camera;
 }
+
+void camera::print_camera_angles() {
+#if PRINT_CAMERA_ANGLES
+  vec3 forward = glm::normalize(m_current.ctr - m_current.eye);
+  float pitch = glm::degrees(glm::asin(-forward.y)); // vertical angle (Y up)
+  float yaw = glm::degrees(glm::atan(forward.x, -forward.z)); // horizontal angle (Z forward)
+
+  WUNDER_INFO_TAG("Camera", "{0} {1}", pitch, yaw);
+#endif
+}
+
 }  // namespace wunder

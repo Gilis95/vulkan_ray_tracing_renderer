@@ -302,10 +302,11 @@ vec3 EvalClearcoat(State state, vec3 V, vec3 N, vec3 L, vec3 H, inout float pdf)
   float D = GTR1(dot(N, H), state.mat.clearcoatRoughness);
   pdf = D * dot(N, H) / (4.0 * dot(V, H));
 
-  float F = DielectricFresnel(dot(L, H), 0.04);
-//  float F = mix(0.04, 1.0, FH);
-  float G = SmithG_GGX(dot(N, L), 0.25) * SmithG_GGX(dot(N, V), 0.25);
-  return vec3(0.25 * state.mat.clearcoat * F * D * G);
+  float scale = 0.25;
+  float FH = SchlickFresnel(dot(L, H));
+  float F = mix(0.04, 1.0, FH);
+  float G = SmithG_GGX(dot(N, L), scale) * SmithG_GGX(dot(N, V), scale);
+  return vec3(scale * state.mat.clearcoat * F * D * G);
 }
 
 //-----------------------------------------------------------------------
@@ -350,9 +351,11 @@ vec3 DisneySample(inout State state, vec3 V, vec3 N, inout vec3 L, inout float p
 
   float r1 = rand(seed);
   float r2 = rand(seed);
-
-  float diffuseRatio = 0.5 * (1.0 - state.mat.metallic);
-  float transWeight = (1.0 - state.mat.metallic) * state.mat.transmission;
+  //
+  float diffuseRatio = 0.5 * (1.0 - state.mat.metallic) * (1.0 - state.mat.clearcoat);
+  float transWeight = (1.0 - state.mat.metallic) * (1.0 - state.mat.clearcoat) * state.mat.transmission;
+  float primarySpecRatio = 1.0 / (1.0 + state.mat.clearcoat);
+  float clearcoatW = state.mat.clearcoat;
 
   vec3 Cdlin = state.mat.albedo;
   float Cdlum = 0.3 * Cdlin.x + 0.6 * Cdlin.y + 0.1 * Cdlin.z;  // luminance approx.
@@ -361,8 +364,10 @@ vec3 DisneySample(inout State state, vec3 V, vec3 N, inout vec3 L, inout float p
   vec3 Cspec0 = state.mat.f0;
   vec3 Csheen = state.mat.sheenTint;  //mix(vec3(1.0), Ctint, state.mat.sheenTint);
 
+  float randomWeight = rand(seed);
+
   // BSDF
-  if (rand(seed) < transWeight)
+  if (randomWeight < transWeight)
   {
     vec3 H = ImportanceSampleGTR2(state.mat.roughness, r1, r2);
     H = state.tangent * H.x + state.bitangent * H.y + N * H.z;
@@ -380,15 +385,23 @@ vec3 DisneySample(inout State state, vec3 V, vec3 N, inout vec3 L, inout float p
     }
 
     // Reflection/Total internal reflection
-    if (rand(seed) < F)
+    if (randomWeight < F)
     {
       L = normalize(R);
       f = EvalDielectricReflection(state, V, N, L, H, pdf);
     }
     else // Transmission
     {
-      L = normalize(refract(-V, H, state.eta));
-      f = EvalDielectricRefraction(state, V, N, L, H, pdf);
+      L = normalize(refract(-V, N, state.eta));
+
+      if (length(L) == 0.0) {
+        L = normalize(R);
+        f = EvalDielectricReflection(state, V, N, L, H, pdf);
+      }
+      else
+      {
+        f = EvalDielectricRefraction(state, V, N, L, H, pdf);
+      }
     }
 
     f *= transWeight;
@@ -396,7 +409,7 @@ vec3 DisneySample(inout State state, vec3 V, vec3 N, inout vec3 L, inout float p
   }
   else // BRDF
   {
-    if (rand(seed) < diffuseRatio)
+    if (randomWeight < diffuseRatio)
     {
       // Diffuse transmission. A way to approximate subsurface scattering
       if (rand(seed) < state.mat.subsurface)
@@ -422,10 +435,20 @@ vec3 DisneySample(inout State state, vec3 V, vec3 N, inout vec3 L, inout float p
     }
     else // Specular
     {
-      float primarySpecRatio = 1.0 / (1.0 + state.mat.clearcoat);
 
       // Sample primary specular lobe
-      if (rand(seed) < primarySpecRatio)
+      // Sample clearcoat lobe
+      if (randomWeight < clearcoatW)
+      {
+        float scale = 10.0f;
+        vec3 H = ImportanceSampleGTR1(state.mat.clearcoatRoughness, r1, r2);
+        H = state.tangent * H.x + state.bitangent * H.y + N * H.z;
+        L = normalize(reflect(-V, H));
+
+        f = EvalClearcoat(state, V, N, L, H, pdf);
+        pdf /= (clearcoatW * scale);
+      }
+      else if (randomWeight < primarySpecRatio)
       {
         vec3 V_tangent = vec3(dot(V, state.tangent), dot(V, state.bitangent), dot(V, N));
         vec3 H = ImportanceSampleGGX_VNDF(V_tangent, state.mat.ax, state.mat.ay, r1, r2);
@@ -435,15 +458,6 @@ vec3 DisneySample(inout State state, vec3 V, vec3 N, inout vec3 L, inout float p
 
         f = EvalSpecular(state, Cspec0, V, N, L, H, pdf);
         pdf *= primarySpecRatio * (1.0 - diffuseRatio);
-      }
-      else // Sample clearcoat lobe
-      {
-        vec3 H = ImportanceSampleGTR1(state.mat.clearcoatRoughness, r1, r2);
-        H = state.tangent * H.x + state.bitangent * H.y + N * H.z;
-        L = normalize(reflect(-V, H));
-
-        f = EvalClearcoat(state, V, N, L, H, pdf);
-        pdf *= (1.0 - primarySpecRatio) * (1.0 - diffuseRatio);
       }
     }
 
