@@ -44,10 +44,6 @@ scene::~scene() {
     m_mesh_instance_data_buffer.reset();
   }
 
-  if (m_sun_and_sky_properties_buffer) {
-    m_sun_and_sky_properties_buffer.reset();
-  }
-
   if (m_environment_textures) {
     m_environment_textures.reset();
   }
@@ -113,8 +109,6 @@ void scene::load_scene(const scene_asset& asset) {
           m_mesh_nodes);
   top_level_acceleration_structure_builder.build();
 
-  m_sun_and_sky_properties_buffer =
-      vulkan_environment_resource_creator::create_sky_and_sun_properties();
   m_environment_textures = std::move(
       vulkan_environment_resource_creator::create_environment_texture());
   AssertReturnUnless(m_environment_textures);
@@ -129,7 +123,6 @@ void scene::collect_descriptors(descriptor_set_manager& target) {
   m_light_buffer->add_descriptor_to(target);
   m_mesh_instance_data_buffer->add_descriptor_to(target);
   m_acceleration_structure->add_descriptor_to(target);
-  m_sun_and_sky_properties_buffer->add_descriptor_to(target);
   m_environment_textures->add_descriptor_to(target);
 }
 

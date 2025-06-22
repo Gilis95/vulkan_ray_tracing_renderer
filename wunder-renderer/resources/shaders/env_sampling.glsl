@@ -5,12 +5,8 @@
 #ifndef ENV_SAMPLING_GLSL
 #define ENV_SAMPLING_GLSL
 
-
 #include "globals.glsl"
 #include "common.glsl"
-
-#include "sun_and_sky.glsl"
-
 
 //-------------------------------------------------------------------------------------------------
 // Environment Sampling (HDR)
@@ -88,28 +84,9 @@ vec4 EnvSample(inout vec3 radiance)
   vec3  lightDir;
   float pdf;
 
-  // Sun & Sky or HDR
-  if(_sunAndSky.in_use == 1)
-  {
-    // #TODO: find proper light direction + PDF
-    float sun_radius = (0.00465f * 10.0f) * _sunAndSky.sun_disk_scale;
-    vec3  T, B;
-    CreateCoordinateSystem(_sunAndSky.sun_direction, T, B);
-    vec3 dir;
-    dir.x = rand(prd.seed) * sun_radius;
-    dir.y = rand(prd.seed) * sun_radius;
-    dir.z = sqrt(max(0.0, 1.0 - dir.x * dir.x - dir.y * dir.y));
-
-    lightDir = normalize(T * dir.x + B * dir.y + _sunAndSky.sun_direction * dir.z);
-    radiance = sun_and_sky(_sunAndSky, lightDir);
-    pdf      = 0.5;
-  }
-  else
-  {
-    // Sampling the HDR with importance sampling
-    vec3 randVal = vec3(rand(prd.seed), rand(prd.seed), rand(prd.seed));
-    radiance     = Environment_sample(environmentTexture, randVal, lightDir, pdf);
-  }
+  // Sampling the HDR with importance sampling
+  vec3 randVal = vec3(rand(prd.seed), rand(prd.seed), rand(prd.seed));
+  radiance     = Environment_sample(environmentTexture, randVal, lightDir, pdf);
 
   radiance *= rtxState.hdrMultiplier;
   return vec4(lightDir, pdf);

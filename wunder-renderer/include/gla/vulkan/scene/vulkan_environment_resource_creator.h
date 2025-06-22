@@ -19,7 +19,6 @@ struct EnvAccel;
 namespace wunder::vulkan {
 class vulkan_environment_resource_creator final {
  public:
-  static unique_ptr<uniform_buffer>  create_sky_and_sun_properties();
   static unique_ptr<vulkan_environment> create_environment_texture();
 
  private:

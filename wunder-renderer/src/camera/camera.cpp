@@ -7,6 +7,7 @@
 #include "core/input_manager.h"
 #include "core/project.h"
 #include "core/services_factory.h"
+#include "core/wunder_features.h"
 #include "event/camera_events.h"
 #include "event/event_handler.hpp"
 #include "event/input_events.h"
@@ -18,7 +19,6 @@
 #include "gla/vulkan/vulkan_device_buffer.h"
 #include "resources/shaders/host_device.h"
 #include "scene/scene_manager.h"
-#include "core/wunder_features.h"
 
 namespace wunder {
 namespace {
@@ -651,7 +651,7 @@ void camera::print_camera_angles() {
   float pitch = glm::degrees(glm::asin(-forward.y)); // vertical angle (Y up)
   float yaw = glm::degrees(glm::atan(forward.x, -forward.z)); // horizontal angle (Z forward)
 
-  WUNDER_INFO_TAG("Camera", "{0} {1}", pitch, yaw);
+  WUNDER_INFO_TAG("Camera", "{0} {1} {2}", pitch, yaw, m_current.fov);
 #endif
 }
 

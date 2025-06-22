@@ -174,14 +174,9 @@ vec3 PathTrace(Ray r)
         return (r.direction + vec3(1)) * 0.5;
       }
 
-      vec3 env;
-      if (_sunAndSky.in_use == 1)
-      env = sun_and_sky(_sunAndSky, r.direction);
-      else
-      {
-        vec2 uv = GetSphericalUv(r.direction);  // See sampling.glsl
-        env = texture(environmentTexture, uv).rgb;
-      }
+      vec2 uv = GetSphericalUv(r.direction);  // See sampling.glsl
+      vec3 env = texture(environmentTexture, uv).rgb;
+
       // Done sampling return
       return radiance + (env * rtxState.hdrMultiplier * throughput);
     }

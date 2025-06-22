@@ -46,7 +46,6 @@ class scene : public non_copyable {
   unique_ptr<storage_buffer> m_light_buffer;
   unique_ptr<storage_buffer> m_mesh_instance_data_buffer;
 
-  unique_ptr<uniform_buffer> m_sun_and_sky_properties_buffer;
   unique_ptr<vulkan_environment> m_environment_textures;
 
   std::vector<vulkan_mesh_scene_node> m_mesh_nodes;
