@@ -44,9 +44,9 @@ application* create_application() {
 
   auto app_properties = application_properties{
       "wunder", "123",
-      window_properties{"Wunder Application", 1980, 1020, window_type::glfw},
-      renderer_properties{.m_width = 1980,
-                          .m_height = 1020,
+      window_properties{"Wunder Application", 1920, 1080, window_type::glfw},
+      renderer_properties{.m_width = 1920,
+                          .m_height = 1080,
                           .m_driver = driver::Vulkan,
                           .m_renderer = renderer_type::RAY_TRACE,
                           .m_gpu_to_use = gpu_to_use::Dedicated,

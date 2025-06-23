@@ -54,8 +54,6 @@ bool scene_manager::activate_scene(scene_id id) {
   auto found_scene_asset_it = m_loaded_scenes.find(id);
   AssertReturnIf(found_scene_asset_it == m_loaded_scenes.end(), false);
 
-  std::pair<scene_id, vulkan::scene> l;
-
   auto& [scene_id, scene] = m_active_scenes.emplace_back();
   scene_id = id;
   unique_ptr load_task = std::make_unique<scene_load_task>(

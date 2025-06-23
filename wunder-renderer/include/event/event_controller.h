@@ -1,7 +1,3 @@
-//
-// Created by christian on 7/3/24.
-//
-
 #ifndef WUNDER_WUNDER_RENDERER_INCLUDE_EVENT_EVENT_CONTROLLER_H_
 #define WUNDER_WUNDER_RENDERER_INCLUDE_EVENT_EVENT_CONTROLLER_H_
 /////////////////////////////////////////////////////////////////////////////////////////
