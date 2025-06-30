@@ -430,6 +430,8 @@ void swap_chain::initialize_depth_buffer() {
   auto& physical_device = vulkan_context.mutable_physical_device();
   auto& device = vulkan_context.mutable_device();
   auto vk_device = device.get_vulkan_logical_device();
+  auto& command_pool = vulkan_context.mutable_command_pool();
+
 
   if (m_depth_view) {
     vkDestroyImageView(vk_device, m_depth_view, nullptr);
@@ -496,10 +498,10 @@ void swap_chain::initialize_depth_buffer() {
       VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
 
   vkCmdPipelineBarrier(
-      device.get_command_pool().get_current_graphics_command_buffer(),
+      command_pool.get_current_graphics_command_buffer(),
       srcStageMask, destStageMask, VK_FALSE, 0, nullptr, 0, nullptr, 1,
       &image_memory_barrier);
-  device.get_command_pool().flush_graphics_command_buffer();
+  command_pool.flush_graphics_command_buffer();
 
   // Setting up the view
   VkImageViewCreateInfo depth_stencil_view{};
@@ -710,8 +712,7 @@ void swap_chain::create_frame_buffer_for_each_queue_element() {
 void swap_chain::update_barriers() const {
   context& vulkan_context =
       layer_abstraction_factory::instance().get_vulkan_context();
-  auto& device = vulkan_context.mutable_device();
-  command_pool& pool = device.get_command_pool();
+  command_pool& pool = vulkan_context.mutable_command_pool();
   auto command_buffer = pool.get_current_compute_command_buffer();
 
   for (auto& queue_element : m_queue_elements) {

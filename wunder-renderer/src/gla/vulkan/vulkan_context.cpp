@@ -29,6 +29,10 @@ void context::shutdown() {
     m_resource_allocator.reset();
   }
 
+  if (m_command_pool) {
+    m_command_pool.reset();
+  }
+
   if (m_logical_device.get()) {
     m_logical_device->shutdown();
   }
@@ -49,6 +53,8 @@ void context::init(const wunder::renderer_properties &properties) {
   // First figure out how many devices are in the system.
   select_physical_device();
   select_logical_device();
+
+  m_command_pool = std::make_unique<command_pool>();
 
   AssertReturnUnless(gladLoaderLoadVulkan(
       m_vulkan->get_instance(), m_physical_device->get_vulkan_physical_device(),
@@ -93,7 +99,6 @@ void context::create_allocator() {
   m_resource_allocator->initialize();
 }
 
-
 const renderer_capabilities &context::get_capabilities() const {
   static renderer_capabilities s_empty;
   return m_renderer_capabilities ? *m_renderer_capabilities : s_empty;
@@ -107,9 +112,10 @@ physical_device &context::mutable_physical_device() {
 
 device &context::mutable_device() { return *m_logical_device; }
 
-
 memory_allocator &context::mutable_resource_allocator() {
   return *m_resource_allocator;
 }
+
+command_pool &context::mutable_command_pool() { return *m_command_pool; }
 
 }  // namespace wunder::vulkan

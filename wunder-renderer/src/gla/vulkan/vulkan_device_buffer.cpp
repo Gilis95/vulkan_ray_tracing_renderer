@@ -26,15 +26,13 @@ device_buffer<base_buffer_type>::device_buffer(
     size_t data_size, VkBufferUsageFlags usage_flags)
     : device_buffer<base_buffer_type>(layer_abstraction_factory::instance()
                                           .get_vulkan_context()
-                                          .mutable_device()
-                                          .get_command_pool()
+                                          .mutable_command_pool()
                                           .get_current_compute_command_buffer(),
                                       std::move(descriptor_build_data), data,
                                       data_size, usage_flags) {
   auto& command_pool = layer_abstraction_factory::instance()
                            .get_vulkan_context()
-                           .mutable_device()
-                           .get_command_pool();
+                           .mutable_command_pool();
 
   command_pool.flush_compute_command_buffer();
 
