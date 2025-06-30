@@ -18,8 +18,7 @@ bottom_level_acceleration_structure_builder::
         std::vector<vulkan_mesh_scene_node>& mesh_nodes)
     : acceleration_structure_builder(layer_abstraction_factory::instance()
                                          .get_vulkan_context()
-                                         .mutable_device()
-                                         .get_command_pool()
+                                         .mutable_command_pool()
                                          .get_current_compute_command_buffer()),
       m_mesh_nodes(mesh_nodes),
       m_min_alignment(128) {}
@@ -87,8 +86,6 @@ void bottom_level_acceleration_structure_builder::
 
 void bottom_level_acceleration_structure_builder::flush_commands() {
   auto& context = layer_abstraction_factory::instance().get_vulkan_context();
-  auto& device = context.mutable_device();
-
-  device.get_command_pool().flush_compute_command_buffer();
+  context.mutable_command_pool().flush_compute_command_buffer();
 }
 }  // namespace wunder::vulkan

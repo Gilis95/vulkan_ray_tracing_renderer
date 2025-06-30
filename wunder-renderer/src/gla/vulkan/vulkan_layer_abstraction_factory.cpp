@@ -11,29 +11,9 @@
 #include "gla/vulkan/ray-trace/vulkan_rtx_renderer.h"
 #include "gla/vulkan/vulkan_context.h"
 #include "gla/vulkan/vulkan_physical_device.h"
+#include "gla/vulkan/vulkan_renderer_context.h"
 #include "gla/vulkan/vulkan_shader.h"
 
-namespace {
-std::unique_ptr<wunder::vulkan::rtx_renderer> create_ray_trace_vulkan_render(
-    const wunder::renderer_properties &properties) {
-  auto renderer = std::make_unique<wunder::vulkan::rtx_renderer>(properties);
-  renderer->init(properties);
-
-  return renderer;
-}
-
-using renderer_create_fn =
-    std::function<std::unique_ptr<wunder::vulkan::rtx_renderer>(
-        const wunder::renderer_properties &)>;
-
-auto ray_tracing_renderer_mapping =
-    std::make_pair<wunder::renderer_type, renderer_create_fn>(
-        wunder::renderer_type::RAY_TRACE,
-        std::bind(create_ray_trace_vulkan_render, std::placeholders::_1));
-
-wunder::vector_map<wunder::renderer_type, renderer_create_fn>
-    renderer_creation_fns({ray_tracing_renderer_mapping});
-}  // namespace
 
 namespace wunder::vulkan {
 layer_abstraction_factory::layer_abstraction_factory() = default;
@@ -45,7 +25,7 @@ layer_abstraction_factory &layer_abstraction_factory::instance() {
   return s_instance;
 }
 
-void layer_abstraction_factory::initialize(
+void layer_abstraction_factory::init(
     const renderer_properties &properties) {
   create_vulkan_context(properties);
   create_renderer(properties);
@@ -53,10 +33,9 @@ void layer_abstraction_factory::initialize(
 
 void layer_abstraction_factory::create_renderer(
     const renderer_properties &properties) {
-  auto create_fn_it = renderer_creation_fns.find(properties.m_renderer);
-  AssertReturnIf(create_fn_it == renderer_creation_fns.end());
 
-  m_renderer = create_fn_it->second(properties);
+  m_renderer_context = std::make_unique<renderer_context>(properties);
+  m_renderer_context->init();
 }
 
 void layer_abstraction_factory::create_vulkan_context(
@@ -65,20 +44,21 @@ void layer_abstraction_factory::create_vulkan_context(
   m_context->init(properties);
 }
 
-rtx_renderer &layer_abstraction_factory::get_renderers() { return *m_renderer; }
+renderer_context &layer_abstraction_factory::get_render_context() { return *m_renderer_context; }
 
 context &layer_abstraction_factory::get_vulkan_context() { return *m_context; }
 
-void layer_abstraction_factory::shutdown() {
-  if (m_renderer) {
-    m_renderer->shutdown();
-    m_renderer.reset();
+void layer_abstraction_factory::begin_shutdown() {
+  if (m_renderer_context) {
+    m_renderer_context->shutdown();
+    m_renderer_context.reset();
   }
+}
 
+void layer_abstraction_factory::end_shutdown() {
   if (m_context.get()) {
     m_context->shutdown();
     m_context.reset();
   }
 }
-
 }  // namespace wunder::vulkan

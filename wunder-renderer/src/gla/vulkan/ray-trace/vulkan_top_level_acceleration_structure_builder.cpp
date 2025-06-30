@@ -16,8 +16,7 @@ top_level_acceleration_structure_builder::
         const std::vector<vulkan_mesh_scene_node>& mesh_nodes)
     : acceleration_structure_builder(layer_abstraction_factory::instance()
                                          .get_vulkan_context()
-                                         .mutable_device()
-                                         .get_command_pool()
+                                         .mutable_command_pool()
                                          .get_current_compute_command_buffer()),
       m_acceleration_structure(acceleration_structure),
       mesh_nodes(mesh_nodes),
@@ -81,9 +80,7 @@ void top_level_acceleration_structure_builder::
 
 void top_level_acceleration_structure_builder::flush_commands() {
   auto& context = layer_abstraction_factory::instance().get_vulkan_context();
-  auto& device = context.mutable_device();
-
-  device.get_command_pool().flush_compute_command_buffer();
+  context.mutable_command_pool().flush_compute_command_buffer();
 }
 
 void top_level_acceleration_structure_builder::free_staging_data() {

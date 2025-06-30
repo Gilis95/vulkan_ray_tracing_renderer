@@ -1,7 +1,3 @@
-//
-// Created by christian on 7/3/24.
-//
-
 #ifndef WUNDER_WUNDER_RENDERER_INCLUDE_GLA_VULKAN_VULKAN_LOGICAL_DEVICE_H_
 #define WUNDER_WUNDER_RENDERER_INCLUDE_GLA_VULKAN_VULKAN_LOGICAL_DEVICE_H_
 
@@ -34,11 +30,6 @@ class device : public non_copyable {
     return m_logical_device;
   }
 
-  command_pool &get_command_pool() { return *m_command_pool; }
-  [[nodiscard]] const command_pool &get_command_pool() const {
-    return *m_command_pool;
-  }
-
  public:
   [[nodiscard]] VkQueue get_graphics_queue() { return m_graphics_queue; }
   [[nodiscard]] VkQueue get_compute_queue() { return m_compute_queue; }
@@ -60,7 +51,6 @@ class device : public non_copyable {
 
   std::vector<vulkan_extension_data> m_used_extensions;
   std::vector<vulkan_extension_data> m_requested_extensions;
-  unique_ptr<command_pool> m_command_pool;
 };
 
 }  // namespace wunder::vulkan

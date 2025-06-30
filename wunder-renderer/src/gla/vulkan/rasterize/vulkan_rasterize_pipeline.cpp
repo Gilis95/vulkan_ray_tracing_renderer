@@ -5,6 +5,7 @@
 #include "gla/vulkan/vulkan_context.h"
 #include "gla/vulkan/vulkan_device.h"
 #include "gla/vulkan/vulkan_layer_abstraction_factory.h"
+#include "gla/vulkan/vulkan_renderer_context.h"
 #include "resources/shaders/host_device.h"
 
 namespace wunder::vulkan {
@@ -39,8 +40,10 @@ void rasterize_pipeline::initialize_pipeline(
         shaders_of_types) {
   auto& vulkan_context =
       layer_abstraction_factory::instance().get_vulkan_context();
+  auto& swap_chain = layer_abstraction_factory::instance()
+                              .get_render_context()
+                              .mutable_swap_chain();
 
-  auto& swap_chain = vulkan_context.mutable_swap_chain();
   device& device = vulkan_context.mutable_device();
   render_pass& renderPass = swap_chain.mutable_render_pass();
 

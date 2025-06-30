@@ -11,6 +11,7 @@ struct renderer_capabilities;
 }  // namespace wunder
 
 namespace wunder::vulkan {
+class command_pool;
 class instance;
 class physical_device;
 class device;
@@ -41,21 +42,20 @@ class context final : public non_copyable {
   [[nodiscard]] instance& mutable_vulkan();
   [[nodiscard]] physical_device& mutable_physical_device();
   [[nodiscard]] device& mutable_device();
-  [[nodiscard]] swap_chain& mutable_swap_chain();
   [[nodiscard]] memory_allocator& mutable_resource_allocator();
+  [[nodiscard]] command_pool& mutable_command_pool() ;
 
  private:
   void create_vulkan_instance(const renderer_properties& properties);
   void select_physical_device();
   void select_logical_device();
   void create_allocator();
-  void create_swap_chain(const renderer_properties& properties);
 
  private:
   unique_ptr<instance> m_vulkan;
   unique_ptr<physical_device> m_physical_device;
   unique_ptr<device> m_logical_device;
-  unique_ptr<swap_chain> m_swap_chain;
+  unique_ptr<command_pool> m_command_pool;
   unique_ptr<memory_allocator> m_resource_allocator;
 
   unique_ptr<renderer_capabilities> m_renderer_capabilities;

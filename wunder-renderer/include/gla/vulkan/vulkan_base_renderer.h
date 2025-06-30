@@ -8,16 +8,17 @@
 #include <vector>
 
 #include "core/vector_map.h"
+#include "scene/scene_types.h"
 
 namespace wunder {
 struct renderer_capabilities;
 class time_unit;
 struct renderer_properties;
-}
+}  // namespace wunder
 namespace wunder::vulkan {
 class shader;
 class descriptor_set_manager;
-}
+}  // namespace wunder::vulkan
 
 namespace wunder::vulkan {
 struct shader_to_compile {
@@ -33,25 +34,26 @@ class base_renderer {
   descriptor_set_manager& mutable_descriptor_set_manager();
   [[nodiscard]] const renderer_capabilities& get_capabilities() const;
 
-protected:
-
-
-public:
+ protected:
+ public:
   void shutdown();
-  void init(const renderer_properties& properties);
+  void init(scene_id scene_id);
+public:
+  virtual void update(time_unit dt) = 0;
 
-protected:
+ protected:
   virtual void shutdown_internal() = 0;
-  virtual void init_internal(const renderer_properties& properties) = 0;
+  virtual void init_internal(scene_id scene_id) = 0;
 
   virtual vector_map<VkShaderStageFlagBits, std::vector<shader_to_compile>>
   get_shaders_for_compilation() = 0;
-private:
+
+ private:
   void initialize_shaders();
 
-protected:
+ protected:
   vector_map<VkShaderStageFlagBits, std::vector<unique_ptr<shader>>> m_shaders;
   unique_ptr<descriptor_set_manager> m_descriptor_set_manager;
 };
-};      // namespace wunder::vulkan
+};  // namespace wunder::vulkan
 #endif  // WUNDER_VULKAN_BASE_RENDERER_H

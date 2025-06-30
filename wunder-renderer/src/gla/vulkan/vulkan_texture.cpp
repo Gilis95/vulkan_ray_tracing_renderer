@@ -415,8 +415,7 @@ template <typename base_texture>
 void texture<base_texture>::bind_texture(VkImageLayout target_layout) {
   auto& vulkan_context =
       layer_abstraction_factory::instance().get_vulkan_context();
-  auto& device = vulkan_context.mutable_device();
-  auto& command_pool = device.get_command_pool();
+  auto& command_pool = vulkan_context.mutable_command_pool() ;
   VkCommandBuffer command_buffer =
       command_pool.get_current_compute_command_buffer();
 
@@ -435,8 +434,7 @@ void texture<base_texture>::bind_texture_data(const texture_asset& asset,
 
   auto& vulkan_context =
       layer_abstraction_factory::instance().get_vulkan_context();
-  auto& device = vulkan_context.mutable_device();
-  auto& command_pool = device.get_command_pool();
+  auto& command_pool = vulkan_context.mutable_command_pool() ;
   auto& allocator = vulkan_context.mutable_resource_allocator();
 
   VkMemoryAllocateInfo memAllocInfo{};

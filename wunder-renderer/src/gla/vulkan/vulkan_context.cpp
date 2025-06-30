@@ -25,12 +25,12 @@ void context::shutdown() {
     m_renderer_capabilities.reset();
   }
 
-  if (m_swap_chain) {
-    m_swap_chain.reset();
-  }
-
   if (m_resource_allocator.get()) {
     m_resource_allocator.reset();
+  }
+
+  if (m_command_pool) {
+    m_command_pool.reset();
   }
 
   if (m_logical_device.get()) {
@@ -54,12 +54,13 @@ void context::init(const wunder::renderer_properties &properties) {
   select_physical_device();
   select_logical_device();
 
+  m_command_pool = std::make_unique<command_pool>();
+
   AssertReturnUnless(gladLoaderLoadVulkan(
       m_vulkan->get_instance(), m_physical_device->get_vulkan_physical_device(),
       m_logical_device->get_vulkan_logical_device()));
 
   create_allocator();
-  create_swap_chain(properties);
 }
 
 void context::create_vulkan_instance(const renderer_properties &properties) {
@@ -98,12 +99,6 @@ void context::create_allocator() {
   m_resource_allocator->initialize();
 }
 
-void context::create_swap_chain(const renderer_properties &properties) {
-  m_swap_chain =
-      make_unique<swap_chain>(properties.m_width, properties.m_height);
-  m_swap_chain->initialize();
-}
-
 const renderer_capabilities &context::get_capabilities() const {
   static renderer_capabilities s_empty;
   return m_renderer_capabilities ? *m_renderer_capabilities : s_empty;
@@ -117,10 +112,10 @@ physical_device &context::mutable_physical_device() {
 
 device &context::mutable_device() { return *m_logical_device; }
 
-swap_chain &context::mutable_swap_chain() { return *m_swap_chain; }
-
 memory_allocator &context::mutable_resource_allocator() {
   return *m_resource_allocator;
 }
+
+command_pool &context::mutable_command_pool() { return *m_command_pool; }
 
 }  // namespace wunder::vulkan

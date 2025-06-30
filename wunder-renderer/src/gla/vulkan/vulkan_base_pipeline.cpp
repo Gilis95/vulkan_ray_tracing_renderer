@@ -5,6 +5,7 @@
 #include "gla/vulkan/vulkan_context.h"
 #include "gla/vulkan/vulkan_device.h"
 #include "gla/vulkan/vulkan_layer_abstraction_factory.h"
+#include "gla/vulkan/vulkan_renderer_context.h"
 #include "gla/vulkan/vulkan_shader.h"
 
 namespace wunder::vulkan {
@@ -62,7 +63,7 @@ void base_pipeline::create_shader_stage_create_info(
 
 void base_pipeline::bind() {
   auto graphic_command_buffer = layer_abstraction_factory::instance()
-                                    .get_vulkan_context()
+                                    .get_render_context()
                                     .mutable_swap_chain()
                                     .get_current_command_buffer();
 

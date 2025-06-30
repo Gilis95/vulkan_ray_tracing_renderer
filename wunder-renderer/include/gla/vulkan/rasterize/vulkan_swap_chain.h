@@ -45,7 +45,7 @@ class swap_chain : public non_copyable {
  public:
   void resize(uint32_t width, uint32_t height);
 
-  void initialize();
+  void init();
   void shutdown();
 
  public:
