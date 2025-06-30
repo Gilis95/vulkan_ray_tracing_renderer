@@ -24,7 +24,7 @@ class rasterize_renderer : public base_renderer {
  public:
   void shutdown_internal() override;
 
-  void init_internal(const renderer_properties& properties) override;
+  void init_internal(scene_id id) override;
 
   storage_texture& get_output_image();
 
@@ -42,7 +42,6 @@ class rasterize_renderer : public base_renderer {
   get_shaders_for_compilation() override;
 
  private:
-  const renderer_properties& m_renderer_properties;
   VkRect2D m_render_region;
 
   Tonemapper m_tonemapper;

@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "core/vector_map.h"
+#include "scene/scene_types.h"
 
 namespace wunder {
 struct renderer_capabilities;
@@ -38,11 +39,11 @@ protected:
 
 public:
   void shutdown();
-  void init(const renderer_properties& properties);
+  void init(scene_id scene_id);
 
 protected:
   virtual void shutdown_internal() = 0;
-  virtual void init_internal(const renderer_properties& properties) = 0;
+  virtual void init_internal(scene_id scene_id) = 0;
 
   virtual vector_map<VkShaderStageFlagBits, std::vector<shader_to_compile>>
   get_shaders_for_compilation() = 0;

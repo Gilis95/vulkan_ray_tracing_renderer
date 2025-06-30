@@ -8,6 +8,7 @@
 #include "gla/vulkan/vulkan_device.h"
 #include "gla/vulkan/vulkan_layer_abstraction_factory.h"
 #include "gla/vulkan/vulkan_memory_allocator.h"
+#include "gla/vulkan/vulkan_renderer_context.h"
 
 namespace wunder::vulkan {
 
@@ -80,9 +81,9 @@ device_buffer<base_buffer_type>::~device_buffer() = default;
 template <typename base_buffer_type>
 void device_buffer<base_buffer_type>::update_data(
     void* data, size_t data_size) /*override*/ {
-  context& vulkan_context =
-      layer_abstraction_factory::instance().get_vulkan_context();
-  auto& swap_chain = vulkan_context.mutable_swap_chain();
+  renderer_context& render_context =
+      layer_abstraction_factory::instance().get_render_context();
+  auto& swap_chain = render_context.mutable_swap_chain();
   auto graphics_queue = swap_chain.get_current_command_buffer();
 
   // Ensure that the modified UBO is not visible to previous frames.

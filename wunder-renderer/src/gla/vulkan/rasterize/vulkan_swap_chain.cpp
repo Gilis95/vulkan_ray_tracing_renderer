@@ -92,11 +92,11 @@ void swap_chain::resize(uint32_t width, uint32_t height) {
   m_width = width;
   m_height = height;
 
-  initialize();
+  init();
   wait_idle();
 }
 
-void swap_chain::initialize() {
+void swap_chain::init() {
   initialize_swap_chain();
   initialize_render_pass();
   initialize_depth_buffer();

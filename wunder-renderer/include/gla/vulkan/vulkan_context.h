@@ -41,7 +41,6 @@ class context final : public non_copyable {
   [[nodiscard]] instance& mutable_vulkan();
   [[nodiscard]] physical_device& mutable_physical_device();
   [[nodiscard]] device& mutable_device();
-  [[nodiscard]] swap_chain& mutable_swap_chain();
   [[nodiscard]] memory_allocator& mutable_resource_allocator();
 
  private:
@@ -49,13 +48,11 @@ class context final : public non_copyable {
   void select_physical_device();
   void select_logical_device();
   void create_allocator();
-  void create_swap_chain(const renderer_properties& properties);
 
  private:
   unique_ptr<instance> m_vulkan;
   unique_ptr<physical_device> m_physical_device;
   unique_ptr<device> m_logical_device;
-  unique_ptr<swap_chain> m_swap_chain;
   unique_ptr<memory_allocator> m_resource_allocator;
 
   unique_ptr<renderer_capabilities> m_renderer_capabilities;

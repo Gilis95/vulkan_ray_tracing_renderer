@@ -6,6 +6,9 @@
 #include "gla/renderer_properties.h"
 
 namespace wunder::vulkan {
+class renderer_context;
+}
+namespace wunder::vulkan {
 class rtx_renderer;
 class context;
 
@@ -15,15 +18,16 @@ class layer_abstraction_factory {
 
  public:
   ~layer_abstraction_factory();
-  void shutdown();
+  void begin_shutdown();
+  void end_shutdown();
 
  public:
   static layer_abstraction_factory &instance();
 
  public:
-  void initialize(const renderer_properties &properties);
+  void init(const renderer_properties &properties);
 
-  [[nodiscard]] rtx_renderer &get_renderers();
+  [[nodiscard]] renderer_context &get_render_context();
 
   [[nodiscard]] context &get_vulkan_context();
 
@@ -32,7 +36,7 @@ class layer_abstraction_factory {
   void create_vulkan_context(const renderer_properties &properties);
 
  private:
-  unique_ptr<rtx_renderer> m_renderer;
+  unique_ptr<renderer_context> m_renderer_context;
   unique_ptr<context> m_context;
 };
 

@@ -4,7 +4,7 @@ include(cmake/Files.cmake)
 include(cmake/Variables.cmake)
 
 add_definitions(-DWANDER_ENABLE_LOG -D_CRT_SECURE_NO_WARNINGS -DWANDER_ENGINE_DEBUG -DTRACY_ENABLE -DGLFW_INCLUDE_NONE)
-message(hui="${CMAKE_SYSTEM_NAME}")
+
 if (${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
     add_definitions(-DWANDER_LINUX=1)
 endif ()

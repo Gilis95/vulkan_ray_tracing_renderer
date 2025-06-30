@@ -18,6 +18,7 @@
 #include "gla/vulkan/vulkan_device.h"
 #include "gla/vulkan/vulkan_layer_abstraction_factory.h"
 #include "gla/vulkan/vulkan_memory_allocator.h"
+#include "gla/vulkan/vulkan_renderer_context.h"
 #include "gla/vulkan/vulkan_shader.h"
 #include "gla/vulkan/vulkan_shader_binding_table.h"
 #include "gla/vulkan/vulkan_texture.h"
@@ -27,33 +28,7 @@
 #include "scene/scene_manager.h"
 
 namespace wunder::vulkan {
-rtx_renderer::rtx_renderer(const renderer_properties &renderer_properties)
-    : event_handler<wunder::event::scene_activated>(),
-      m_renderer_properties(renderer_properties),
-      m_have_active_scene(false) {}
-
-rtx_renderer::~rtx_renderer() = default;
-
-void rtx_renderer::shutdown_internal() /*override*/ {
-  if (m_rtx_pipeline.get()) {
-    m_rtx_pipeline.reset();
-  }
-  if (m_shader_binding_table.get()) {
-    m_shader_binding_table.reset();
-  }
-
-  if (m_rasterize_renderer) {
-    m_rasterize_renderer->shutdown();
-    m_rasterize_renderer.reset();
-  }
-
-  if (m_state) {
-    m_state.reset();
-  }
-}
-
-void rtx_renderer::init_internal(const renderer_properties &properties) {
-  m_state = std::make_unique<RtxState>();
+rtx_renderer::rtx_renderer(const renderer_properties &properties) :m_state(std::make_unique<RtxState>()) {
   m_state->maxDepth = 10;
   m_state->maxSamples = 7;
   m_state->fireflyClampThreshold = 0.f;
@@ -62,6 +37,58 @@ void rtx_renderer::init_internal(const renderer_properties &properties) {
   m_state->minHeatmap = 0;
   m_state->maxHeatmap = 65000;
   m_state->debugging_mode = DebugMode::eNoDebug;
+}
+
+rtx_renderer::~rtx_renderer() = default;
+
+void rtx_renderer::shutdown_internal() /*override*/ {
+  if (m_rtx_pipeline.get()) {
+    m_rtx_pipeline.reset();
+  }
+
+  if (m_shader_binding_table.get()) {
+    m_shader_binding_table.reset();
+  }
+
+  if (m_state) {
+    m_state.reset();
+  }
+}
+
+void rtx_renderer::init_internal(scene_id scene_id) {
+  auto api_scene = project::instance().get_scene_manager().mutable_api_scene(
+        scene_id);
+  AssertReturnUnless(api_scene.has_value());
+  auto &scene = api_scene->get();
+  const auto &environment_texture = scene.get_environment_texture();
+
+  auto &renderer_context =
+      layer_abstraction_factory::instance().get_render_context();
+  auto &renderer_properties = renderer_context.get_renderer_properties();
+  auto &m_rasterize_renderer = renderer_context.mutable_rasterize_renderer();
+
+  auto &camera = service_factory::instance().get_camera();
+  camera.set_window_size(renderer_properties.m_width,
+                         renderer_properties.m_height);
+
+  m_descriptor_set_manager->clear_resources();
+  scene.collect_descriptors(*m_descriptor_set_manager);
+  camera.collect_descriptors(*m_descriptor_set_manager);
+  m_rasterize_renderer.get_output_image().add_descriptor_to(
+      *m_descriptor_set_manager);
+
+  AssertReturnIf(m_descriptor_set_manager->build() !=
+                     descriptor_set_manager::build_error_code::SUCCESS, );
+
+  m_rtx_pipeline =
+      std::move(rtx_pipeline::create(*m_descriptor_set_manager, m_shaders));
+  AssertReturnUnless(m_rtx_pipeline);
+
+  m_shader_binding_table = shader_binding_table::create(*m_rtx_pipeline);
+
+  m_state->frame = 0;
+  m_state->fireflyClampThreshold =
+      environment_texture.m_acceleration_data.m_integral;
 }
 
 vector_map<VkShaderStageFlagBits, std::vector<shader_to_compile>>
@@ -105,20 +132,14 @@ void rtx_renderer::create_descriptor_manager(const shader &shader) {
       shader.get_shader_reflection_data());
 }
 
-void rtx_renderer::update(time_unit dt) /*override*/
+void rtx_renderer::update(time_unit /*dt*/) /*override*/
 {
-  ReturnUnless(m_have_active_scene);
+  auto &renderer_context =
+      layer_abstraction_factory::instance().get_render_context();
+  auto &m_renderer_properties = renderer_context.get_renderer_properties();
 
-  auto &vulkan_context =
-      layer_abstraction_factory::instance().get_vulkan_context();
-  auto &swap_chain = vulkan_context.mutable_swap_chain();
-
-  AssertReturnUnless(swap_chain.acquire().has_value(), );
-
-  swap_chain.begin_command_buffer();
-  auto graphic_command_buffer = swap_chain.get_current_command_buffer();
-
-  service_factory::instance().update(dt);
+  auto graphic_command_buffer =
+      renderer_context.mutable_swap_chain().get_current_command_buffer();
 
   m_rtx_pipeline->bind();
   m_descriptor_set_manager->bind(*m_rtx_pipeline);
@@ -148,55 +169,8 @@ void rtx_renderer::update(time_unit dt) /*override*/
                     m_renderer_properties.m_width,
                     m_renderer_properties.m_height, 1);
 
-  m_rasterize_renderer->begin_frame();
-  m_rasterize_renderer->draw_frame();
-  m_rasterize_renderer->end_frame();
-
-  swap_chain.flush_current_command_buffer();
-
   log_current_sate_frame();
   ++m_state->frame;
-}
-
-void rtx_renderer::on_event(
-    const wunder::event::scene_activated &scene_activated_event) {
-  // validation that scene has been normaly loaded
-  auto api_scene = project::instance().get_scene_manager().mutable_api_scene(
-      scene_activated_event.m_id);
-  AssertReturnUnless(api_scene.has_value());
-  auto &scene = api_scene->get();
-  const auto &environment_texture = scene.get_environment_texture();
-
-  auto &camera = service_factory::instance().get_camera();
-
-  camera.set_window_size(m_renderer_properties.m_width,
-                         m_renderer_properties.m_height);
-
-  m_descriptor_set_manager->clear_resources();
-
-  m_rasterize_renderer =
-      std::make_unique<rasterize_renderer>(m_renderer_properties);
-
-  scene.collect_descriptors(*m_descriptor_set_manager);
-  camera.collect_descriptors(*m_descriptor_set_manager);
-  m_rasterize_renderer->get_output_image().add_descriptor_to(
-      *m_descriptor_set_manager);
-
-  AssertReturnIf(m_descriptor_set_manager->build() !=
-                     descriptor_set_manager::build_error_code::SUCCESS, );
-
-  m_rtx_pipeline =
-      std::move(rtx_pipeline::create(*m_descriptor_set_manager, m_shaders));
-  AssertReturnUnless(m_rtx_pipeline);
-
-  m_shader_binding_table = shader_binding_table::create(*m_rtx_pipeline);
-
-  m_rasterize_renderer->init(m_renderer_properties);
-  m_state->frame = 0;
-  m_state->fireflyClampThreshold =
-      environment_texture.m_acceleration_data.m_integral;
-  m_have_active_scene = true;
-  log_loaded_scene_size();
 }
 
 void rtx_renderer::on_event(const wunder::event::camera_moved &) /*override*/ {
@@ -206,16 +180,6 @@ void rtx_renderer::on_event(const wunder::event::camera_moved &) /*override*/ {
 void rtx_renderer::log_current_sate_frame() {
 #if PRINT_STATE_FRAME
   WUNDER_TRACE_TAG("Rtx Renderer", "Frame {0}", m_state->frame);
-#endif
-}
-
-void rtx_renderer::log_loaded_scene_size() {
-#if PRINT_ALLOCATED_SCENE_SIZE
-  auto &memory_allocator = layer_abstraction_factory::instance()
-                               .get_vulkan_context()
-                               .mutable_resource_allocator();
-
-  memory_allocator.dump_stats();
 #endif
 }
 

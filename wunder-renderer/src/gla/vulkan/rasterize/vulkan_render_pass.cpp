@@ -9,6 +9,7 @@
 #include "gla/vulkan/vulkan_layer_abstraction_factory.h"
 #include "gla/vulkan/vulkan_macros.h"
 #include "gla/vulkan/vulkan_physical_device.h"
+#include "gla/vulkan/vulkan_renderer_context.h"
 
 namespace wunder::vulkan {
 
@@ -96,11 +97,10 @@ void render_pass::deallocate() const {
 }
 
 void render_pass::begin(VkFramebuffer framebuffer, VkExtent2D size) const {
-  context& vulkan_context =
-      layer_abstraction_factory::instance().get_vulkan_context();
-
-  auto command_buffer =
-      vulkan_context.mutable_swap_chain().get_current_command_buffer();
+  auto command_buffer = layer_abstraction_factory::instance()
+                            .get_render_context()
+                            .mutable_swap_chain()
+                            .get_current_command_buffer();
 
   std::array<VkClearValue, 2> clear_values{};
   clear_values[0].color = {{0.0f, 0.0f, 0.0f, 0.0f}};
@@ -119,10 +119,10 @@ void render_pass::begin(VkFramebuffer framebuffer, VkExtent2D size) const {
 }
 
 void render_pass::end() {
-  context& vulkan_context =
-      layer_abstraction_factory::instance().get_vulkan_context();
-  auto command_buffer =
-      vulkan_context.mutable_swap_chain().get_current_command_buffer();
+  auto command_buffer = layer_abstraction_factory::instance()
+                              .get_render_context()
+                              .mutable_swap_chain()
+                              .get_current_command_buffer();
 
   vkCmdEndRenderPass(command_buffer);
 }

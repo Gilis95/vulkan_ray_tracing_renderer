@@ -11,6 +11,7 @@
 #include "gla/vulkan/vulkan_device.h"
 #include "gla/vulkan/vulkan_layer_abstraction_factory.h"
 #include "gla/vulkan/vulkan_macros.h"
+#include "gla/vulkan/vulkan_renderer_context.h"
 #include "gla/vulkan/vulkan_shader.h"
 #include "include/gla/vulkan/vulkan_base_pipeline.h"
 
@@ -103,7 +104,7 @@ descriptor_set_manager::build_error_code descriptor_set_manager::build() {
 
 void descriptor_set_manager::bind(const base_pipeline& pipeline) const {
   auto command_buffer = layer_abstraction_factory::instance()
-                            .get_vulkan_context()
+                            .get_render_context()
                             .mutable_swap_chain()
                             .get_current_command_buffer();
 
