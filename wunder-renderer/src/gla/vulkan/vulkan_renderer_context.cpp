@@ -66,13 +66,14 @@ void renderer_context::update(time_unit dt) {
   m_rasterize_renderer->update(dt);
 
   m_swap_chain->flush_current_command_buffer();
-  log_loaded_scene_size();
 }
 
 void renderer_context::on_event(
     const wunder::event::scene_activated& event) /*override*/ {
   m_rasterize_renderer->init(event.m_id);
   m_rtx_renderer->init(event.m_id);
+
+  log_loaded_scene_size();
 
   m_have_active_scene = true;
 }
