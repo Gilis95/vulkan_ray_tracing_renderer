@@ -19,20 +19,22 @@ namespace wunder::vulkan {
 class rasterize_renderer : public base_renderer {
  public:
   explicit rasterize_renderer(const renderer_properties& m_renderer_properties);
-  ~rasterize_renderer();
+  ~rasterize_renderer() override;
 
- public:
+public:
+
+  void update(time_unit dt) override;
+
+  storage_texture& get_output_image() {
+    return *m_output_image;
+  }
+ private:
   void shutdown_internal() override;
-
   void init_internal(scene_id id) override;
 
-  storage_texture& get_output_image();
-
- public:
+ private:
   void begin_frame();
-
   void draw_frame();
-
   void end_frame();
 
  private:

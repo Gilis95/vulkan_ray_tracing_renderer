@@ -63,10 +63,7 @@ void renderer_context::update(time_unit dt) {
   service_factory::instance().update(dt);
 
   m_rtx_renderer->update(dt);
-
-  m_rasterize_renderer->begin_frame();
-  m_rasterize_renderer->draw_frame();
-  m_rasterize_renderer->end_frame();
+  m_rasterize_renderer->update(dt);
 
   m_swap_chain->flush_current_command_buffer();
   log_loaded_scene_size();

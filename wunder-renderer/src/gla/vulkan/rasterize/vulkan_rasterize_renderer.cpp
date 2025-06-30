@@ -1,5 +1,6 @@
 #include "gla/vulkan/rasterize/vulkan_rasterize_renderer.h"
 
+#include "core/time_unit.h"
 #include "gla/renderer_properties.h"
 #include "gla/vulkan/descriptors/vulkan_descriptor_set_manager.h"
 #include "gla/vulkan/rasterize/vulkan_rasterize_pipeline.h"
@@ -38,6 +39,12 @@ rasterize_renderer::rasterize_renderer(
 
 rasterize_renderer::~rasterize_renderer() = default;
 
+void rasterize_renderer::update(time_unit /*dt*/) /*override*/ {
+  begin_frame();
+  draw_frame();
+  end_frame();
+}
+
 void rasterize_renderer::shutdown_internal() /*override*/ {
   m_output_image.reset();
   m_input_image.reset();
@@ -50,10 +57,6 @@ void rasterize_renderer::init_internal(scene_id /*id*/) /*override*/ {
 
   m_pipeline = std::move(
       rasterize_pipeline::create(*m_descriptor_set_manager, m_shaders));
-}
-
-storage_texture &rasterize_renderer::get_output_image() {
-  return *m_output_image;
 }
 
 void rasterize_renderer::create_descriptor_manager(const shader &shader) {

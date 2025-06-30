@@ -39,10 +39,7 @@ class rtx_renderer : public base_renderer,
   ~rtx_renderer() override;
 
  public:
-  void update(time_unit dt);
-
-  [[nodiscard]] swap_chain& mutable_swap_chain();
-
+  void update(time_unit dt) override;
  protected:
   void shutdown_internal() override;
   void init_internal(scene_id scene_id) override;
