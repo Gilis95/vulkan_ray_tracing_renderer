@@ -48,6 +48,7 @@ glad_add_library(Vulkan REPRODUCIBLE LOADER API vulkan=1.3 EXTENSIONS
         VK_KHR_surface,
         VK_KHR_deferred_host_operations,
         VK_KHR_shader_clock,
+        VK_KHR_dynamic_rendering
         #Embedded
         VK_EXT_validation_features,
         VK_EXT_validation_flags,

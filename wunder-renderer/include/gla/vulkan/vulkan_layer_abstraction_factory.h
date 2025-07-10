@@ -5,6 +5,9 @@
 #include "core/wunder_memory.h"
 #include "gla/renderer_properties.h"
 
+namespace wunder {
+struct application_properties;
+}
 namespace wunder::vulkan {
 class renderer_context;
 }
@@ -25,14 +28,14 @@ class layer_abstraction_factory {
   static layer_abstraction_factory &instance();
 
  public:
-  void init(const renderer_properties &properties);
+  void init(const application_properties &properties);
 
   [[nodiscard]] renderer_context &get_render_context();
 
   [[nodiscard]] context &get_vulkan_context();
 
  private:
-  void create_renderer(const renderer_properties &properties);
+  void create_renderer(const application_properties &properties);
   void create_vulkan_context(const renderer_properties &properties);
 
  private:

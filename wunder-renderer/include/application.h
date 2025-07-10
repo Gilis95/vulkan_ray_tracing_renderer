@@ -1,9 +1,10 @@
 #ifndef APPLICATION_H
 #define APPLICATION_H
 
+#include "core/time_unit.h"
+#include "core/wunder_memory.h"
 #include "event/event_handler.h"
 #include "event/window_events.h"
-#include "core/wunder_memory.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -14,7 +15,7 @@ class asset_manager;
 
 struct application_properties;
 
-class application : private event_handler<wunder::event::window_close_event>{
+class application : private event_handler<wunder::event::window_close_event> {
  public:
   explicit application(application_properties&& properties);
   ~application() override;
@@ -30,6 +31,9 @@ class application : private event_handler<wunder::event::window_close_event>{
   virtual void initialize_internal() = 0;
 
   void close();
+
+  virtual void update_internal(const time_unit& time_unit) = 0;
+  virtual void shutdown_internal() = 0;
 
   /**
    * Main game loop.
@@ -54,7 +58,7 @@ class application : private event_handler<wunder::event::window_close_event>{
   unique_ptr<application_properties> m_properties;
 };
 
-extern application *create_application(application_properties& m_properties);
+extern application* create_application(application_properties& m_properties);
 
 }  // namespace wunder
 /////////////////////////////////////////////////////////////////////////////////////////

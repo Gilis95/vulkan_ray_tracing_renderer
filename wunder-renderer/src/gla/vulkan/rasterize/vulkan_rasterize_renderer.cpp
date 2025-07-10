@@ -49,14 +49,16 @@ void rasterize_renderer::shutdown_internal() /*override*/ {
   m_output_image.reset();
   m_input_image.reset();
   m_pipeline.reset();
+  m_render_pass.reset();
 }
 
 void rasterize_renderer::init_internal(scene_id /*id*/) /*override*/ {
   m_input_image->add_descriptor_to(*m_descriptor_set_manager);
   m_descriptor_set_manager->build();
 
+  m_render_pass = std::make_unique<render_pass>("raterize renderer pass", VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_CLEAR);
   m_pipeline = std::move(
-      rasterize_pipeline::create(*m_descriptor_set_manager, m_shaders));
+      rasterize_pipeline::create(*m_descriptor_set_manager, m_shaders, *m_render_pass));
 }
 
 void rasterize_renderer::create_descriptor_manager(const shader &shader) {
@@ -96,8 +98,7 @@ void rasterize_renderer::begin_frame() {
   auto graphic_command_buffer = swap_chain.get_current_command_buffer();
 
   m_input_image->generate_mip_levels(graphic_command_buffer);
-
-  swap_chain.begin_render_pass();
+  m_render_pass->begin();
 
   VkViewport viewport{static_cast<float>(m_render_region.offset.x),
                       static_cast<float>(m_render_region.offset.y),
@@ -115,7 +116,7 @@ void rasterize_renderer::begin_frame() {
 
 void rasterize_renderer::draw_frame() {
   auto &render_context =
-        layer_abstraction_factory::instance().get_render_context();
+      layer_abstraction_factory::instance().get_render_context();
 
   auto &swap_chain = render_context.mutable_swap_chain();
   auto graphic_command_buffer = swap_chain.get_current_command_buffer();
@@ -130,12 +131,7 @@ void rasterize_renderer::draw_frame() {
 }
 
 void rasterize_renderer::end_frame() {
-  auto &render_context =
-        layer_abstraction_factory::instance().get_render_context();
-
-  auto &swap_chain = render_context.mutable_swap_chain();
-
-  swap_chain.end_render_pass();
+  m_render_pass->end();
 }
 
 }  // namespace wunder::vulkan

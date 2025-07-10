@@ -16,19 +16,16 @@
 #include "window/window_properties.h"
 
 namespace wunder {
-
 /////////////////////////////////////////////////////////////////////////////////////////
 static void glfw_error_callback(int error, const char *description) {
   WUNDER_ERROR("GLFW Error ({0}): {1}", error, description);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-glfw_window::glfw_window() = default;
+glfw_window::glfw_window() : window(type) {};
 
 /////////////////////////////////////////////////////////////////////////////////////////
-glfw_window::~glfw_window() {
-  glfwTerminate();
-};
+glfw_window::~glfw_window() { glfwTerminate(); };
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void glfw_window::init(const window_properties &properties) {
@@ -94,8 +91,8 @@ VkSurfaceKHR glfw_window::create_vulkan_surface() const {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void glfw_window::init_input_event_listeners() const {
-  glfwSetKeyCallback(m_window, [](GLFWwindow */*window*/, int key, int /*scanCode*/,
-                                  int action, int /*mods*/) {
+  glfwSetKeyCallback(m_window, [](GLFWwindow * /*window*/, int key,
+                                  int /*scanCode*/, int action, int /*mods*/) {
     switch (action) {
       case GLFW_PRESS:
       case GLFW_REPEAT: {
@@ -117,52 +114,54 @@ void glfw_window::init_input_event_listeners() const {
     }
   });
 
-  glfwSetCharCallback(m_window, [](GLFWwindow */*window*/, unsigned int key_code) {
-    event::keyboard::symbol_pressed press_event(
-        static_cast<keyboard::key_code>(key_code));
+  glfwSetCharCallback(m_window,
+                      [](GLFWwindow * /*window*/, unsigned int key_code) {
+                        event::keyboard::symbol_pressed press_event(
+                            static_cast<keyboard::key_code>(key_code));
 
-    event_controller::on_event(press_event);
-  });
+                        event_controller::on_event(press_event);
+                      });
 
   glfwSetScrollCallback(
-      m_window, [](GLFWwindow */*window*/, double x_offset, double y_offset) {
+      m_window, [](GLFWwindow * /*window*/, double x_offset, double y_offset) {
         wunder::event::mouse::scroll mouse_scrolled_event(
             glm::vec2(x_offset, y_offset));
         event_controller::on_event(mouse_scrolled_event);
       });
 
   glfwSetCursorPosCallback(
-      m_window, [](GLFWwindow */*window*/, double x_pos, double y_pos) {
+      m_window, [](GLFWwindow * /*window*/, double x_pos, double y_pos) {
         wunder::event::mouse::move mouse_moved_event(glm::vec2(x_pos, y_pos));
         event_controller::on_event(mouse_moved_event);
       });
 
-  glfwSetMouseButtonCallback(
-      m_window, [](GLFWwindow */*window*/, int button, int action, int /*mods*/) {
-        switch (action) {
-          case GLFW_PRESS: {
-            event::mouse::pressed mouse_pressed_event(
-                static_cast<wunder::mouse::key_code>(button));
-            event_controller::on_event(mouse_pressed_event);
+  glfwSetMouseButtonCallback(m_window, [](GLFWwindow * /*window*/, int button,
+                                          int action, int /*mods*/) {
+    switch (action) {
+      case GLFW_PRESS: {
+        event::mouse::pressed mouse_pressed_event(
+            static_cast<wunder::mouse::key_code>(button));
+        event_controller::on_event(mouse_pressed_event);
 
-            break;
-          }
-          case GLFW_RELEASE: {
-            event::mouse::released mouse_released_event(
-                static_cast<mouse::key_code>(button));
-            event_controller::on_event(mouse_released_event);
+        break;
+      }
+      case GLFW_RELEASE: {
+        event::mouse::released mouse_released_event(
+            static_cast<mouse::key_code>(button));
+        event_controller::on_event(mouse_released_event);
 
-            break;
-          }
-          default:
-            break;
-        }
-      });
+        break;
+      }
+      default:
+        break;
+    }
+  });
 
-  glfwSetDropCallback(m_window, [](GLFWwindow */*window*/, int pathsCount ,const char** paths) {
+  glfwSetDropCallback(m_window, [](GLFWwindow * /*window*/, int pathsCount,
+                                   const char **paths) {
     ReturnUnless(pathsCount > 0);
 
-    event_controller::on_event(event::file_dropped( paths[0]));
+    event_controller::on_event(event::file_dropped(paths[0]));
   });
 }
 }  // namespace wunder

@@ -9,6 +9,7 @@
 #include "resources/shaders/host_device.h"
 
 namespace wunder::vulkan {
+class render_pass;
 class swap_chain;
 class descriptor_set_manager;
 class rasterize_pipeline;
@@ -52,6 +53,7 @@ public:
 
   unique_ptr<storage_texture> m_output_image;
   unique_ptr<sampled_texture> m_input_image;
+  unique_ptr<render_pass> m_render_pass;
 };
 }  // namespace wunder::vulkan
 #endif  // WUNDER_VULKAN_RASTERIZE_RENDERER_H

@@ -4,6 +4,7 @@
 #include <initializer_list>
 #include <memory>
 
+#include "application_properties.h"
 #include "core/vector_map.h"
 #include "gla/renderer_capabilities .h"
 #include "gla/renderer_properties.h"
@@ -26,13 +27,13 @@ layer_abstraction_factory &layer_abstraction_factory::instance() {
 }
 
 void layer_abstraction_factory::init(
-    const renderer_properties &properties) {
-  create_vulkan_context(properties);
+    const application_properties &properties) {
+  create_vulkan_context(properties.m_renderer_properties);
   create_renderer(properties);
 }
 
 void layer_abstraction_factory::create_renderer(
-    const renderer_properties &properties) {
+    const application_properties &properties) {
 
   m_renderer_context = std::make_unique<renderer_context>(properties);
   m_renderer_context->init();

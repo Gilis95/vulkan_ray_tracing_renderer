@@ -2,6 +2,8 @@
 
 #include <oneapi/tbb/task_group.h>
 
+#include "event/event_controller.h"
+#include "event/vulkan_events.h"
 #include "gla/vulkan/rasterize/vulkan_render_pass.h"
 #include "gla/vulkan/vulkan.h"
 #include "gla/vulkan/vulkan_command_pool.h"
@@ -18,7 +20,6 @@ swap_chain::queue_element::queue_element(queue_element&& other)
     : m_image(other.m_image),
       m_image_view(other.m_image_view),
       m_command_buffer(other.m_command_buffer),
-      m_framebuffer(other.m_framebuffer),
       m_barrier(other.m_barrier),
       m_fence(other.m_fence),
       m_semaphore_entry(std::move(other.m_semaphore_entry))
@@ -27,7 +28,6 @@ swap_chain::queue_element::queue_element(queue_element&& other)
   other.m_image = VK_NULL_HANDLE;
   other.m_image_view = VK_NULL_HANDLE;
   other.m_command_buffer = VK_NULL_HANDLE;
-  other.m_framebuffer = VK_NULL_HANDLE;
   other.m_fence = VK_NULL_HANDLE;
   other.m_semaphore_entry.read_semaphore = VK_NULL_HANDLE;
   other.m_semaphore_entry.written_semaphore = VK_NULL_HANDLE;
@@ -53,10 +53,6 @@ swap_chain::queue_element::~queue_element() {
                        VK_NULL_HANDLE);
   }
 
-  if (m_framebuffer != VK_NULL_HANDLE) {
-    vkDestroyFramebuffer(vk_device, m_framebuffer, VK_NULL_HANDLE);
-  }
-
   if (m_fence != VK_NULL_HANDLE) {
     vkDestroyFence(vk_device, m_fence, VK_NULL_HANDLE);
   }
@@ -72,7 +68,6 @@ swap_chain::swap_chain(std::uint32_t width, std::uint32_t height)
       m_height(height),
       m_current_queue_element{},
       m_queue_elements{},
-      m_render_pass(),
       m_surface(VK_NULL_HANDLE),
       m_swap_chain(VK_NULL_HANDLE),
       m_command_pool(VK_NULL_HANDLE),
@@ -98,7 +93,6 @@ void swap_chain::resize(uint32_t width, uint32_t height) {
 
 void swap_chain::init() {
   initialize_swap_chain();
-  initialize_render_pass();
   initialize_depth_buffer();
   initialize_queue_elements();
 }
@@ -134,14 +128,12 @@ void swap_chain::shutdown() {
 
   m_queue_elements.clear();
 
-  if (m_render_pass) {
-    m_render_pass.reset();
-  }
-
   if (m_surface != VK_NULL_HANDLE) {
     vkDestroySurfaceKHR(vulkan_context.mutable_vulkan().get_instance(),
                         m_surface, VK_NULL_HANDLE);
   }
+
+  event_controller::on_event(event::vulkan::swap_chain_destroyed{});
 }
 
 std::optional<std::uint32_t> swap_chain::acquire() {
@@ -253,15 +245,6 @@ void swap_chain::flush_current_command_buffer() {
 
   ++m_current_queue_element;
 }
-
-void swap_chain::begin_render_pass() const {
-  m_render_pass->begin(m_queue_elements[m_current_queue_element].m_framebuffer,
-                       {.width = m_width, .height = m_height});
-}
-
-void swap_chain::end_render_pass() const { m_render_pass->end(); }
-
-render_pass& swap_chain::mutable_render_pass() { return *m_render_pass; }
 
 void swap_chain::initialize_swap_chain() {
   context& vulkan_context =
@@ -420,10 +403,6 @@ void swap_chain::initialize_swap_chain() {
   vkDestroySwapchainKHR(vk_device, old_swap_chain, nullptr);
 }
 
-void swap_chain::initialize_render_pass() {  // Render Pass
-  m_render_pass = make_unique<render_pass>(m_colour_format);
-}
-
 void swap_chain::initialize_depth_buffer() {
   context& vulkan_context =
       layer_abstraction_factory::instance().get_vulkan_context();
@@ -431,7 +410,6 @@ void swap_chain::initialize_depth_buffer() {
   auto& device = vulkan_context.mutable_device();
   auto vk_device = device.get_vulkan_logical_device();
   auto& command_pool = vulkan_context.mutable_command_pool();
-
 
   if (m_depth_view) {
     vkDestroyImageView(vk_device, m_depth_view, nullptr);
@@ -497,10 +475,9 @@ void swap_chain::initialize_depth_buffer() {
   const VkPipelineStageFlags destStageMask =
       VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
 
-  vkCmdPipelineBarrier(
-      command_pool.get_current_graphics_command_buffer(),
-      srcStageMask, destStageMask, VK_FALSE, 0, nullptr, 0, nullptr, 1,
-      &image_memory_barrier);
+  vkCmdPipelineBarrier(command_pool.get_current_graphics_command_buffer(),
+                       srcStageMask, destStageMask, VK_FALSE, 0, nullptr, 0,
+                       nullptr, 1, &image_memory_barrier);
   command_pool.flush_graphics_command_buffer();
 
   // Setting up the view
@@ -530,7 +507,6 @@ void swap_chain::initialize_queue_elements() {
   create_command_buffer_for_each_queue_element();
   create_semaphores_for_each_queue_element();
   create_fence_for_each_queue_element();
-  create_frame_buffer_for_each_queue_element();
 
   update_barriers();
 }
@@ -541,7 +517,7 @@ void swap_chain::create_image_for_each_queue_element() {
   auto& device = vulkan_context.mutable_device();
   auto vk_device = device.get_vulkan_logical_device();
 
-  std::uint32_t image_count = static_cast<uint32_t>(m_queue_elements.size());
+  auto image_count = static_cast<uint32_t>(m_queue_elements.size());
 
   // Get the swap chain images
   std::vector<VkImage> images(image_count);
@@ -668,44 +644,11 @@ void swap_chain::create_fence_for_each_queue_element() {
   auto vk_device = device.get_vulkan_logical_device();
 
   // Create Synchronization Primitives
-  for (size_t i = 0; i < m_queue_elements.size(); i++) {
-    auto& queue_element = m_queue_elements[i];
-
+  for (auto & queue_element : m_queue_elements) {
     VkFenceCreateInfo fenceCreateInfo{};
     fenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
     fenceCreateInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
     vkCreateFence(vk_device, &fenceCreateInfo, nullptr, &queue_element.m_fence);
-  }
-}
-
-void swap_chain::create_frame_buffer_for_each_queue_element() {
-  context& vulkan_context =
-      layer_abstraction_factory::instance().get_vulkan_context();
-  auto& device = vulkan_context.mutable_device();
-  auto vk_device = device.get_vulkan_logical_device();
-
-  std::array<VkImageView, 2> attachments{};
-  attachments[1] = m_depth_view;
-
-  VkFramebufferCreateInfo frameBufferCreateInfo = {};
-  frameBufferCreateInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-  frameBufferCreateInfo.renderPass = m_render_pass->get_vulkan_render_pass();
-  frameBufferCreateInfo.attachmentCount = 2;
-  frameBufferCreateInfo.width = m_width;
-  frameBufferCreateInfo.height = m_height;
-  frameBufferCreateInfo.layers = 1;
-  frameBufferCreateInfo.pAttachments = attachments.data();
-
-  for (size_t i = 0; i < m_queue_elements.size(); i++) {
-    auto& queue_element = m_queue_elements[i];
-    attachments[0] = queue_element.m_image_view;
-
-    VK_CHECK_RESULT(vkCreateFramebuffer(vk_device, &frameBufferCreateInfo,
-                                        nullptr, &queue_element.m_framebuffer));
-    set_debug_utils_object_name(
-        vk_device,
-        std::format("Swapchain framebuffer (Frame in flight: {})", i),
-        queue_element.m_framebuffer);
   }
 }
 

@@ -1,5 +1,6 @@
 #include "gla/vulkan/vulkan_renderer_context.h"
 
+#include "application_properties.h"
 #include "core/services_factory.h"
 #include "core/time_unit.h"
 #include "event/scene_events.h"
@@ -10,13 +11,13 @@
 #include "gla/vulkan/ray-trace/vulkan_rtx_renderer.h"
 
 namespace wunder::vulkan {
-renderer_context::renderer_context(const renderer_properties& properties)
+renderer_context::renderer_context(const application_properties& properties)
     : m_have_active_scene(false),
-      m_renderer_properties(properties),
+      m_renderer_properties(properties.m_renderer_properties),
       m_swap_chain(
-          make_unique<swap_chain>(properties.m_width, properties.m_height)),
-      m_rasterize_renderer(make_unique<rasterize_renderer>(properties)),
-      m_rtx_renderer(make_unique<rtx_renderer>(properties)) {}
+          make_unique<swap_chain>(properties.m_window_properties.m_width, properties.m_window_properties.m_height)),
+      m_rasterize_renderer(make_unique<rasterize_renderer>(properties.m_renderer_properties)),
+      m_rtx_renderer(make_unique<rtx_renderer>(properties.m_renderer_properties)) {}
 
 renderer_context::~renderer_context() /*override*/ = default;
 
@@ -51,20 +52,29 @@ void renderer_context::shutdown() {
   }
 }
 
-void renderer_context::init() { m_swap_chain->init(); }
+void renderer_context::init() {
+  m_swap_chain->init();
+}
+
+bool renderer_context::begin() {
+  AssertReturnUnless(m_swap_chain->acquire().has_value(), false);
+
+  m_swap_chain->begin_command_buffer();
+
+  return true;
+}
 
 void renderer_context::update(time_unit dt) {
   ReturnUnless(m_have_active_scene);
-
-  AssertReturnUnless(m_swap_chain->acquire().has_value(), );
-
-  m_swap_chain->begin_command_buffer();
 
   service_factory::instance().update(dt);
 
   m_rtx_renderer->update(dt);
   m_rasterize_renderer->update(dt);
 
+}
+
+void renderer_context::end() {
   m_swap_chain->flush_current_command_buffer();
 }
 

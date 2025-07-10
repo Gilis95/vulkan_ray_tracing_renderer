@@ -3,6 +3,8 @@
 
 #include <application.h>
 #include <event/event_handler.h>
+
+#include "imgui/wunder_imgui.h"
 // #include <event/scene_events.h>
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -19,13 +21,18 @@ class wunder_application : public application,
   explicit wunder_application(application_properties&& properties);
   ~wunder_application() override;
 
- public:
+ private:
+  void initialize_imgui();
   void initialize_internal() override;
+  void shutdown_internal() override;
 
+  void update_internal(const time_unit& time_unit) override;
  public:
   void on_event(const wunder::event::scene_loaded&) override;
-};
 
+ private:
+  wunder_imgui m_imgui;
+};
 /////////////////////////////////////////////////////////////////////////////////////////
 application* create_application();
 }  // namespace wunder

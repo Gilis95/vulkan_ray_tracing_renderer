@@ -7,6 +7,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <unordered_map>
 
+#include "core/non_copyable.h"
 #include "core/time_unit.h"
 #include "core/wunder_memory.h"
 #include "event/event_handler.h"
@@ -32,7 +33,8 @@ namespace wunder {
 
 class camera : private event_handler<wunder::event::mouse::move>,
                private event_handler<wunder::event::mouse::scroll>,
-               private event_handler<wunder::event::scene_activated>
+               private event_handler<wunder::event::scene_activated>,
+               private non_copyable
 
 {
  public:
@@ -121,7 +123,8 @@ class camera : private event_handler<wunder::event::mouse::move>,
   // Retrieving the current speed
   float get_speed() const { return m_speed; }
 
-  properties get_camera_properties() const { return m_current; }
+  const properties& get_camera_properties() const { return m_current; }
+  properties& mutable_camera_properties() { return m_current; }
 
   // Clip planes
   void set_clip_planes(glm::vec2 clip) { m_clip_planes = clip; }
@@ -137,7 +140,7 @@ class camera : private event_handler<wunder::event::mouse::move>,
   void on_event(const wunder::event::mouse::scroll& event) override;
   void on_event(const wunder::event::scene_activated& event) override;
 
- private:
+ public:
   // This should be called in an application loop to update the camera matrix if
   // this one is animated: new position, key movement
   void update_camera_position_smoothly();

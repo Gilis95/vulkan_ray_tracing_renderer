@@ -1,10 +1,11 @@
 #ifndef GLFW_WINDOW_H
 #define GLFW_WINDOW_H
 
+#include <glad/vulkan.h>
+
 #include <utility>
 
 #include "window/window.h"
-#include <glad/vulkan.h>
 
 struct GLFWwindow;
 
@@ -13,6 +14,9 @@ namespace wunder {
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 class glfw_window : public window {
+ public:
+  static constexpr window_type type = window_type::glfw;
+
  public:
   glfw_window();
   ~glfw_window() override;
@@ -29,6 +33,10 @@ class glfw_window : public window {
       wunder::vulkan::vulkan_extensions& out_extensions) const override;
 
   [[nodiscard]] VkSurfaceKHR create_vulkan_surface() const override;
+
+ public:
+  [[nodiscard]] GLFWwindow* mutable_window() { return m_window; }
+
  private:
   GLFWwindow* m_window;
   void init_input_event_listeners() const;

@@ -1,12 +1,16 @@
 #ifndef VULKAN_RENDERER_CONTEXT_H
 #define VULKAN_RENDERER_CONTEXT_H
 
+#include <vector>
+
 #include "core/non_copyable.h"
 #include "core/wunder_memory.h"
 #include "event/event_handler.h"
+#include "rasterize/vulkan_render_pass.h"
 
 // forward declarations
 namespace wunder {
+struct application_properties;
 class time_unit;
 struct renderer_properties;
 struct renderer_capabilities;
@@ -23,10 +27,11 @@ class rtx_renderer;
 
 class renderer_context : public non_copyable,
                          public event_handler<wunder::event::scene_activated> {
-private:
+ private:
   friend class layer_abstraction_factory;
-  public:
-  renderer_context(const renderer_properties& properties);
+
+ public:
+  renderer_context(const application_properties& properties);
   ~renderer_context() override;
 
  private:
@@ -40,7 +45,9 @@ private:
   rtx_renderer& mutable_rtx_renderer();
 
  public:
+  bool begin();
   void update(time_unit dt);
+  void end();
 
  private:
   void on_event(const wunder::event::scene_activated&) override;

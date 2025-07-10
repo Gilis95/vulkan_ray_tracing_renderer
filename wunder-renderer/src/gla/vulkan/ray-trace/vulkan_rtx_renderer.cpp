@@ -173,8 +173,12 @@ void rtx_renderer::update(time_unit /*dt*/) /*override*/
   ++m_state->frame;
 }
 
-void rtx_renderer::on_event(const wunder::event::camera_moved &) /*override*/ {
+void rtx_renderer::reset_frames() {
   m_state->frame = 0;
+}
+
+void rtx_renderer::on_event(const wunder::event::camera_moved &) /*override*/ {
+  reset_frames();
 }
 
 void rtx_renderer::log_current_sate_frame() {

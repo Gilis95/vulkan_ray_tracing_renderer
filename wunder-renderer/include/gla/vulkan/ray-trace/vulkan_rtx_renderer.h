@@ -16,7 +16,6 @@
 
 struct RtxState;
 
-
 namespace wunder::event {
 struct scene_activated;
 struct camera_moved;
@@ -39,7 +38,12 @@ class rtx_renderer : public base_renderer,
   ~rtx_renderer() override;
 
  public:
+  RtxState& mutable_rtx_config() { return *m_state; }
+
+ public:
   void update(time_unit dt) override;
+  void reset_frames();
+
  protected:
   void shutdown_internal() override;
   void init_internal(scene_id scene_id) override;
