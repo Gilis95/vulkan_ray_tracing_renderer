@@ -14,6 +14,8 @@ namespace wunder::vulkan {
 class render_pass;
 
 class swap_chain : public non_copyable {
+private:
+  friend class render_pass;
  public:
   struct queue_element : public non_copyable {
    public:
@@ -31,7 +33,6 @@ class swap_chain : public non_copyable {
     VkImage m_image = VK_NULL_HANDLE;
     VkImageView m_image_view = VK_NULL_HANDLE;
     VkCommandBuffer m_command_buffer = VK_NULL_HANDLE;
-    VkFramebuffer m_framebuffer = VK_NULL_HANDLE;
 
     VkImageMemoryBarrier m_barrier{};
     VkFence m_fence = VK_NULL_HANDLE;
@@ -45,24 +46,29 @@ class swap_chain : public non_copyable {
  public:
   void resize(uint32_t width, uint32_t height);
 
-  void initialize();
+  void init();
   void shutdown();
 
- public:
+  [[nodiscard]] size_t get_image_count() const{
+    return m_queue_elements.size();
+  }
+
+  [[nodiscard]] VkFormat& get_colour_format() {
+    return m_colour_format;
+  }
+
+  [[nodiscard]] uint32_t get_current_queue_element() const {
+    return m_current_queue_element;
+  }
+
+public:
   std::optional<std::uint32_t> acquire();
 
   void begin_command_buffer();
   VkCommandBuffer get_current_command_buffer();
   void flush_current_command_buffer();
 
- public:
-  void begin_render_pass() const;
-  void end_render_pass() const;
-
-  render_pass& mutable_render_pass();
-
  private:
-  void initialize_render_pass();
 
   void initialize_swap_chain();
 
@@ -70,7 +76,6 @@ class swap_chain : public non_copyable {
   void create_image_for_each_queue_element();
   void create_image_barrier_for_each_queue_element();
   void create_semaphores_for_each_queue_element();
-  void create_frame_buffer_for_each_queue_element();
   void create_fence_for_each_queue_element();
   void create_command_buffer_for_each_queue_element();
   void initialize_depth_buffer();
@@ -86,8 +91,6 @@ class swap_chain : public non_copyable {
   uint32_t m_current_queue_element;
 
   std::vector<queue_element> m_queue_elements;
-
-  unique_ptr<render_pass> m_render_pass;
   VkSurfaceKHR m_surface;
   VkSwapchainKHR m_swap_chain;
   VkCommandPool m_command_pool;

@@ -36,9 +36,9 @@ void base_renderer::shutdown() {
   m_shaders.clear();
 }
 
-void base_renderer::init(const renderer_properties &properties) {
+void base_renderer::init(scene_id scene_id) {
   initialize_shaders();
-  init_internal(properties);
+  init_internal(scene_id);
 }
 
 void base_renderer::initialize_shaders() {

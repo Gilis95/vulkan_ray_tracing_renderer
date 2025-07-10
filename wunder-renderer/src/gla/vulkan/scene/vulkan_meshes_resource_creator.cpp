@@ -129,9 +129,8 @@ void meshes_resource_creator::create_index_and_vertex_buffer(
 
   auto& command_pool = layer_abstraction_factory::instance()
                            .get_vulkan_context()
-                           .mutable_device()
-                           .get_command_pool();
-  auto command_buffer = command_pool.get_current_graphics_command_buffer();
+                           .mutable_command_pool();
+  auto command_buffer = command_pool.get_current_compute_command_buffer();
 
   for (const auto& [mesh_id, mesh_asset_ref] : m_input_mesh_assets) {
     auto& [id, _vulkan_mesh] = out_mesh_instances.emplace_back();
@@ -164,7 +163,7 @@ void meshes_resource_creator::create_index_and_vertex_buffer(
     ++i;
   }
 
-  command_pool.flush_graphics_command_buffer();
+  command_pool.flush_compute_command_buffer();
 
   // free staging data
   for (auto& [_, mesh] : out_mesh_instances) {

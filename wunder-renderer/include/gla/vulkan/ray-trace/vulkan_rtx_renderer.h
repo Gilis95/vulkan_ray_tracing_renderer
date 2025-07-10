@@ -12,6 +12,7 @@
 #include "event/event_handler.h"
 #include "gla/vulkan/vulkan_base_renderer.h"
 #include "glad/vulkan.h"
+#include "scene/scene_types.h"
 
 struct RtxState;
 
@@ -21,6 +22,7 @@ struct camera_moved;
 }  // namespace wunder::event
 
 namespace wunder::vulkan {
+class swap_chain;
 
 class descriptor_set_manager;
 class shader;
@@ -29,21 +31,22 @@ class shader_binding_table;
 class rasterize_renderer;
 
 class rtx_renderer : public base_renderer,
-                     public event_handler<wunder::event::scene_activated>,
                      public event_handler<wunder::event::camera_moved>,
                      public non_copyable {
  public:
-  explicit rtx_renderer(const renderer_properties&);
-
- public:
+  explicit rtx_renderer(const renderer_properties& properties);
   ~rtx_renderer() override;
 
  public:
-  void update(time_unit dt);
+  RtxState& mutable_rtx_config() { return *m_state; }
+
+ public:
+  void update(time_unit dt) override;
+  void reset_frames();
 
  protected:
   void shutdown_internal() override;
-  void init_internal(const renderer_properties& properties) override;
+  void init_internal(scene_id scene_id) override;
 
   vector_map<VkShaderStageFlagBits, std::vector<shader_to_compile>>
   get_shaders_for_compilation() override;
@@ -51,22 +54,16 @@ class rtx_renderer : public base_renderer,
   void create_descriptor_manager(const shader& shader);
 
  private:
-  void on_event(const wunder::event::scene_activated&) override;
   void on_event(const wunder::event::camera_moved&) override;
 
   // debug features
  private:
   void log_current_sate_frame();
-  void log_loaded_scene_size();
- private:
-  const renderer_properties& m_renderer_properties;
-  bool m_have_active_scene;
 
+ private:
   unique_ptr<rtx_pipeline> m_rtx_pipeline;
   unique_ptr<shader_binding_table> m_shader_binding_table;
   unique_ptr<RtxState> m_state;
-
-  unique_ptr<rasterize_renderer> m_rasterize_renderer;
 };
 }  // namespace wunder::vulkan
 #endif /* VULKAN_RENDERER_H */

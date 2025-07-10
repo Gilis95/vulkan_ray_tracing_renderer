@@ -4,7 +4,7 @@ include(cmake/Files.cmake)
 include(cmake/Variables.cmake)
 
 add_definitions(-DWANDER_ENABLE_LOG -D_CRT_SECURE_NO_WARNINGS -DWANDER_ENGINE_DEBUG -DTRACY_ENABLE -DGLFW_INCLUDE_NONE)
-message(hui="${CMAKE_SYSTEM_NAME}")
+
 if (${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
     add_definitions(-DWANDER_LINUX=1)
 endif ()
@@ -48,6 +48,7 @@ glad_add_library(Vulkan REPRODUCIBLE LOADER API vulkan=1.3 EXTENSIONS
         VK_KHR_surface,
         VK_KHR_deferred_host_operations,
         VK_KHR_shader_clock,
+        VK_KHR_dynamic_rendering
         #Embedded
         VK_EXT_validation_features,
         VK_EXT_validation_flags,

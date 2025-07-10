@@ -1,11 +1,7 @@
-//
-// Created by christian on 7/3/24.
-//
-
 #ifndef WUNDER_WUNDER_RENDERER_INCLUDE_WINDOW_WINDOW_PROPERTIES_H_
 #define WUNDER_WUNDER_RENDERER_INCLUDE_WINDOW_WINDOW_PROPERTIES_H_
-#include <string>
 #include <cstdint>
+#include <string>
 
 namespace wunder {
 enum class window_type : std::int32_t { glfw };
@@ -27,5 +23,5 @@ struct window_properties {
         m_height(height),
         m_type(type) {}
 };
-}
-#endif //WUNDER_WUNDER_RENDERER_INCLUDE_WINDOW_WINDOW_PROPERTIES_H_
+}  // namespace wunder
+#endif  // WUNDER_WUNDER_RENDERER_INCLUDE_WINDOW_WINDOW_PROPERTIES_H_

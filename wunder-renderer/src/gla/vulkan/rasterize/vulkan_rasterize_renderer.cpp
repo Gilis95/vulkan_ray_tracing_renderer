@@ -1,5 +1,6 @@
 #include "gla/vulkan/rasterize/vulkan_rasterize_renderer.h"
 
+#include "core/time_unit.h"
 #include "gla/renderer_properties.h"
 #include "gla/vulkan/descriptors/vulkan_descriptor_set_manager.h"
 #include "gla/vulkan/rasterize/vulkan_rasterize_pipeline.h"
@@ -7,6 +8,7 @@
 #include "gla/vulkan/rasterize/vulkan_swap_chain.h"
 #include "gla/vulkan/vulkan_context.h"
 #include "gla/vulkan/vulkan_layer_abstraction_factory.h"
+#include "gla/vulkan/vulkan_renderer_context.h"
 #include "gla/vulkan/vulkan_shader.h"
 #include "gla/vulkan/vulkan_texture.h"
 #include "resources/shaders/host_device.h"
@@ -14,10 +16,9 @@
 namespace wunder::vulkan {
 rasterize_renderer::rasterize_renderer(
     const renderer_properties &renderer_properties)
-    : m_renderer_properties(renderer_properties),
-      m_render_region{.offset = {.x = 0, .y = 0},
-                      .extent = {.width = m_renderer_properties.m_width,
-                                 .height = m_renderer_properties.m_height}},
+    : m_render_region{.offset = {.x = 0, .y = 0},
+                      .extent = {.width = renderer_properties.m_width,
+                                 .height = renderer_properties.m_height}},
       m_tonemapper{.brightness = 1.0f,
                    .contrast = 1.0f,
                    .saturation = 1.0f,
@@ -31,30 +32,33 @@ rasterize_renderer::rasterize_renderer(
                    .dither = 1} {
   m_output_image.reset(new storage_texture(
       {.m_enabled = true, .m_descriptor_name = "rtxGeneratedImage"},
-      VK_FORMAT_R32G32B32A32_SFLOAT, m_renderer_properties.m_width,
-      m_renderer_properties.m_height));
+      VK_FORMAT_R32G32B32A32_SFLOAT, renderer_properties.m_width,
+      renderer_properties.m_height));
   m_input_image.reset(new sampled_texture(*m_output_image));
 }
 
 rasterize_renderer::~rasterize_renderer() = default;
 
+void rasterize_renderer::update(time_unit /*dt*/) /*override*/ {
+  begin_frame();
+  draw_frame();
+  end_frame();
+}
+
 void rasterize_renderer::shutdown_internal() /*override*/ {
   m_output_image.reset();
   m_input_image.reset();
   m_pipeline.reset();
+  m_render_pass.reset();
 }
 
-void rasterize_renderer::init_internal(
-    const renderer_properties &/*properties*/) /*override*/ {
+void rasterize_renderer::init_internal(scene_id /*id*/) /*override*/ {
   m_input_image->add_descriptor_to(*m_descriptor_set_manager);
   m_descriptor_set_manager->build();
 
+  m_render_pass = std::make_unique<render_pass>("raterize renderer pass", VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_CLEAR);
   m_pipeline = std::move(
-      rasterize_pipeline::create(*m_descriptor_set_manager, m_shaders));
-}
-
-storage_texture &rasterize_renderer::get_output_image() {
-  return *m_output_image;
+      rasterize_pipeline::create(*m_descriptor_set_manager, m_shaders, *m_render_pass));
 }
 
 void rasterize_renderer::create_descriptor_manager(const shader &shader) {
@@ -86,19 +90,20 @@ rasterize_renderer::get_shaders_for_compilation() {
 }
 
 void rasterize_renderer::begin_frame() {
-  auto &vulkan_context =
-      layer_abstraction_factory::instance().get_vulkan_context();
-  auto &swap_chain = vulkan_context.mutable_swap_chain();
+  auto &render_context =
+      layer_abstraction_factory::instance().get_render_context();
+  auto &renderer_properties = render_context.get_renderer_properties();
 
+  auto &swap_chain = render_context.mutable_swap_chain();
   auto graphic_command_buffer = swap_chain.get_current_command_buffer();
-  m_input_image->generate_mip_levels(graphic_command_buffer);
 
-  swap_chain.begin_render_pass();
+  m_input_image->generate_mip_levels(graphic_command_buffer);
+  m_render_pass->begin();
 
   VkViewport viewport{static_cast<float>(m_render_region.offset.x),
                       static_cast<float>(m_render_region.offset.y),
-                      static_cast<float>(m_renderer_properties.m_width),
-                      static_cast<float>(m_renderer_properties.m_height),
+                      static_cast<float>(renderer_properties.m_width),
+                      static_cast<float>(renderer_properties.m_height),
                       0.0f,
                       1.0f};
   VkRect2D scissor{
@@ -110,10 +115,11 @@ void rasterize_renderer::begin_frame() {
 }
 
 void rasterize_renderer::draw_frame() {
-  auto graphic_command_buffer = layer_abstraction_factory::instance()
-                                    .get_vulkan_context()
-                                    .mutable_swap_chain()
-                                    .get_current_command_buffer();
+  auto &render_context =
+      layer_abstraction_factory::instance().get_render_context();
+
+  auto &swap_chain = render_context.mutable_swap_chain();
+  auto graphic_command_buffer = swap_chain.get_current_command_buffer();
 
   vkCmdPushConstants(
       graphic_command_buffer, m_pipeline->get_vulkan_pipeline_layout(),
@@ -125,11 +131,7 @@ void rasterize_renderer::draw_frame() {
 }
 
 void rasterize_renderer::end_frame() {
-  auto &vulkan_context =
-      layer_abstraction_factory::instance().get_vulkan_context();
-  auto &swap_chain = vulkan_context.mutable_swap_chain();
-
-  swap_chain.end_render_pass();
+  m_render_pass->end();
 }
 
 }  // namespace wunder::vulkan

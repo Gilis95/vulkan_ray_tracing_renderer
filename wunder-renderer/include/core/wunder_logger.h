@@ -4,11 +4,11 @@
 
 _Pragma("GCC diagnostic ignored \"-Wdeprecated-literal-operator\"")
 #include <spdlog/spdlog.h>
-_Pragma("GCC diagnostic pop")
+    _Pragma("GCC diagnostic pop")
 
     /////////////////////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////////////////////////
-    namespace wunder {
+namespace wunder {
   /////////////////////////////////////////////////////////////////////////////////////////
   class log {
    public:
@@ -116,6 +116,13 @@ _Pragma("GCC diagnostic pop")
 #define WUNDER_WARN(...)
 #define WUNDER_ERROR(...)
 #define WUNDER_CRITICAL(...)
+
+#define WUNDER_TRACE_TAG(tag, ...)
+#define WUNDER_DEBUG_TAG(tag, ...)
+#define WUNDER_INFO_TAG(tag, ...)
+#define WUNDER_WARN_TAG(tag, ...)
+#define WUNDER_ERROR_TAG(tag, ...)
+#define WUNDER_CRITICAL_TAG(tag, ...)
 #endif
 
 #endif

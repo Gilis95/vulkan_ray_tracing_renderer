@@ -27,9 +27,7 @@ device::device(VkPhysicalDeviceFeatures /*enabled_features*/) {}
 device::~device() = default;
 
 void device::shutdown() {
-  if (m_command_pool) {
-    m_command_pool.reset();
-  }
+
 
   VK_CHECK_RESULT(vkDeviceWaitIdle(m_logical_device));
   vkDestroyDevice(m_logical_device, nullptr);
@@ -52,8 +50,6 @@ void device::initialize() {
                    physical_device.m_queue_family_indices.Compute, 0,
                    &m_compute_queue);
   set_debug_utils_object_name(m_logical_device, "compute queue", m_graphics_queue);
-
-  m_command_pool = std::make_unique<command_pool>();
 }
 
 void device::create_extensions_list() {
