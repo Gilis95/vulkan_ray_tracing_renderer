@@ -6,7 +6,6 @@
 #include "core/non_copyable.h"
 #include "core/wunder_memory.h"
 #include "event/event_handler.h"
-#include "rasterize/vulkan_render_pass.h"
 
 // forward declarations
 namespace wunder {
@@ -24,6 +23,7 @@ namespace wunder::vulkan {
 class swap_chain;
 class rasterize_renderer;
 class rtx_renderer;
+class render_pass;
 
 class renderer_context : public non_copyable,
                          public event_handler<wunder::event::scene_activated> {
@@ -31,7 +31,7 @@ class renderer_context : public non_copyable,
   friend class layer_abstraction_factory;
 
  public:
-  renderer_context(const application_properties& properties);
+  explicit renderer_context(const application_properties& properties);
   ~renderer_context() override;
 
  private:
@@ -39,10 +39,11 @@ class renderer_context : public non_copyable,
   void shutdown();
 
  public:
-  const renderer_properties& get_renderer_properties() const;
-  swap_chain& mutable_swap_chain();
-  rasterize_renderer& mutable_rasterize_renderer();
-  rtx_renderer& mutable_rtx_renderer();
+  [[nodiscard]] const renderer_properties& get_renderer_properties() const;
+  [[nodiscard]] swap_chain& mutable_swap_chain();
+  [[nodiscard]] render_pass& mutable_render_pass();
+  [[nodiscard]] rasterize_renderer& mutable_rasterize_renderer();
+  [[nodiscard]] rtx_renderer& mutable_rtx_renderer();
 
  public:
   bool begin();
@@ -63,6 +64,7 @@ class renderer_context : public non_copyable,
   unique_ptr<swap_chain> m_swap_chain;
   unique_ptr<rasterize_renderer> m_rasterize_renderer;
   unique_ptr<rtx_renderer> m_rtx_renderer;
+  unique_ptr<render_pass> m_render_pass;
 };
 }  // namespace wunder::vulkan
 #endif  // VULKAN_RENDERER_CONTEXT_H

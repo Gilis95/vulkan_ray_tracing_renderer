@@ -4,7 +4,7 @@
 
 namespace wunder::event::vulkan {
 
-class swap_chain_destroyed {
+class renderer_shutdown {
 
 };
 

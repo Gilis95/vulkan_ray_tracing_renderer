@@ -3,8 +3,8 @@
 //
 
 #include "gla/vulkan/vulkan_physical_device_types.h"
-
 #include <cstring>
+#include <cstdint>
 
 namespace wunder::vulkan {
 physical_device_info::physical_device_info()
@@ -157,10 +157,10 @@ void properties_11O_old::write(
 
 void init_physical_info(physical_device_info& info,
                         VkPhysicalDevice physical_device,
-                        uint32_t version_major, uint32_t version_minor) {
+                        std::uint32_t version_major, std::uint32_t version_minor) {
   vkGetPhysicalDeviceMemoryProperties(physical_device,
                                       &info.m_memory_properties);
-  uint32_t count;
+  std::uint32_t count;
   vkGetPhysicalDeviceQueueFamilyProperties(physical_device, &count, nullptr);
   info.m_queue_properties.resize(count);
   vkGetPhysicalDeviceQueueFamilyProperties(physical_device, &count,

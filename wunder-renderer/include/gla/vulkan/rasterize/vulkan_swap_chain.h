@@ -67,7 +67,6 @@ public:
   void begin_command_buffer();
   VkCommandBuffer get_current_command_buffer();
   void flush_current_command_buffer();
-
  private:
 
   void initialize_swap_chain();

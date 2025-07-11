@@ -52,7 +52,7 @@ void wunder_application::initialize_imgui() { m_imgui.init(); }
 application* create_application() {
   auto current_path = std::filesystem::current_path();
   wunder::wunder_filesystem::instance().set_work_dir(
-      (std::filesystem::absolute(current_path / ".." / "..")));
+      (std::filesystem::absolute(current_path)));
 
   uint32_t width =
       1920 + static_cast<std::uint32_t>(right_side_panel::s_dimensions.x);
@@ -67,7 +67,7 @@ application* create_application() {
                           .m_driver = driver::Vulkan,
                           .m_renderer = renderer_type::RAY_TRACE,
                           .m_gpu_to_use = gpu_to_use::Dedicated,
-                          .m_enable_validation = false}};
+                          .m_enable_validation = true}};
 
   return new wunder_application(std::move(app_properties));
 }

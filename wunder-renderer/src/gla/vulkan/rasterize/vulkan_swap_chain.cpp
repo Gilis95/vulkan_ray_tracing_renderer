@@ -132,8 +132,6 @@ void swap_chain::shutdown() {
     vkDestroySurfaceKHR(vulkan_context.mutable_vulkan().get_instance(),
                         m_surface, VK_NULL_HANDLE);
   }
-
-  event_controller::on_event(event::vulkan::swap_chain_destroyed{});
 }
 
 std::optional<std::uint32_t> swap_chain::acquire() {

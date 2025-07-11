@@ -3,11 +3,14 @@
 #include "application_properties.h"
 #include "core/services_factory.h"
 #include "core/time_unit.h"
+#include "core/wunder_memory.h"
+#include "event/event_controller.h"
 #include "event/scene_events.h"
+#include "event/vulkan_events.h"
 #include "gla/renderer_properties.h"
 #include "gla/vulkan/rasterize/vulkan_rasterize_renderer.h"
+#include "gla/vulkan/rasterize/vulkan_render_pass.h"
 #include "gla/vulkan/rasterize/vulkan_swap_chain.h"
-#include "gla/vulkan/ray-trace/vulkan_rtx_pipeline.h"
 #include "gla/vulkan/ray-trace/vulkan_rtx_renderer.h"
 
 namespace wunder::vulkan {
@@ -15,9 +18,13 @@ renderer_context::renderer_context(const application_properties& properties)
     : m_have_active_scene(false),
       m_renderer_properties(properties.m_renderer_properties),
       m_swap_chain(
-          make_unique<swap_chain>(properties.m_window_properties.m_width, properties.m_window_properties.m_height)),
-      m_rasterize_renderer(make_unique<rasterize_renderer>(properties.m_renderer_properties)),
-      m_rtx_renderer(make_unique<rtx_renderer>(properties.m_renderer_properties)) {}
+          make_unique<swap_chain>(properties.m_window_properties.m_width,
+                                  properties.m_window_properties.m_height)),
+      m_rasterize_renderer(
+          make_unique<rasterize_renderer>(properties.m_renderer_properties)),
+      m_rtx_renderer(
+          make_unique<rtx_renderer>(properties.m_renderer_properties)),
+      m_render_pass(make_unique<render_pass>()) {}
 
 renderer_context::~renderer_context() /*override*/ = default;
 
@@ -26,6 +33,8 @@ const renderer_properties& renderer_context::get_renderer_properties() const {
 }
 
 swap_chain& renderer_context::mutable_swap_chain() { return *m_swap_chain; }
+
+render_pass& renderer_context::mutable_render_pass() { return *m_render_pass; }
 
 rasterize_renderer& renderer_context::mutable_rasterize_renderer() {
   return *m_rasterize_renderer;
@@ -50,10 +59,13 @@ void renderer_context::shutdown() {
     m_rtx_renderer->shutdown();
     m_rtx_renderer.reset();
   }
+
+  event_controller::on_event(event::vulkan::renderer_shutdown{});
 }
 
 void renderer_context::init() {
   m_swap_chain->init();
+  m_render_pass->init(VK_ATTACHMENT_LOAD_OP_CLEAR);
 }
 
 bool renderer_context::begin() {
@@ -71,12 +83,9 @@ void renderer_context::update(time_unit dt) {
 
   m_rtx_renderer->update(dt);
   m_rasterize_renderer->update(dt);
-
 }
 
-void renderer_context::end() {
-  m_swap_chain->flush_current_command_buffer();
-}
+void renderer_context::end() { m_swap_chain->flush_current_command_buffer(); }
 
 void renderer_context::on_event(
     const wunder::event::scene_activated& event) /*override*/ {

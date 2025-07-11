@@ -1,7 +1,7 @@
 project(wunder-sandbox)
 
 add_definitions(-DWUNDER_ENABLE_LOG -DSK_PLATFORM_LINUX -DTRACY_ENABLE -DGLFW_INCLUDE_NONE
-        -DIMGUI_IMPL_VULKAN_USE_GLAD)
+    -DIMGUI_IMPL_VULKAN_USE_GLAD -DIMGUI_IMPL_VULKAN_HAS_DYNAMIC_RENDERING)
 
 include(cmake/FetchDependencies.cmake)
 include(cmake/Files.cmake)

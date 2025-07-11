@@ -53,7 +53,6 @@ public:
 
   unique_ptr<storage_texture> m_output_image;
   unique_ptr<sampled_texture> m_input_image;
-  unique_ptr<render_pass> m_render_pass;
 };
 }  // namespace wunder::vulkan
 #endif  // WUNDER_VULKAN_RASTERIZE_RENDERER_H

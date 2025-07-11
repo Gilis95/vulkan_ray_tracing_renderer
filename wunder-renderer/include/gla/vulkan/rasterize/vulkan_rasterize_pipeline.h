@@ -22,7 +22,7 @@ class rasterize_pipeline : public base_pipeline {
   static std::unique_ptr<rasterize_pipeline> create(
       const descriptor_set_manager& descriptor_set_manager,
       const vector_map<VkShaderStageFlagBits, std::vector<unique_ptr<shader>>>&
-          shaders, render_pass& render_pass);
+          shaders);
 
  public:
   [[nodiscard]] VkPushConstantRange get_push_constant_range() const override;
@@ -30,10 +30,13 @@ class rasterize_pipeline : public base_pipeline {
  private:
   void initialize_pipeline(
       const vector_map<VkShaderStageFlagBits, std::vector<unique_ptr<shader>>>&
-          shaders_of_types, render_pass& render_pass);
+          shaders_of_types);
+
+  void initialize_rendering_info();
 
  private:
   VkGraphicsPipelineCreateInfo m_pipeline_create_info;
+  VkPipelineRenderingCreateInfo m_pipeline_rendering_create_info;
   VkPipelineCache m_pipeline_cache;
 
   vulkan_rasterize_pipeline_state m_pipeline_state;

@@ -9,11 +9,12 @@
 #include "core/task_executor.h"
 #include "core/wunder_filesystem.h"
 #include "event/event_handler.hpp"
+#include "event/file_events.h"
 
 namespace wunder {
 
 asset_manager::asset_manager()
-    : event_handler(),
+    : event_handler<event::file_dropped>(),
       m_gltf(std::make_unique<tinygltf::TinyGLTF>()),
       m_asset_importer(std::make_unique<gltf_asset_importer>(m_asset_storage)),
       m_asset_importer_executor(make_unique<task_executor>(1)) {}

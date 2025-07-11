@@ -1,26 +1,29 @@
 #ifndef WUNDER_IMGUI_H
 #define WUNDER_IMGUI_H
-#include <memory>
+#include <glad/vulkan.h>
 
 #include "core/time_unit.h"
 #include "event/event_handler.h"
+#include "event/vulkan_events.h"
 #include "imgui/imgui_right_side_panel.h"
-#include <glad/vulkan.h>
 
 namespace wunder {
 namespace vulkan {
 class render_pass;
 }
 
-namespace event::vulkan {
-class swap_chain_destroyed;
+namespace event {
+class scene_activated;
+namespace vulkan {
+class renderer_shutdown;
 }
+}  // namespace event
 
 }  // namespace wunder
 namespace wunder {
 
-class wunder_imgui
-    : private event_handler<wunder::event::vulkan::swap_chain_destroyed> {
+class wunder_imgui : private event_handler<wunder::event::scene_activated>,
+                     private event_handler<event::vulkan::renderer_shutdown> {
  public:
   wunder_imgui();
   ~wunder_imgui() override;
@@ -31,13 +34,15 @@ class wunder_imgui
 
  public:
   void update(wunder::time_unit dt);
-private:
-  void on_event(const event::vulkan::swap_chain_destroyed&) override;
- private:
-  right_side_panel m_right_side_panel;
-  std::unique_ptr<vulkan::render_pass> m_render_pass;
-  VkDescriptorPool m_imgui_desc_pool;
 
+ private:
+  void on_event(const wunder::event::scene_activated& event) override;
+  void on_event(const wunder::event::vulkan::renderer_shutdown& event) override;
+
+ private:
+  VkAttachmentLoadOp m_load_op;
+  right_side_panel m_right_side_panel;
+  VkDescriptorPool m_imgui_desc_pool;
 };
 }  // namespace wunder
 #endif  // WUNDER_IMGUI_H

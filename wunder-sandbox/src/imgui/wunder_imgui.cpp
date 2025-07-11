@@ -7,6 +7,7 @@
 #include "core/wunder_logger.h"
 #include "event/event_handler.h"
 #include "event/event_handler.hpp"
+#include "event/scene_events.h"
 #include "event/vulkan_events.h"
 #include "gla/vulkan/rasterize/vulkan_render_pass.h"
 #include "gla/vulkan/rasterize/vulkan_swap_chain.h"
@@ -21,9 +22,10 @@
 
 namespace wunder {
 wunder_imgui::wunder_imgui()
-    : event_handler<wunder::event::vulkan::swap_chain_destroyed>() {}
+    : event_handler<wunder::event::scene_activated>(),
+      m_load_op(VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_CLEAR) {}
 
-wunder_imgui::~wunder_imgui() {};
+wunder_imgui::~wunder_imgui() = default;
 
 void wunder_imgui::init() {
   auto& gla = wunder::vulkan::layer_abstraction_factory::instance();
@@ -40,9 +42,6 @@ void wunder_imgui::init() {
   }
 
   auto& window = maybe_window.value().get();
-
-  m_render_pass = std::make_unique<vulkan::render_pass>(
-      "imgui pass", VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_DONT_CARE);
 
   std::vector<VkDescriptorPoolSize> poolSize{
       {VK_DESCRIPTOR_TYPE_SAMPLER, 1},
@@ -65,7 +64,7 @@ void wunder_imgui::init() {
   init_info.Queue = device.get_graphics_queue();
   init_info.PipelineCache = VK_NULL_HANDLE;
   init_info.DescriptorPool = m_imgui_desc_pool;
-  init_info.RenderPass = m_render_pass->get_vulkan_render_pass();
+  init_info.RenderPass = VK_NULL_HANDLE;
   init_info.Subpass = 0;
   init_info.MinImageCount = 2;
   init_info.ImageCount = static_cast<uint32_t>(swap_chain.get_image_count());
@@ -73,7 +72,8 @@ void wunder_imgui::init() {
   init_info.CheckVkResultFn = nullptr;
   init_info.Allocator = nullptr;
 
-  init_info.UseDynamicRendering = VK_FALSE;
+  init_info.UseDynamicRendering = VK_TRUE;
+
   init_info.PipelineRenderingCreateInfo.sType =
       VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO_KHR;
   init_info.PipelineRenderingCreateInfo.colorAttachmentCount = 1;
@@ -99,10 +99,13 @@ void wunder_imgui::init() {
 void wunder_imgui::shutdown() {}
 
 void wunder_imgui::update(wunder::time_unit dt) {
-  auto& gla = wunder::vulkan::layer_abstraction_factory::instance();
-  auto& swap_chain = gla.get_render_context().mutable_swap_chain();
+  auto& render_context = wunder::vulkan::layer_abstraction_factory::instance()
+                             .get_render_context();
+  auto& swap_chain = render_context.mutable_swap_chain();
+  auto& render_pass = render_context.mutable_render_pass();
 
-  m_render_pass->begin();
+  render_pass.push_load_operation(m_load_op);
+  render_pass.begin();
 
   // Start the Dear ImGui frame
   ImGui_ImplGlfw_NewFrame();
@@ -113,22 +116,24 @@ void wunder_imgui::update(wunder::time_unit dt) {
   ImGui::Render();
   ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(),
                                   swap_chain.get_current_command_buffer());
-  m_render_pass->end();
+  render_pass.end();
 }
 
 void wunder_imgui::on_event(
-    const event::vulkan::swap_chain_destroyed&) /*override*/ {
+    const wunder::event::scene_activated& event) /*override*/ {
+  m_load_op = VK_ATTACHMENT_LOAD_OP_LOAD;
+}
+
+void wunder_imgui::on_event(
+    const wunder::event::vulkan::renderer_shutdown& /*event*/) /*override*/ {
   vulkan::context& context =
       vulkan::layer_abstraction_factory::instance().get_vulkan_context();
   auto* const device = context.mutable_device().get_vulkan_logical_device();
 
   ImGui_ImplVulkan_Shutdown();
 
-  m_render_pass.reset();
-
   if (m_imgui_desc_pool) {
     vkDestroyDescriptorPool(device, m_imgui_desc_pool, VK_NULL_HANDLE);
   }
 }
-
 }  // namespace wunder
