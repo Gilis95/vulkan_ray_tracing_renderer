@@ -1,7 +1,6 @@
 #ifndef TASK_EXECUTOR_H
 #define TASK_EXECUTOR_H
 #include <future>
-#include <list>
 #include <queue>
 #include <thread>
 
@@ -11,28 +10,33 @@
 
 namespace wunder {
 class task_executor {
- private:
-  struct task_data {
-    std::future<void> m_future;
-    std::jthread m_thread;
-
-    std::unique_ptr<async_task> m_task;
-  };
-
-public:
+ public:
   explicit task_executor(std::uint32_t pool_size = 1);
+
+  void shutdown();
+
  public:
   void update(time_unit dt);
 
-  void enqueue(std::unique_ptr<async_task> task);
-private:
-  void try_start_task();
-  void try_finish_task();
-private:
-  std::queue<unique_ptr< async_task>> m_scheduled_task_queue;
-  std::list<task_data>  m_in_progress_tasks;
+  void enqueue(async_task* task);
 
-  uint32_t m_pool_size;
+ private:  // executed on worker threads
+  // It seems like stop_toke is simple ptr wrapper, bu however
+  void run(const std::stop_token& token);
+  void try_run_task(const std::stop_token& token);
+
+ private:  // executed on owner thread
+  void try_finish_task();
+
+ private:
+  std::queue<shared_ptr<async_task>> m_scheduled_tasks_queue;
+  std::mutex m_scheduled_tasks_mutex;
+  std::condition_variable m_scheduled_tasks_cv;
+
+  std::queue<shared_ptr<async_task>> m_ready_task_queue;
+  std::mutex m_ready_tasks_mutex;
+
+  std::vector<std::jthread> m_worker_threads;
 };
 }  // namespace wunder
 

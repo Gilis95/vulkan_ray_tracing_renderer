@@ -13,7 +13,7 @@ asset_handle asset_storage::add_asset(asset&& _asset) {
   const asset_handle handle = asset_handle(current_asset_id);
 
   m_assets.emplace(current_asset_id, std::forward<asset>(_asset));
-  event_controller::on_event(asset_loaded{.m_asset_handle = handle});
+  event_controller::on_event(event::asset_loaded{.m_asset_handle = handle});
 
   return handle;
 }

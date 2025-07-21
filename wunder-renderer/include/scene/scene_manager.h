@@ -10,18 +10,19 @@ namespace tinygltf {
 class Model;
 }
 
-namespace wunder::vulkan {
+namespace wunder {
+class scene_asset;
+
+namespace vulkan {
 class scene;
+}
+namespace event {
+struct asset_loaded;
+}
 }
 
 namespace wunder {
-struct asset_loaded;
-
-class scene_asset;
-;
-enum class asset_serialization_result_codes;
-
-class scene_manager : public event_handler<asset_loaded> {
+class scene_manager : public event_handler<event::asset_loaded> {
  public:
   scene_manager();
   ~scene_manager() override;
@@ -38,7 +39,7 @@ public:
   bool deactivate_scene(scene_id id);
 
  protected:
-  void on_event(const asset_loaded&) override;
+  void on_event(const event::asset_loaded&) override;
 
  private:
   vector_map<scene_id, scene_asset> m_loaded_scenes;
