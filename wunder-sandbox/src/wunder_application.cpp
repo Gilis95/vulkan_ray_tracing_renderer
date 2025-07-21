@@ -50,7 +50,7 @@ void wunder_application::initialize_imgui() { m_imgui.init(); }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 application* create_application() {
-  auto current_path = std::filesystem::current_path();
+  auto current_path = std::filesystem::current_path() /".." / "..";
   wunder::wunder_filesystem::instance().set_work_dir(
       (std::filesystem::absolute(current_path)));
 

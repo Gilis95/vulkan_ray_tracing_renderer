@@ -19,7 +19,9 @@ asset_manager::asset_manager()
       m_asset_importer(std::make_unique<gltf_asset_importer>(m_asset_storage)),
       m_asset_importer_executor(make_unique<task_executor>(1)) {}
 
-asset_manager::~asset_manager() = default;
+asset_manager::~asset_manager() {
+  m_asset_importer_executor->shutdown();
+}
 
 void asset_manager::update(time_unit dt) {
   m_asset_importer_executor->update(dt);
@@ -34,13 +36,8 @@ asset_serialization_result_codes asset_manager::import_asset(
   AssertReturnUnless(scene_real_path.has_extension(),
                      asset_serialization_result_codes::error);
 
-  unique_ptr<asset_importer_task> task = make_unique<asset_importer_task>(
-      *m_gltf, *m_asset_importer, scene_real_path);
-  AssertReturnUnless(
-      task->is_file_supported(),
-      asset_serialization_result_codes::not_supported_format_error);
-
-  m_asset_importer_executor->enqueue(std::move(task));
+  m_asset_importer_executor->enqueue( new asset_importer_task(
+      *m_gltf, *m_asset_importer, scene_real_path));
 
   return asset_serialization_result_codes::scheduled;
 }

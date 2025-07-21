@@ -22,7 +22,7 @@ class renderer_shutdown;
 }  // namespace wunder
 namespace wunder {
 
-class wunder_imgui : private event_handler<wunder::event::scene_activated>,
+class wunder_imgui : private event_handler<event::scene_activated>,
                      private event_handler<event::vulkan::renderer_shutdown> {
  public:
   wunder_imgui();
@@ -33,7 +33,7 @@ class wunder_imgui : private event_handler<wunder::event::scene_activated>,
   void shutdown();
 
  public:
-  void update(wunder::time_unit dt);
+  void update(time_unit dt);
 
  private:
   void on_event(const wunder::event::scene_activated& event) override;

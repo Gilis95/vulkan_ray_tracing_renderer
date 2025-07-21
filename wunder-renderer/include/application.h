@@ -4,17 +4,20 @@
 #include "core/time_unit.h"
 #include "core/wunder_memory.h"
 #include "event/event_handler.h"
-#include "event/window_events.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 namespace wunder {
-
 class scene_manager;
 class asset_manager;
 
 struct application_properties;
+namespace event {
+struct window_close_event;
+}
+}  // namespace wunder
 
+namespace wunder {
 class application : private event_handler<wunder::event::window_close_event> {
  public:
   explicit application(application_properties&& properties);

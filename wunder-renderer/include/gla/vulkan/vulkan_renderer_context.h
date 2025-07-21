@@ -1,8 +1,6 @@
 #ifndef VULKAN_RENDERER_CONTEXT_H
 #define VULKAN_RENDERER_CONTEXT_H
 
-#include <vector>
-
 #include "core/non_copyable.h"
 #include "core/wunder_memory.h"
 #include "event/event_handler.h"

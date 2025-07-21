@@ -1,7 +1,3 @@
-//
-// Created by christian on 12/18/24.
-//
-
 #ifndef WUNDER_INPUT_MANAGER_H
 #define WUNDER_INPUT_MANAGER_H
 
@@ -9,15 +5,31 @@
 #include <unordered_map>
 
 #include "core/input.h"
+#include "core/wunder_macros.h"
 #include "event/event_handler.h"
 #include "event/input_events.h"
 
-#include "core/wunder_macros.h"
-
 namespace wunder {
-
 class time_unit;
 
+namespace event {
+
+namespace keyboard {
+struct pressed;
+struct symbol_pressed;
+struct released;
+}  // namespace keyboard
+
+namespace mouse {
+struct pressed;
+struct released;
+struct move;
+}  // namespace mouse
+
+};  // namespace event
+}  // namespace wunder
+
+namespace wunder {
 enum class key_state : std::uint8_t {
   none = 1 << 0,
   pressed = 1 << 1,

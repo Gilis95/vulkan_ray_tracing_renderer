@@ -10,9 +10,7 @@
 #include "assets/asset_storage.h"
 #include "assets/asset_types.h"
 #include "core/time_unit.h"
-#include "core/vector_map.h"
 #include "event/event_handler.h"
-#include "event/file_events.h"
 
 namespace tinygltf {
 class TinyGLTF;
@@ -22,6 +20,12 @@ class Model;
 namespace wunder {
 class task_executor;
 class gltf_asset_importer;
+namespace event {
+struct file_dropped;
+}
+}
+
+namespace wunder {
 class asset_manager : protected event_handler<event::file_dropped> {
  public:
   asset_manager();

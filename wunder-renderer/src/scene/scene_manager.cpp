@@ -15,13 +15,14 @@
 namespace wunder {
 scene_id scene_manager::s_scene_counter = 0;
 
-scene_manager::scene_manager() : event_handler<asset_loaded>() {}
+scene_manager::scene_manager() : event_handler<event::asset_loaded>() {}
 
 scene_manager::~scene_manager() /*override*/ = default;
 
 void scene_manager::shutdown() {
   m_active_scenes.clear();
   m_loaded_scenes.clear();
+  m_executor.shutdown();
 }
 
 void scene_manager::update(wunder::time_unit dt) {
@@ -56,9 +57,8 @@ bool scene_manager::activate_scene(scene_id id) {
 
   auto& [scene_id, scene] = m_active_scenes.emplace_back();
   scene_id = id;
-  unique_ptr load_task = std::make_unique<scene_load_task>(
-      scene_id, scene, found_scene_asset_it->second);
-  m_executor.enqueue(std::move(load_task));
+  m_executor.enqueue(new scene_load_task(
+      scene_id, scene, found_scene_asset_it->second));
 
   return true;
 }
@@ -72,7 +72,7 @@ bool scene_manager::deactivate_scene(scene_id id) {
 }
 
 void scene_manager::on_event(
-    const asset_loaded& asset_loaded_event) /*override*/
+    const event::asset_loaded& asset_loaded_event) /*override*/
 {
   auto& asset_manager = project::instance().get_asset_manager();
   auto maybe_scene_asset =

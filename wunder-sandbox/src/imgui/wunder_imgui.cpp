@@ -1,7 +1,5 @@
 #include "imgui/wunder_imgui.h"
 
-#include <iostream>
-
 #include "backends/imgui_impl_glfw.h"
 #include "backends/imgui_impl_vulkan.h"
 #include "core/wunder_logger.h"

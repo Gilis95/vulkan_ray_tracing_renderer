@@ -3,6 +3,7 @@
 #include "core/time_unit.h"
 #include "core/wunder_macros.h"
 #include "event/event_handler.hpp"
+#include "event/input_events.h"
 
 namespace wunder {
 input_manager::input_manager()
